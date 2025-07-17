@@ -1,17 +1,17 @@
 package spring.memewikibe.support.response;
 
 public class Cursor implements Paging {
-    private final long next;
+    private final Long next;
     private final boolean hasMore;
     private final int pageSize;
 
-    public Cursor(long next, boolean hasMore, int pageSize) {
+    public Cursor(Long next, boolean hasMore, int pageSize) {
         this.next = next;
         this.hasMore = hasMore;
         this.pageSize = pageSize;
     }
 
-    public long getNext() {
+    public Long getNext() {
         return next;
     }
 
