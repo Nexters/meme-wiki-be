@@ -1,12 +1,3 @@
--- 해시태그 테이블
-create table hashtag
-(
-    id         bigint auto_increment primary key,
-    created_at timestamp(6),
-    updated_at timestamp(6),
-    name       varchar(255) not null unique
-);
-
 -- 밈 테이블
 create table meme
 (
@@ -17,16 +8,7 @@ create table meme
     description varchar(255),
     category    enum('NONE') not null comment '밈 분류 카테고리',
     img_url     varchar(255) null comment '이미지 url',
-);
-
--- 밈 해시태그 관계 테이블
-create table meme_hashtag
-(
-    id         bigint auto_increment primary key,
-    created_at timestamp(6),
-    updated_at timestamp(6),
-    meme_id    bigint not null,
-    hashtag_id bigint not null,
+    hashtags    text null comment '해시태그',
 );
 
 -- 밈 조회 로그 테이블

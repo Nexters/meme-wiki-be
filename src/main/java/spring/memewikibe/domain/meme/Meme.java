@@ -1,10 +1,13 @@
 package spring.memewikibe.domain.meme;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import spring.memewikibe.domain.BaseEntity;
 
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class Meme extends BaseEntity {
     private String title;
@@ -16,9 +19,9 @@ public class Meme extends BaseEntity {
 
     private String imgUrl;
 
-    protected Meme() {
-    }
+    private String hashtags;
 
+    @Getter
     public enum Category {
         NONE
     }
