@@ -1,14 +1,14 @@
 -- 밈 테이블
 create table meme
 (
-    id          bigint auto_increment primary key,
-    created_at  timestamp(6),
-    updated_at  timestamp(6),
-    title       varchar(255) not null comment '밈 제목',
-    description varchar(255),
-    category    enum('NONE') not null comment '밈 분류 카테고리',
-    img_url     varchar(255) null comment '이미지 url',
-    hashtags    text null comment '해시태그',
+    id            bigint auto_increment primary key,
+    created_at    timestamp(6),
+    updated_at    timestamp(6),
+    title         varchar(255) not null comment '밈 제목',
+    origin        text null comment '밈의 유래',
+    usage_context text null comment '밈 사용 맥락(언제 사용하는지 상황 맥락)',
+    img_url       varchar(255) null comment '이미지 url',
+    hashtags      text null comment '해시태그 (json 형태로 저장)',
 );
 
 -- 밈 조회 로그 테이블
@@ -37,3 +37,25 @@ create table meme_share_log
     updated_at timestamp(6),
     meme_id    bigint not null,
 );
+
+-- 카테고리
+create table category
+(
+    id         bigint auto_increment primary key,
+    created_at timestamp(6),
+    updated_at timestamp(6),
+    name       varchar(255) not null comment '카테고리 이름',
+    img_url    varchar(255) not null comment '카테고리 대표 이미지 URL',
+
+    constraint category_name_unique unique (name)
+)
+
+--- 밈 카테고리 관계 테이블
+create table meme_category
+(
+    id          bigint auto_increment primary key,
+    created_at  timestamp(6),
+    updated_at  timestamp(6),
+    meme_id     bigint not null,
+    category_id bigint not null,
+)
