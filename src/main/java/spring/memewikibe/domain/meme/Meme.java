@@ -16,6 +16,8 @@ public class Meme extends BaseEntity {
 
     private String usageContext;
 
+    private String trendPeriod;
+
     private String imgUrl;
 
     private String hashtags;
