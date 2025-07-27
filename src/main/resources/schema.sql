@@ -7,6 +7,7 @@ create table meme
     title         varchar(255) not null comment '밈 제목',
     origin        text null comment '밈의 유래',
     usage_context text null comment '밈 사용 맥락(언제 사용하는지 상황 맥락)',
+    trend_period varchar(10) comment '밈 유행 기간',
     img_url       varchar(255) null comment '이미지 url',
     hashtags      text null comment '해시태그 (json 형태로 저장)',
 );
