@@ -5,6 +5,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.memewikibe.domain.BaseEntity;
@@ -18,4 +19,14 @@ public class MemeCustomLog extends BaseEntity {
     @JoinColumn(name = "meme_id", nullable = false)
     private Meme meme;
 
+    @Builder
+    private MemeCustomLog(Meme meme) {
+        this.meme = meme;
+    }
+
+    public static MemeCustomLog of(Meme meme) {
+        return MemeCustomLog.builder()
+            .meme(meme)
+            .build();
+    }
 }
