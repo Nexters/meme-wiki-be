@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
+import spring.memewikibe.application.MemeAggregationService;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
@@ -11,6 +12,12 @@ import spring.memewikibe.support.response.PageResponse;
 @RestController
 @RequestMapping("/api/memes")
 public class MemeController {
+
+    private final MemeAggregationService aggregationService;
+
+    public MemeController(MemeAggregationService aggregationService) {
+        this.aggregationService = aggregationService;
+    }
 
     @GetMapping
     public ApiResponse<PageResponse<Cursor, MemeSimpleResponse>> getMemes(
@@ -35,7 +42,7 @@ public class MemeController {
     public void makeOwnMeme(
         @PathVariable Long id
     ) {
-        // TODO: 증적용 테이블에 나만의 밈 만들기 로그 증적
+        aggregationService.increaseMakeCustomMemeCount(id);
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
@@ -43,7 +50,7 @@ public class MemeController {
     public void shareMeme(
         @PathVariable Long id
     ) {
-        // TODO: 증적용 테이블에 공유 로그 증적
+        aggregationService.increaseShareMemeCount(id);
     }
 
 }

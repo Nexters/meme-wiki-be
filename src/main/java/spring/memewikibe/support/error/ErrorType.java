@@ -5,7 +5,10 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorType {
     DEFAULT_ERROR(
-        HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "예기치 못한 에러가 발생했습니다.", LogLevel.ERROR);
+        HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "예기치 못한 에러가 발생했습니다.", LogLevel.ERROR),
+    MEME_NOT_FOUNT(
+        HttpStatus.NOT_FOUND, ErrorCode.E404, "존재하지 않는 밈입니다.", LogLevel.WARN),
+    ;
 
     private final HttpStatus status;
 
