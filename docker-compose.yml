@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    image: meme-wiki-be:latest
+    container_name: meme-wiki-be
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - /home/ubuntu/logs:/app/logs

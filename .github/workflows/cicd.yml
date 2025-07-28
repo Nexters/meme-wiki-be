@@ -1,0 +1,84 @@
+name: Spring Boot CI/CD Pipeline with Docker
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew clean build -x test
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-jar
+        path: build/libs/*.jar
+        retention-days: 1
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download JAR artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: app-jar
+        path: build/libs
+
+    - name: List files
+      run: ls -la build/libs
+
+    - name: Copy files to NCP server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.NCP_SERVER_HOST }}
+        username: ${{ secrets.NCP_SERVER_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "build/libs/*.jar"
+        target: "/home/ubuntu/app"
+        strip_components: 2
+        overwrite: true
+
+    - name: Copy deployment files to NCP server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.NCP_SERVER_HOST }}
+        username: ${{ secrets.NCP_SERVER_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "deploy.sh,Dockerfile,docker-compose.yml"
+        target: "/home/ubuntu/app"
+        overwrite: true
+
+    - name: Execute deploy script on NCP server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.NCP_SERVER_HOST }}
+        username: ${{ secrets.NCP_SERVER_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          chmod +x /home/ubuntu/app/deploy.sh
+          /home/ubuntu/app/deploy.sh
