@@ -18,13 +18,17 @@ public class Cursor implements Paging {
     }
 
     public static Cursor of(List<? extends BaseEntity> entities, int limit) {
-        if (entities.isEmpty() || limit <= 0) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("크기 제한은 0보다 커야 합니다.");
+        }
+
+        if (entities.isEmpty()) {
             return new Cursor(null, false, 0);
         }
 
         boolean hasMore = entities.size() > limit;
         int actualSize = Math.min(entities.size(), limit);
-        Long next = entities.getLast().getId();
+        Long next = hasMore ? entities.getLast().getId() : null;
 
         return new Cursor(next, hasMore, actualSize);
     }
