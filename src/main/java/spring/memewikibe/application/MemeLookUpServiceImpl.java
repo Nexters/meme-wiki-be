@@ -39,4 +39,38 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
             .map(it -> new CategoryResponse(it.getId(), it.getName(), it.getImgUrl()))
             .toList();
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PageResponse<Cursor, MemeDetailResponse> getMemesByCategory(Long id, Long next, int limit) {
+        Category category = getCategoryBy(id);
+        List<Meme> memes = fetchMemesByCategory(category, next, limit);
+        List<MemeDetailResponse> response = memes.stream()
+            .map(it -> new MemeDetailResponse(it.getId(), it.getTitle(), it.getUsageContext(), it.getOrigin(), it.getTrendPeriod(), it.getImgUrl(), it.getHashtags()))
+            .toList();
+
+        Cursor cursor = Cursor.of(memes, limit);
+        return PageResponse.cursor(cursor, response);
+    }
+
+    private Category getCategoryBy(Long id) {
+        return categoryRepository.findById(id)
+            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.CATEGORY_NOT_FOUND));
+    }
+
+    private List<Meme> fetchMemesByCategory(Category category, Long next, int limit) {
+        if (next == null) {
+            return memeCategoryRepository.findByCategory(category, Limit.of(limit + 1))
+                .stream()
+                .map(MemeCategory::getMeme)
+                .toList();
+        }
+
+        Meme meme = memeRepository.findById(next)
+            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUNT));
+        return memeCategoryRepository.findByCategoryAndMemeGreaterThanOrderByMemeAsc(category, meme, Limit.of(limit + 1))
+            .stream()
+            .map(MemeCategory::getMeme)
+            .toList();
+    }
 }
