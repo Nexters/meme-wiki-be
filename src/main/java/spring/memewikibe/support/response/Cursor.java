@@ -1,5 +1,11 @@
 package spring.memewikibe.support.response;
 
+import lombok.Getter;
+import spring.memewikibe.domain.BaseEntity;
+
+import java.util.List;
+
+@Getter
 public class Cursor implements Paging {
     private final Long next;
     private final boolean hasMore;
@@ -11,15 +17,16 @@ public class Cursor implements Paging {
         this.pageSize = pageSize;
     }
 
-    public Long getNext() {
-        return next;
+    public static Cursor of(List<? extends BaseEntity> entities, int limit) {
+        if (entities.isEmpty() || limit <= 0) {
+            return new Cursor(null, false, 0);
+        }
+
+        boolean hasMore = entities.size() > limit;
+        int actualSize = Math.min(entities.size(), limit);
+        Long next = entities.getLast().getId();
+
+        return new Cursor(next, hasMore, actualSize);
     }
 
-    public boolean isHasMore() {
-        return hasMore;
-    }
-
-    public int getPageSize() {
-        return pageSize;
-    }
 }

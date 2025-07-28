@@ -7,8 +7,6 @@ import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.application.MemeAggregationService;
 import spring.memewikibe.application.MemeLookUpService;
-import spring.memewikibe.domain.meme.Category;
-import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
@@ -64,5 +62,14 @@ public class MemeController {
     @GetMapping("/categories")
     public ApiResponse<List<CategoryResponse>> getCategories() {
         return ApiResponse.success(memeLookUpService.getAllCategories());
+    }
+
+    @GetMapping("/categories/{id}")
+    public ApiResponse<PageResponse<Cursor, MemeDetailResponse>> getMemesByCategory(
+        @PathVariable Long id,
+        @RequestParam(required = false) Long next,
+        @RequestParam(required = false, defaultValue = "20") int limit
+    ) {
+        return ApiResponse.success(memeLookUpService.getMemesByCategory(id, next, limit));
     }
 }

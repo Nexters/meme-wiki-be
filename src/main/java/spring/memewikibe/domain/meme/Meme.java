@@ -2,6 +2,7 @@ package spring.memewikibe.domain.meme;
 
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.memewikibe.domain.BaseEntity;
@@ -21,4 +22,15 @@ public class Meme extends BaseEntity {
     private String imgUrl;
 
     private String hashtags;
+
+    @Builder
+    private Meme(String title, String origin, String usageContext, String trendPeriod, String imgUrl, String hashtags) {
+        this.title = title;
+        this.origin = origin;
+        this.usageContext = usageContext;
+        this.trendPeriod = trendPeriod;
+        this.imgUrl = imgUrl;
+        this.hashtags = hashtags;
+    }
+
 }
