@@ -3,16 +3,19 @@ package spring.memewikibe.infrastructure;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Limit;
 import org.springframework.test.context.TestConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.domain.meme.Category;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCategory;
 
 import java.util.List;
 
-@DataJpaTest
+@SpringBootTest
+@Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MemeCategoryRepositoryTest {
 
