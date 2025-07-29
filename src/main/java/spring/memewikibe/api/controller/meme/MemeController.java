@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
+import spring.memewikibe.application.MemeAggregationLookUpService;
 import spring.memewikibe.application.MemeAggregationService;
 import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.support.response.ApiResponse;
@@ -19,10 +20,12 @@ public class MemeController {
 
     private final MemeAggregationService aggregationService;
     private final MemeLookUpService memeLookUpService;
+    private final MemeAggregationLookUpService memeAggregationLookUpService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpService memeAggregationLookUpService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
+        this.memeAggregationLookUpService = memeAggregationLookUpService;
     }
 
     @GetMapping
@@ -71,5 +74,10 @@ public class MemeController {
         @RequestParam(required = false, defaultValue = "20") int limit
     ) {
         return ApiResponse.success(memeLookUpService.getMemesByCategory(id, next, limit));
+    }
+
+    @GetMapping("/rankings/shared")
+    public ApiResponse<List<MemeSimpleResponse>> getMostSharedMemes() {
+        return ApiResponse.success(memeAggregationLookUpService.getMostFrequentSharedMemes());
     }
 }

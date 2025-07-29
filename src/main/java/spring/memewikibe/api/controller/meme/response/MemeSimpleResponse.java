@@ -5,8 +5,7 @@ import java.util.Objects;
 public record MemeSimpleResponse(
     long id,
     String title,
-    String summary,
-    String image
+    String imgUrl
 ) {
     public MemeSimpleResponse {
         Objects.requireNonNull(title, "제목은 필수 입니다.");
