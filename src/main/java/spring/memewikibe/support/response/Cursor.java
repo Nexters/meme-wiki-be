@@ -28,7 +28,7 @@ public class Cursor implements Paging {
 
         boolean hasMore = entities.size() > limit;
         int actualSize = Math.min(entities.size(), limit);
-        Long next = hasMore ? entities.getLast().getId() : null;
+        Long next = hasMore ? entities.get(actualSize - 1).getId() : null;
 
         return new Cursor(next, hasMore, actualSize);
     }
