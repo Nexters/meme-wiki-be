@@ -7,7 +7,9 @@ import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
+import spring.memewikibe.domain.meme.MemeCustomLog;
 import spring.memewikibe.domain.meme.MemeShareLog;
+import spring.memewikibe.infrastructure.MemeCustomLogRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.infrastructure.MemeShareLogRepository;
 
@@ -23,16 +25,19 @@ class MemeAggregationLookUpServiceImplTest {
     private final MemeAggregationLookUpServiceImpl sut;
     private final MemeRepository memeRepository;
     private final MemeShareLogRepository shareLogRepository;
+    private final MemeCustomLogRepository customLogRepository;
 
-    MemeAggregationLookUpServiceImplTest(MemeAggregationLookUpServiceImpl sut, MemeRepository memeRepository, MemeShareLogRepository shareLogRepository) {
+    MemeAggregationLookUpServiceImplTest(MemeAggregationLookUpServiceImpl sut, MemeRepository memeRepository, MemeShareLogRepository shareLogRepository, MemeCustomLogRepository customLogRepository) {
         this.sut = sut;
         this.memeRepository = memeRepository;
         this.shareLogRepository = shareLogRepository;
+        this.customLogRepository = customLogRepository;
     }
 
     @AfterEach
     void tearDown() {
         shareLogRepository.deleteAllInBatch();
+        customLogRepository.deleteAllInBatch();
         memeRepository.deleteAllInBatch();
     }
 
@@ -81,10 +86,58 @@ class MemeAggregationLookUpServiceImplTest {
 
         // then
         then(response).hasSize(3);
-        // ID가 높은 순서로 정렬되어야 함 (저장 순서의 역순)
-        then(response.get(0).title()).isEqualTo("전남친 토스트");
-        then(response.get(1).title()).isEqualTo("나만 아니면 돼");
-        then(response.get(2).title()).isEqualTo("무야호");
+        then(response).extracting(MemeSimpleResponse::title)
+            .containsExactly("전남친 토스트", "나만 아니면 돼", "무야호");
+    }
+
+    @Test
+    void 커스텀수가_높은_밈을_조회한다() {
+        // given
+        Meme 무야호 = createMeme("무야호");
+        Meme 나만_아니면_돼 = createMeme("나만 아니면 돼");
+        Meme 전남친_토스트 = createMeme("전남친 토스트");
+        Meme 맑은_눈의_광인 = createMeme("맑은 눈의 광인");
+
+        memeRepository.saveAll(List.of(무야호, 나만_아니면_돼, 전남친_토스트, 맑은_눈의_광인));
+
+        customLogRepository.saveAll(List.of(
+            createMemeCustomLog(전남친_토스트), createMemeCustomLog(전남친_토스트), createMemeCustomLog(전남친_토스트),
+            createMemeCustomLog(무야호), createMemeCustomLog(무야호),
+            createMemeCustomLog(맑은_눈의_광인)
+        ));
+
+        // when
+        List<MemeSimpleResponse> response = sut.getMostFrequentCustomMemes();
+
+        // then
+        then(response).hasSize(3)
+            .extracting(MemeSimpleResponse::title)
+            .containsExactly("전남친 토스트", "무야호", "맑은 눈의 광인");
+    }
+
+    @Test
+    void 동일한_커스텀수일_때_id가_높은순으로_정렬된다() {
+        // given
+        Meme 무야호 = createMeme("무야호");
+        Meme 나만_아니면_돼 = createMeme("나만 아니면 돼");
+        Meme 전남친_토스트 = createMeme("전남친 토스트");
+
+        memeRepository.saveAll(List.of(무야호, 나만_아니면_돼, 전남친_토스트));
+
+        // 모든 밈이 동일하게 2개씩 커스텀
+        customLogRepository.saveAll(List.of(
+            createMemeCustomLog(무야호), createMemeCustomLog(무야호),
+            createMemeCustomLog(나만_아니면_돼), createMemeCustomLog(나만_아니면_돼),
+            createMemeCustomLog(전남친_토스트), createMemeCustomLog(전남친_토스트)
+        ));
+
+        // when
+        List<MemeSimpleResponse> response = sut.getMostFrequentCustomMemes();
+
+        // then
+        then(response).hasSize(3);
+        then(response).extracting(MemeSimpleResponse::title)
+            .containsExactly("전남친 토스트", "나만 아니면 돼", "무야호");
     }
 
     private Meme createMeme(String name) {
@@ -106,6 +159,12 @@ class MemeAggregationLookUpServiceImplTest {
 
     private MemeShareLog createMemeShareLog(Meme meme) {
         return MemeShareLog.builder()
+            .meme(meme)
+            .build();
+    }
+
+    private MemeCustomLog createMemeCustomLog(Meme meme) {
+        return MemeCustomLog.builder()
             .meme(meme)
             .build();
     }
