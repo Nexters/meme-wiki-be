@@ -30,7 +30,7 @@ class CursorTest {
     void 목록이_크기_제한보다_크면_다음항목이_존재한다() {
         Cursor cursor = Cursor.of(List.of(createFixtureEntity(1L), createFixtureEntity(2L)), 1);
 
-        then(cursor.getNext()).isEqualTo(2L);
+        then(cursor.getNext()).isEqualTo(1L);
         then(cursor.isHasMore()).isTrue();
         then(cursor.getPageSize()).isEqualTo(1);
     }
@@ -52,6 +52,19 @@ class CursorTest {
         then(cursor.getNext()).isNull();
         then(cursor.isHasMore()).isFalse();
         then(cursor.getPageSize()).isEqualTo(0);
+    }
+
+    @Test
+    void next값은_리스트의_크기와_limit의_크기중_작은_것의_id가_next값이다() {
+        Cursor cursor = Cursor.of(List.of(
+            createFixtureEntity(1L),
+            createFixtureEntity(2L),
+            createFixtureEntity(3L)
+        ), 2);
+
+        then(cursor.getNext()).isEqualTo(2L);
+        then(cursor.isHasMore()).isTrue();
+        then(cursor.getPageSize()).isEqualTo(2);
     }
 
     @Entity

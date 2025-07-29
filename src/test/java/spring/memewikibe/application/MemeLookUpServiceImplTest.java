@@ -117,8 +117,8 @@ class MemeLookUpServiceImplTest {
         // when
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByCategory(예능.getId(), null, 1);
         // then
-        then(response.getPaging()).extracting(Cursor::isHasMore, Cursor::getPageSize)
-            .containsExactlyInAnyOrder(true, 1);
+        then(response.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+            .containsExactlyInAnyOrder(나만_아니면_돼.getId(), true, 1);
         then(response.getPaging().getNext()).isNotNull();
         then(response.getResults()).hasSize(1)
             .extracting(MemeDetailResponse::title)
