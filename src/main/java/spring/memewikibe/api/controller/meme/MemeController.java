@@ -47,7 +47,7 @@ public class MemeController {
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)
-    @PostMapping("/{id}/own")
+    @PostMapping("/{id}/custom")
     public void makeOwnMeme(
         @PathVariable Long id
     ) {
@@ -79,5 +79,10 @@ public class MemeController {
     @GetMapping("/rankings/shared")
     public ApiResponse<List<MemeSimpleResponse>> getMostSharedMemes() {
         return ApiResponse.success(memeAggregationLookUpService.getMostFrequentSharedMemes());
+    }
+
+    @GetMapping("/rankings/custom")
+    public ApiResponse<List<MemeSimpleResponse>> getMostCustomMemes() {
+        return ApiResponse.success(memeAggregationLookUpService.getMostFrequentCustomMemes());
     }
 }

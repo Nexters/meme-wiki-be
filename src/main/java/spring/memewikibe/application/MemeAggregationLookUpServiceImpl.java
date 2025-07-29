@@ -33,9 +33,10 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
         return shareLogRepository.findTopMemesByShareCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<MemeSimpleResponse> getMostFrequentCustomMemes() {
-        return List.of();
+        return customLogRepository.findTopMemesByCustomCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
     }
 
     @Override
