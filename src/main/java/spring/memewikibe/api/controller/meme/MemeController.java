@@ -85,4 +85,9 @@ public class MemeController {
     public ApiResponse<List<MemeSimpleResponse>> getMostCustomMemes() {
         return ApiResponse.success(memeAggregationLookUpService.getMostFrequentCustomMemes());
     }
+
+    @GetMapping("/rankings/top-rated")
+    public ApiResponse<List<MemeSimpleResponse>> getTopRatedMemes() {
+        return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
+    }
 }
