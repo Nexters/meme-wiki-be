@@ -11,4 +11,6 @@ public interface MemeLookUpService {
     List<CategoryResponse> getAllCategories();
 
     PageResponse<Cursor, MemeDetailResponse> getMemesByCategory(Long id, Long next, int limit);
+
+    PageResponse<Cursor, MemeDetailResponse> getMemesByQuery(String query, Long next, int limit);
 }
