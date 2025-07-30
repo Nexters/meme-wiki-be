@@ -11,7 +11,7 @@ import spring.memewikibe.infrastructure.MemeShareLogRepository;
 import spring.memewikibe.infrastructure.MemeViewLogRepository;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 
-import static spring.memewikibe.support.error.ErrorType.MEME_NOT_FOUNT;
+import static spring.memewikibe.support.error.ErrorType.MEME_NOT_FOUND;
 
 @Service
 public class MemeAggregationServiceImpl implements MemeAggregationService {
@@ -47,6 +47,6 @@ public class MemeAggregationServiceImpl implements MemeAggregationService {
     }
 
     private Meme getMemeBy(Long memeId) {
-        return memeRepository.findById(memeId).orElseThrow(() -> new MemeWikiApplicationException(MEME_NOT_FOUNT));
+        return memeRepository.findById(memeId).orElseThrow(() -> new MemeWikiApplicationException(MEME_NOT_FOUND));
     }
 }

@@ -41,8 +41,7 @@ public class MemeController {
     public ApiResponse<MemeDetailResponse> getMeme(
         @PathVariable Long id
     ) {
-        // TODO: 상세 조회
-        return null;
+        return ApiResponse.success(memeLookUpService.getMemeById(id));
     }
 
     @ResponseStatus(HttpStatus.ACCEPTED)

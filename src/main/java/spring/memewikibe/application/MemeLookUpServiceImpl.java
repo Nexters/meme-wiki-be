@@ -60,6 +60,14 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
         return createPageResponseBy(foundMemes, limit);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public MemeDetailResponse getMemeById(Long id) {
+        Meme meme = memeRepository.findById(id)
+            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
+        return new MemeDetailResponse(meme.getId(), meme.getTitle(), meme.getUsageContext(), meme.getOrigin(), meme.getTrendPeriod(), meme.getImgUrl(), meme.getHashtags());
+    }
+
     private PageResponse<Cursor, MemeDetailResponse> createPageResponseBy(List<Meme> memes, int limit) {
         Cursor cursor = Cursor.of(memes, limit);
         List<MemeDetailResponse> response = memes.stream()
@@ -83,7 +91,7 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
         }
 
         Meme meme = memeRepository.findById(next)
-            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUNT));
+            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
         return memeCategoryRepository.findByCategoryAndMemeGreaterThanOrderByMemeAsc(category, meme, Limit.of(limit + 1))
             .stream()
             .map(MemeCategory::getMeme)
