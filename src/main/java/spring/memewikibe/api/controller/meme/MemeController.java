@@ -29,13 +29,12 @@ public class MemeController {
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<Cursor, MemeSimpleResponse>> getMemes(
+    public ApiResponse<PageResponse<Cursor, MemeDetailResponse>> getMemes(
         @RequestParam(required = false) Long next,
         @RequestParam(required = false) String query,
         @RequestParam(required = false, defaultValue = "20") int limit
     ) {
-        // TODO: 검색 및 전체조회
-        return null;
+        return ApiResponse.success(memeLookUpService.getMemesByQuery(query, next, limit));
     }
 
     @GetMapping("/{id}")

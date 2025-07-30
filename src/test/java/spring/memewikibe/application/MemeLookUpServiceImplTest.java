@@ -124,4 +124,52 @@ class MemeLookUpServiceImplTest {
             .extracting(MemeDetailResponse::title)
             .containsExactlyInAnyOrder("나만 아니면 돼");
     }
+
+    @Test
+    void 쿼리로_밈을_검색한다_페이지네이션() {
+        // given
+        // ID 순서 보장을 위해 순서대로 저장
+        Meme 밈1 = memeRepository.save(Meme.builder().title("테스트 밈").build());
+        Meme 밈2 = memeRepository.save(Meme.builder().title("테스트 밈입니다").build());
+        Meme 밈3 = memeRepository.save(Meme.builder().title("이것도 테스트 밈").build());
+
+
+        // when
+        // "테스트"가 포함된 밈을 검색, 페이지 크기는 2
+        PageResponse<Cursor, MemeDetailResponse> firstPage = memeLookUpService.getMemesByQuery("테스트", null, 2);
+
+        // then: 첫 페이지 검증 (최신순: 밈3, 밈2)
+        then(firstPage.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+            .containsExactlyInAnyOrder(밈2.getId(), true, 2);
+        then(firstPage.getResults())
+            .hasSize(2)
+            .extracting(MemeDetailResponse::title)
+            .containsExactlyInAnyOrder("이것도 테스트 밈", "테스트 밈입니다");
+
+        // when: 두 번째 페이지 요청
+        PageResponse<Cursor, MemeDetailResponse> secondPage = memeLookUpService.getMemesByQuery("테스트", firstPage.getPaging().getNext(), 2);
+
+        // then: 두 번째 페이지 검증 (나머지: 밈1)
+        then(secondPage.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+            .containsExactlyInAnyOrder(null, false, 1);
+        then(secondPage.getResults())
+            .hasSize(1)
+            .extracting(MemeDetailResponse::title)
+            .containsExactlyInAnyOrder("테스트 밈");
+    }
+
+    @Test
+    void 쿼리로_밈을_검색한다_결과_없음() {
+        // given
+        Meme 나만_아니면_돼 = Meme.builder().title("나만 아니면 돼").build();
+        memeRepository.save(나만_아니면_돼);
+
+        // when
+        PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery("없는검색어", null, 10);
+
+        // then
+        then(response.getResults()).isEmpty();
+        then(response.getPaging().isHasMore()).isFalse();
+        then(response.getPaging().getNext()).isNull();
+    }
 }
