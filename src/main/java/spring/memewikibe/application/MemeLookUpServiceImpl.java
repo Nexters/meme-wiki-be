@@ -1,5 +1,6 @@
 package spring.memewikibe.application;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,6 +9,7 @@ import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.domain.meme.Category;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCategory;
+import spring.memewikibe.domain.meme.event.MemeViewedEvent;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
@@ -24,11 +26,13 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     private final CategoryRepository categoryRepository;
     private final MemeRepository memeRepository;
     private final MemeCategoryRepository memeCategoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public MemeLookUpServiceImpl(CategoryRepository categoryRepository, MemeRepository memeRepository, MemeCategoryRepository memeCategoryRepository) {
+    public MemeLookUpServiceImpl(CategoryRepository categoryRepository, MemeRepository memeRepository, MemeCategoryRepository memeCategoryRepository, ApplicationEventPublisher eventPublisher) {
         this.categoryRepository = categoryRepository;
         this.memeRepository = memeRepository;
         this.memeCategoryRepository = memeCategoryRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -65,6 +69,9 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     public MemeDetailResponse getMemeById(Long id) {
         Meme meme = memeRepository.findById(id)
             .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
+
+        eventPublisher.publishEvent(new MemeViewedEvent(id));
+
         return new MemeDetailResponse(meme.getId(), meme.getTitle(), meme.getUsageContext(), meme.getOrigin(), meme.getTrendPeriod(), meme.getImgUrl(), meme.getHashtags());
     }
 
