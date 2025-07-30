@@ -44,12 +44,28 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Override
     public PageResponse<Cursor, MemeDetailResponse> getMemesByCategory(Long id, Long next, int limit) {
         Category category = getCategoryBy(id);
-        List<Meme> memes = fetchMemesByCategory(category, next, limit);
+        List<Meme> foundMemes = fetchMemesByCategory(category, next, limit);
+
+        return createPageResponseBy(foundMemes, limit);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PageResponse<Cursor, MemeDetailResponse> getMemesByQuery(String query, Long next, int limit) {
+        if (next == null) {
+            List<Meme> foundMemes = memeRepository.findByTitleContainingOrderByIdDesc(query, Limit.of(limit + 1));
+            return createPageResponseBy(foundMemes, limit);
+        }
+        List<Meme> foundMemes = memeRepository.findByTitleContainingAndIdLessThanOrderByIdDesc(query, next, Limit.of(limit + 1));
+        return createPageResponseBy(foundMemes, limit);
+    }
+
+    private PageResponse<Cursor, MemeDetailResponse> createPageResponseBy(List<Meme> memes, int limit) {
+        Cursor cursor = Cursor.of(memes, limit);
         List<MemeDetailResponse> response = memes.stream()
             .map(it -> new MemeDetailResponse(it.getId(), it.getTitle(), it.getUsageContext(), it.getOrigin(), it.getTrendPeriod(), it.getImgUrl(), it.getHashtags()))
+            .limit(limit)
             .toList();
-
-        Cursor cursor = Cursor.of(memes, limit);
         return PageResponse.cursor(cursor, response);
     }
 
