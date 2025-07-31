@@ -1,13 +1,17 @@
-name: Spring Boot CI/CD Pipeline with Docker
+name: Container Registry CI/CD Pipeline (Watchtower Auto-Deploy)
 
 on:
   push:
     branches:
       - master
 
+env:
+  REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
+  IMAGE_NAME: meme-wiki-be
+  
 jobs:
-  build:
-    name: Build
+  build-and-push:
+    name: Build and Push to Registry
     runs-on: ubuntu-latest
 
     steps:
@@ -27,58 +31,36 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew clean build -x test
 
-    - name: Upload JAR artifact
-      uses: actions/upload-artifact@v4
+    - name: Get commit SHA
+      id: vars
+      run: |
+        echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to NCP Container Registry
+      uses: docker/login-action@v3
       with:
-        name: app-jar
-        path: build/libs/*.jar
-        retention-days: 1
+        registry: ${{ env.REGISTRY_URL }}
+        username: ${{ secrets.NCP_ACCESS_KEY }}
+        password: ${{ secrets.NCP_SECRET_KEY }}
 
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download JAR artifact
-      uses: actions/download-artifact@v4
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
       with:
-        name: app-jar
-        path: build/libs
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.SHORT_SHA }}
+          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TIMESTAMP }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
-    - name: List files
-      run: ls -la build/libs
-
-    - name: Copy files to NCP server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.NCP_SERVER_HOST }}
-        username: ${{ secrets.NCP_SERVER_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "build/libs/*.jar"
-        target: "/home/ubuntu/app"
-        strip_components: 2
-        overwrite: true
-
-    - name: Copy deployment files to NCP server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.NCP_SERVER_HOST }}
-        username: ${{ secrets.NCP_SERVER_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "deploy.sh,Dockerfile,docker-compose.yml"
-        target: "/home/ubuntu/app"
-        overwrite: true
-
-    - name: Execute deploy script on NCP server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.NCP_SERVER_HOST }}
-        username: ${{ secrets.NCP_SERVER_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          chmod +x /home/ubuntu/app/deploy.sh
-          /home/ubuntu/app/deploy.sh
+    - name: Deployment completed
+      run: |
+        echo "✅ 이미지 배포 완료: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
+        echo "🐳 Watchtower가 5분 내 자동 배포 시작" 
