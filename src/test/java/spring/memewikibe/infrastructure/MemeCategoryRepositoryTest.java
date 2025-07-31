@@ -2,7 +2,6 @@ package spring.memewikibe.infrastructure;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Limit;
@@ -92,7 +91,7 @@ class MemeCategoryRepositoryTest {
 
     @Description("GreaterThan은 다음 ID부터 조회하는 것이므로, 현재 ID보다 큰 밈 조회")
     @Test
-    void findByCategoryAndMemeGreaterThanOrderByMemeAscTest() {
+    void findByCategoryAndMemeGreaterThanOrderByMemeDescTest() {
         // given
         Category 예능 = Category.builder()
             .name("예능")
@@ -143,13 +142,13 @@ class MemeCategoryRepositoryTest {
                 .build()));
 
         // when
-        List<MemeCategory> memeCategories = sut.findByCategoryAndMemeGreaterThanOrderByMemeAsc(예능, 나만_아니면_돼, Limit.of(1));
+        List<MemeCategory> memeCategories = sut.findByCategoryAndMemeGreaterThanOrderByMemeDesc(예능, 무야호.getId(), Limit.of(1));
 
         // then
         BDDAssertions.then(memeCategories).hasSize(1)
             .extracting(MemeCategory::getMeme)
             .extracting(Meme::getTitle)
-            .containsExactly("무야호");
+            .containsExactly("나만 아니면 돼");
 
     }
 }
