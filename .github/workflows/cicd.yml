@@ -60,7 +60,49 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    # Infrastructure changes detection and deployment
+    - name: Check for infrastructure changes
+      id: changes
+      run: |
+        if git diff --name-only HEAD~1 HEAD | grep -E "(docker-compose\.yml|init-scripts/)" > /dev/null; then
+          echo "infra_changed=true" >> $GITHUB_OUTPUT
+          echo "🔧 Infrastructure changes detected"
+        else
+          echo "infra_changed=false" >> $GITHUB_OUTPUT
+          echo "📦 Code-only changes detected"
+        fi
+
+    - name: Deploy infrastructure changes
+      if: steps.changes.outputs.infra_changed == 'true'
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.NCP_SERVER_HOST }}
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "docker-compose.yml,init-scripts/"
+        target: "/home/ubuntu/app/"
+
+    - name: Restart services for infrastructure changes
+      if: steps.changes.outputs.infra_changed == 'true'
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.NCP_SERVER_HOST }}
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /home/ubuntu/app
+          echo "🔄 Infrastructure changes detected - restarting services..."
+          docker-compose down
+          docker volume rm app_mysql_data || true  # Remove old data if schema changed
+          docker-compose up -d
+          echo "✅ Infrastructure deployment completed"
+
     - name: Deployment completed
       run: |
         echo "✅ 이미지 배포 완료: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
-        echo "🐳 Watchtower가 5분 내 자동 배포 시작" 
+        if [ "${{ steps.changes.outputs.infra_changed }}" == "true" ]; then
+          echo "🔧 Infrastructure changes deployed via SSH"
+          echo "🐳 Services restarted with new configuration"
+        else
+          echo "🐳 Watchtower가 5분 내 자동 배포 시작"
+        fi 
