@@ -76,13 +76,13 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
 
         eventPublisher.publishEvent(new MemeViewedEvent(id));
 
-        return new MemeDetailResponse(meme.getId(), meme.getTitle(), meme.getUsageContext(), meme.getOrigin(), meme.getTrendPeriod(), meme.getImgUrl(), meme.getHashtags());
+        return MemeDetailResponse.from(meme);
     }
 
     private PageResponse<Cursor, MemeDetailResponse> createPageResponseBy(List<Meme> memes, int limit) {
         Cursor cursor = Cursor.of(memes, limit);
         List<MemeDetailResponse> response = memes.stream()
-            .map(it -> new MemeDetailResponse(it.getId(), it.getTitle(), it.getUsageContext(), it.getOrigin(), it.getTrendPeriod(), it.getImgUrl(), it.getHashtags()))
+            .map(MemeDetailResponse::from)
             .limit(limit)
             .toList();
         return PageResponse.cursor(cursor, response);
