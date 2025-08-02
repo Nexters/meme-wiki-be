@@ -1,12 +1,15 @@
 package spring.memewikibe.infrastructure;
 
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLSubQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Repository;
+import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeAggregationResult;
 
 import java.time.Duration;
@@ -76,5 +79,29 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
                 meme.id.desc())
             .limit(limit)
             .fetch();
+    }
+
+    @Override
+    public List<Meme> findByTitleDynamicContainingOrderByIdDesc(String title, Limit limit) {
+        return queryFactory
+            .selectFrom(meme)
+            .where(titleContains(title))
+            .orderBy(meme.id.desc())
+            .limit(limit.max())
+            .fetch();
+    }
+
+    @Override
+    public List<Meme> findByTitleDynamicContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit) {
+        return queryFactory
+            .selectFrom(meme)
+            .where(titleContains(title), meme.id.lt(lastId))
+            .orderBy(meme.id.desc())
+            .limit(limit.max())
+            .fetch();
+    }
+
+    private BooleanExpression titleContains(String title) {
+        return title != null && !title.trim().isEmpty() ? meme.title.containsIgnoreCase(title) : null;
     }
 }
