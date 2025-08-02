@@ -2,12 +2,12 @@
 create table meme
 (
     id            bigint auto_increment primary key,
-    created_at    timestamp(6),
-    updated_at    timestamp(6),
+    created_at    timestamp(6) default current_timestamp,
+    updated_at    timestamp(6) default current_timestamp,
     title         varchar(255) not null comment '밈 제목',
     origin        text null comment '밈의 유래',
     usage_context text null comment '밈 사용 맥락(언제 사용하는지 상황 맥락)',
-    trend_period varchar(10) comment '밈 유행 기간',
+    trend_period varchar(10) comment '밈 유행 기간 (YYYY)',
     img_url       varchar(255) null comment '이미지 url',
     hashtags      text null comment '해시태그 (json 형태로 저장)',
 );
@@ -16,8 +16,8 @@ create table meme
 create table meme_view_log
 (
     id         bigint auto_increment primary key,
-    created_at timestamp(6),
-    updated_at timestamp(6),
+    created_at timestamp(6) default current_timestamp,
+    updated_at timestamp(6) default current_timestamp,
     meme_id    bigint not null,
 );
 
@@ -25,8 +25,8 @@ create table meme_view_log
 create table meme_custom_log
 (
     id         bigint auto_increment primary key,
-    created_at timestamp(6),
-    updated_at timestamp(6),
+    created_at timestamp(6) default current_timestamp,
+    updated_at timestamp(6) default current_timestamp,
     meme_id    bigint not null,
 );
 
@@ -34,8 +34,8 @@ create table meme_custom_log
 create table meme_share_log
 (
     id         bigint auto_increment primary key,
-    created_at timestamp(6),
-    updated_at timestamp(6),
+    created_at timestamp(6) default current_timestamp,
+    updated_at timestamp(6) default current_timestamp,
     meme_id    bigint not null,
 );
 
@@ -43,8 +43,8 @@ create table meme_share_log
 create table category
 (
     id         bigint auto_increment primary key,
-    created_at timestamp(6),
-    updated_at timestamp(6),
+    created_at timestamp(6) default current_timestamp,
+    updated_at timestamp(6) default current_timestamp,
     name       varchar(255) not null comment '카테고리 이름',
     img_url    varchar(255) not null comment '카테고리 대표 이미지 URL',
 
@@ -55,8 +55,8 @@ create table category
 create table meme_category
 (
     id          bigint auto_increment primary key,
-    created_at  timestamp(6),
-    updated_at  timestamp(6),
+    created_at timestamp(6) default current_timestamp,
+    updated_at timestamp(6) default current_timestamp,
     meme_id     bigint not null,
     category_id bigint not null,
 )
