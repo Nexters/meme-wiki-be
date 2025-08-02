@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - feature/**
 
 env:
   REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
@@ -82,6 +81,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "docker-compose.yml,init-scripts/"
         target: "/home/ubuntu/app/"
+        overwrite: true
 
     - name: Restart services for infrastructure changes
       if: steps.changes.outputs.infra_changed == 'true'
