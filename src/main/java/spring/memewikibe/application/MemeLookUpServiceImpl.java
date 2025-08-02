@@ -48,7 +48,7 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Override
     public PageResponse<Cursor, MemeDetailResponse> getMemesByCategory(Long id, Long next, int limit) {
         int validatedLimit = Math.min(Math.max(limit, 1), 30);
-        
+
         Category category = getCategoryBy(id);
         List<Meme> foundMemes = fetchMemesByCategory(category, next, validatedLimit);
 
@@ -59,12 +59,12 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Override
     public PageResponse<Cursor, MemeDetailResponse> getMemesByQuery(String query, Long next, int limit) {
         int validatedLimit = Math.min(Math.max(limit, 1), 30);
-        
+
         if (next == null) {
-            List<Meme> foundMemes = memeRepository.findByTitleContainingOrderByIdDesc(query, Limit.of(validatedLimit + 1));
+            List<Meme> foundMemes = memeRepository.findByTitleDynamicContainingOrderByIdDesc(query, Limit.of(validatedLimit + 1));
             return createPageResponseBy(foundMemes, validatedLimit);
         }
-        List<Meme> foundMemes = memeRepository.findByTitleContainingAndIdLessThanOrderByIdDesc(query, next, Limit.of(validatedLimit + 1));
+        List<Meme> foundMemes = memeRepository.findByTitleDynamicContainingAndIdLessThanOrderByIdDesc(query, next, Limit.of(validatedLimit + 1));
         return createPageResponseBy(foundMemes, validatedLimit);
     }
 
