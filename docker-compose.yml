@@ -20,6 +20,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    ports:
+      - "3306:3306"
 
   # 메인 애플리케이션
   app:

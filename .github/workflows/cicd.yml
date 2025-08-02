@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - feature/**
 
 env:
   REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
