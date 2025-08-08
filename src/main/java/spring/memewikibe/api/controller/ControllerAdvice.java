@@ -2,9 +2,11 @@ package spring.memewikibe.api.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import spring.memewikibe.support.error.ErrorType;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 import spring.memewikibe.support.response.ApiResponse;
@@ -22,6 +24,16 @@ public class ControllerAdvice {
             default -> log.info("CustomException : {}", e.getMessage(), e);
         }
         return new ResponseEntity<>(ApiResponse.error(e.getErrorType(), e.getData()), e.getErrorType().getStatus());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException e) {
+        if (e.getMessage().contains("favicon.ico")) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        log.warn("Static resource not found: {}", e.getMessage());
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
