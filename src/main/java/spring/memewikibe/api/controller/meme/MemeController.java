@@ -1,13 +1,22 @@
 package spring.memewikibe.api.controller.meme;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.application.MemeAggregationLookUpCacheProxyService;
 import spring.memewikibe.application.MemeAggregationLookUpService;
 import spring.memewikibe.application.MemeAggregationService;
+import spring.memewikibe.application.MemeCreateService;
 import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
@@ -22,11 +31,13 @@ public class MemeController {
     private final MemeAggregationService aggregationService;
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
+    private final MemeCreateService memeCreateService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, MemeCreateService memeCreateService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
+        this.memeCreateService = memeCreateService;
     }
 
     @GetMapping
@@ -88,5 +99,24 @@ public class MemeController {
     @GetMapping("/rankings/top-rated")
     public ApiResponse<List<MemeSimpleResponse>> getTopRatedMemes() {
         return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
+    }
+
+    @Operation(
+        summary = "밈 생성",
+        requestBody = @RequestBody(
+            content = @Content(
+                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                encoding = {
+                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
+                    @Encoding(name = "image", contentType = "image/*")
+                }
+            )
+        )
+    )
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Long> createMeme(
+        @RequestPart("request") @Valid MemeCreateRequest request,
+        @RequestPart("image") MultipartFile imageFile) {
+        return ApiResponse.success(memeCreateService.createMeme(request, imageFile));
     }
 }
