@@ -11,11 +11,11 @@ public record MemeCreateRequest(
     String title,
 
     @NotBlank(message = "출처는 필수입니다.")
-    @Size(max = 200, message = "출처는 200자를 초과할 수 없습니다.")
+    @Size(max = 1000, message = "출처는 1000자를 초과할 수 없습니다.")
     String origin,
 
     @NotBlank(message = "사용 맥락은 필수입니다.")
-    @Size(max = 500, message = "사용 맥락은 500자를 초과할 수 없습니다.")
+    @Size(max = 1000, message = "사용 맥락은 1000자를 초과할 수 없습니다.")
     String usageContext,
 
     @NotBlank(message = "트렌드 기간은 필수입니다.")
