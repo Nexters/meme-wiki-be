@@ -33,6 +33,11 @@ dependencies {
     implementation 'io.github.openfeign.querydsl:querydsl-jpa:7.0'
     implementation 'io.github.openfeign.querydsl:querydsl-apt:7.0'
     annotationProcessor 'io.github.openfeign.querydsl:querydsl-apt:7.0:jakarta'
+
+    implementation 'software.amazon.awssdk:s3:2.24.12'
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'commons-io:commons-io:2.15.1'
 }
 
 tasks.named('test') {
