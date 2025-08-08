@@ -8,7 +8,7 @@ on:
 env:
   REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
   IMAGE_NAME: meme-wiki-be
-  
+
 jobs:
   build-and-push:
     name: Build and Push to Registry
@@ -93,10 +93,23 @@ jobs:
         script: |
           cd /home/ubuntu/app
           echo "🔄 Infrastructure changes detected - restarting services..."
-          docker-compose down
-          docker volume rm app_mysql_data || true  # Remove old data if schema changed
-          docker-compose up -d
-          echo "✅ Infrastructure deployment completed"
+          # Export runtime env vars from GitHub Secrets (no .env file needed)
+          export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
+          export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
+          export MYSQL_USER='${{ secrets.MYSQL_USER }}'
+          export MYSQL_PASSWORD='${{ secrets.MYSQL_PASSWORD }}'
+
+          export NCP_REGISTRY_URL='${{ secrets.NCP_REGISTRY_URL }}'
+
+          export CLOUDFLARE_R2_ACCESS_KEY_ID='${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}'
+          export CLOUDFLARE_R2_SECRET_ACCESS_KEY='${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}'
+          export CLOUDFLARE_R2_ENDPOINT='${{ secrets.CLOUDFLARE_R2_ENDPOINT }}'
+          export CLOUDFLARE_R2_BUCKET_NAME='${{ secrets.CLOUDFLARE_R2_BUCKET_NAME }}'
+
+          docker compose pull app
+          docker compose up -d app
+          docker compose ps
+          echo "✅ App service restarted"
 
     - name: Deployment completed
       run: |
