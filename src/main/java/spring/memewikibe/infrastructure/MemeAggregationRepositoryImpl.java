@@ -9,6 +9,7 @@ import com.querydsl.jpa.JPQLSubQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Repository;
+import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeAggregationResult;
 
@@ -98,6 +99,21 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
             .where(titleContains(title), meme.id.lt(lastId))
             .orderBy(meme.id.desc())
             .limit(limit.max())
+            .fetch();
+    }
+
+    @Override
+    public List<MemeSimpleResponse> findLatestMemesExcludingIds(List<Long> excludeIds, int limit) {
+        return queryFactory
+            .select(Projections.constructor(MemeSimpleResponse.class,
+                meme.id,
+                meme.title,
+                meme.imgUrl
+            ))
+            .from(meme)
+            .where(excludeIds.isEmpty() ? null : meme.id.notIn(excludeIds))
+            .orderBy(meme.id.desc())
+            .limit(limit)
             .fetch();
     }
 

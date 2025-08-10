@@ -10,6 +10,7 @@ import spring.memewikibe.infrastructure.MemeShareLogRepository;
 import spring.memewikibe.infrastructure.MemeViewLogRepository;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,13 +21,11 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     private final static int MOST_POPULAR_MEMES_COUNT = 6;
 
     private final MemeCustomLogRepository customLogRepository;
-    private final MemeViewLogRepository viewLogRepository;
     private final MemeShareLogRepository shareLogRepository;
     private final MemeRepository memeRepository;
 
     public MemeAggregationLookUpServiceImpl(MemeCustomLogRepository customLogRepository, MemeViewLogRepository viewLogRepository, MemeShareLogRepository shareLogRepository, MemeRepository memeRepository) {
         this.customLogRepository = customLogRepository;
-        this.viewLogRepository = viewLogRepository;
         this.shareLogRepository = shareLogRepository;
         this.memeRepository = memeRepository;
     }
@@ -35,21 +34,43 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     @Transactional(readOnly = true)
     @Override
     public List<MemeSimpleResponse> getMostFrequentSharedMemes() {
-        return shareLogRepository.findTopMemesByShareCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
+        List<MemeSimpleResponse> response = shareLogRepository.findTopMemesByShareCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
+        if (response.size() < AGGREGATION_ITEM_COUNT) {
+            return fillWithLatestMemes(response, AGGREGATION_ITEM_COUNT);
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<MemeSimpleResponse> getMostFrequentCustomMemes() {
-        return customLogRepository.findTopMemesByCustomCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
+        List<MemeSimpleResponse> response = customLogRepository.findTopMemesByCustomCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
+        if (response.size() < AGGREGATION_ITEM_COUNT) {
+            return fillWithLatestMemes(response, AGGREGATION_ITEM_COUNT);
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<MemeSimpleResponse> getMostPopularMemes() {
         List<MemeAggregationResult> aggregationResult = memeRepository.findTopRatedMemesBy(AGGREGATION_DURATION_PERIOD, MOST_POPULAR_MEMES_COUNT);
-        return aggregationResult.stream()
+        List<MemeSimpleResponse> response = aggregationResult.stream()
             .map(it -> new MemeSimpleResponse(it.id(), it.title(), it.imgUrl()))
             .toList();
+        if (response.size() < MOST_POPULAR_MEMES_COUNT) {
+            return fillWithLatestMemes(response, MOST_POPULAR_MEMES_COUNT);
+        }
+        return response;
+    }
+
+    private List<MemeSimpleResponse> fillWithLatestMemes(List<MemeSimpleResponse> originalList, int targetCount) {
+        int remainingCount = targetCount - originalList.size();
+        List<Long> existingIds = originalList.stream().map(MemeSimpleResponse::id).toList();
+        List<MemeSimpleResponse> latestMemes = memeRepository.findLatestMemesExcludingIds(existingIds, remainingCount);
+
+        List<MemeSimpleResponse> result = new ArrayList<>(originalList);
+        result.addAll(latestMemes);
+        return result;
     }
 }
