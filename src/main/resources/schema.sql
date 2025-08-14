@@ -60,3 +60,18 @@ create table meme_category
     meme_id     bigint not null,
     category_id bigint not null,
 )
+
+-- 밈 퀴즈 테이블
+create table meme_quiz
+(
+    id          bigint auto_increment primary key,
+    created_at  timestamp(6) default current_timestamp,
+    updated_at  timestamp(6) default current_timestamp,
+    question    text not null,
+    option_1    varchar(255) not null,
+    option_2    varchar(255) not null,
+    option_3    varchar(255) not null,
+    option_4    varchar(255) not null,
+    answer      int not null,
+    image_url   varchar(255) null,
+)
