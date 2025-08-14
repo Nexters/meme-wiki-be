@@ -13,11 +13,8 @@ import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
-import spring.memewikibe.application.MemeAggregationLookUpCacheProxyService;
-import spring.memewikibe.application.MemeAggregationLookUpService;
-import spring.memewikibe.application.MemeAggregationService;
-import spring.memewikibe.application.MemeCreateService;
-import spring.memewikibe.application.MemeLookUpService;
+import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
+import spring.memewikibe.application.*;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
@@ -32,12 +29,14 @@ public class MemeController {
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
     private final MemeCreateService memeCreateService;
+    private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, MemeCreateService memeCreateService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, MemeCreateService memeCreateService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.memeCreateService = memeCreateService;
+        this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
     }
 
     @GetMapping
@@ -87,8 +86,8 @@ public class MemeController {
     }
 
     @GetMapping("/rankings/shared")
-    public ApiResponse<List<MemeSimpleResponse>> getMostSharedMemes() {
-        return ApiResponse.success(memeAggregationLookUpService.getMostFrequentSharedMemes());
+    public ApiResponse<MostSharedMemes> getMostSharedMemes() {
+        return ApiResponse.success(sharedMemeScheduleCacheService.getMostSharedMemes());
     }
 
     @GetMapping("/rankings/custom")
