@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpService {
 
-    private final static Duration AGGREGATION_DURATION_PERIOD = Duration.ofDays(1);
+    private final static Duration AGGREGATION_DURATION_PERIOD = Duration.ofDays(7);
     private final static int AGGREGATION_ITEM_COUNT = 10;
     private final static int MOST_POPULAR_MEMES_COUNT = 6;
 
