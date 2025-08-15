@@ -95,13 +95,13 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
 
     private List<Meme> fetchMemesByCategory(Category category, Long next, int limit) {
         if (next == null) {
-            return memeCategoryRepository.findByCategory(category, Limit.of(limit + 1))
+            return memeCategoryRepository.findByCategoryOrderByMemeIdDesc(category, Limit.of(limit + 1))
                 .stream()
                 .map(MemeCategory::getMeme)
                 .toList();
         }
 
-        return memeCategoryRepository.findByCategoryAndMemeGreaterThanOrderByMemeDesc(category, next, Limit.of(limit + 1))
+        return memeCategoryRepository.findByCategoryAndMemeIdLessThanOrderByMemeIdDesc(category, next, Limit.of(limit + 1))
             .stream()
             .map(MemeCategory::getMeme)
             .toList();
