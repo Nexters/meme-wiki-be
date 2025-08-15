@@ -121,11 +121,11 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByCategory(예능.getId(), null, 1);
         // then
         then(response.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
-            .containsExactlyInAnyOrder(나만_아니면_돼.getId(), true, 1);
+            .containsExactlyInAnyOrder(무야호.getId(), true, 1);
         then(response.getPaging().getNext()).isNotNull();
         then(response.getResults()).hasSize(1)
             .extracting(MemeDetailResponse::title)
-            .containsExactlyInAnyOrder("나만 아니면 돼");
+            .containsExactlyInAnyOrder("무야호");
     }
 
     @Test

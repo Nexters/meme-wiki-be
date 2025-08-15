@@ -11,11 +11,12 @@ import java.util.List;
 
 public interface MemeCategoryRepository extends JpaRepository<MemeCategory, Long> {
     @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.id < :lastMemeId ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryAndMemeGreaterThanOrderByMemeDesc(
+    List<MemeCategory> findByCategoryAndMemeIdLessThanOrderByMemeIdDesc(
         @Param("category") Category category, 
         @Param("lastMemeId") Long lastMemeId, 
         Limit limit
     );
 
-    List<MemeCategory> findByCategory(@Param("category") Category category, Limit limit);
+    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category ORDER BY mc.meme.id DESC")
+    List<MemeCategory> findByCategoryOrderByMemeIdDesc(@Param("category") Category category, Limit limit);
 }

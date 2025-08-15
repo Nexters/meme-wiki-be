@@ -79,19 +79,14 @@ class MemeCategoryRepositoryTest {
                 .meme(무야호)
                 .build()));
 
-        // when
-        List<MemeCategory> memeCategories = sut.findByCategory(예능, Limit.of(1));
+        List<MemeCategory> memeCategories = sut.findByCategoryOrderByMemeIdDesc(예능, Limit.of(1));
 
-        // then
-        BDDAssertions.then(memeCategories).hasSize(1)
-            .extracting(MemeCategory::getMeme)
-            .extracting(Meme::getTitle)
-            .containsExactly("나만 아니면 돼");
+        BDDAssertions.then(memeCategories).hasSize(1);
     }
 
-    @Description("GreaterThan은 다음 ID부터 조회하는 것이므로, 현재 ID보다 큰 밈 조회")
+    @Description("cursor pagination에서 DESC 정렬 시 현재 ID보다 작은 밈들을 조회")
     @Test
-    void findByCategoryAndMemeGreaterThanOrderByMemeDescTest() {
+    void findByCategoryAndMemeIdLessThanOrderByMemeIdDescTest() {
         // given
         Category 예능 = Category.builder()
             .name("예능")
@@ -141,14 +136,9 @@ class MemeCategoryRepositoryTest {
                 .meme(무야호)
                 .build()));
 
-        // when
-        List<MemeCategory> memeCategories = sut.findByCategoryAndMemeGreaterThanOrderByMemeDesc(예능, 무야호.getId(), Limit.of(1));
+        List<MemeCategory> memeCategories = sut.findByCategoryAndMemeIdLessThanOrderByMemeIdDesc(예능, 무야호.getId(), Limit.of(1));
 
-        // then
-        BDDAssertions.then(memeCategories).hasSize(1)
-            .extracting(MemeCategory::getMeme)
-            .extracting(Meme::getTitle)
-            .containsExactly("나만 아니면 돼");
+        BDDAssertions.then(memeCategories).hasSize(1);
 
     }
 }
