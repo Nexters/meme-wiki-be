@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밈위키 관리자 로그인</title>
+    <link href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .login-body {
+            padding: 2rem;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="login-card">
+                    <div class="login-header">
+                        <div class="emoji">🎭</div>
+                        <h2 class="mb-0">밈위키 관리자</h2>
+                        <p class="mb-0 opacity-75">관리자 인증이 필요합니다</p>
+                    </div>
+                    
+                    <div class="login-body">
+                        <!-- 에러 메시지 -->
+                        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span th:text="${error}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- 로그인 폼 -->
+                        <form th:action="@{/admin/login}" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label fw-bold">사용자명</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="username" 
+                                       name="username" 
+                                       placeholder="관리자 사용자명을 입력하세요"
+                                       required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-bold">비밀번호</label>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="비밀번호를 입력하세요"
+                                       required>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-login btn-lg">
+                                    🔐 로그인
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="bi bi-shield-lock"></i>
+                                인증된 관리자만 접근할 수 있습니다
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 자동 포커스 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').focus();
+            
+            // 엔터 키로 폼 제출
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.querySelector('form').submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

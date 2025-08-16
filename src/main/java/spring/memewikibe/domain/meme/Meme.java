@@ -1,5 +1,6 @@
 package spring.memewikibe.domain.meme;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.Builder;

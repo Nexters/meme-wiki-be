@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Wiki</title>
+    <!-- Bootstrap CSS -->
+    <link href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/custom.css" rel="stylesheet" th:if="${#strings.length('css/custom.css') > 0}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-emoji-laughing"></i> Meme Wiki
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/memes">밈 목록</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/api/quiz">퀴즈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/swagger-ui/index.html">API 문서</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="jumbotron bg-light p-5 rounded-3">
+                    <h1 class="display-4">밈 위키에 오신 것을 환영합니다! 🎉</h1>
+                    <p class="lead">다양한 밈들을 탐색하고, 퀴즈를 풀어보세요!</p>
+                    <hr class="my-4">
+                    <p>Bootstrap을 사용한 빠르고 반응형 UI로 구성되었습니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-collection"></i> 밈 탐색
+                        </h5>
+                        <p class="card-text">다양한 카테고리의 밈들을 둘러보세요.</p>
+                        <a href="/api/memes" class="btn btn-primary">밈 보기</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-question-circle"></i> 퀴즈
+                        </h5>
+                        <p class="card-text">재미있는 밈 퀴즈에 도전해보세요!</p>
+                        <a href="/api/quiz" class="btn btn-success">퀴즈 시작</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-gear"></i> API 문서
+                        </h5>
+                        <p class="card-text">개발자를 위한 API 문서를 확인하세요.</p>
+                        <a href="/swagger-ui/index.html" class="btn btn-info">API 문서</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2024 Meme Wiki. Bootstrap으로 빠르게 제작된 UI입니다.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="/webjars/jquery/3.7.1/jquery.min.js"></script>
+</body>
+</html>
