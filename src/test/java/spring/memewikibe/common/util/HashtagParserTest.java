@@ -47,4 +47,13 @@ class HashtagParserTest {
 
         assertThat(result).isEmpty();
     }
+
+    @Test
+    void Json형식으로_변환한다() {
+        String hashtags = "#퀸은울지않아, #이효리, #화사, #댄스가수유랑단, #자존감, #명언, #걸크러쉬";
+
+        String result = HashtagParser.toJson(hashtags);
+
+        assertThat(result).isEqualTo("[\"#퀸은울지않아, #이효리, #화사, #댄스가수유랑단, #자존감, #명언, #걸크러쉬\"]");
+    }
 }

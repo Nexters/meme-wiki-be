@@ -22,4 +22,15 @@ public class HashtagParser {
             return Collections.emptyList();
         }
     }
+
+    public static String toJson(String hashtags) {
+        if (hashtags == null || hashtags.trim().isEmpty()) {
+            return "[]";
+        }
+        try {
+            return objectMapper.writeValueAsString(Collections.singletonList(hashtags));
+        } catch (JsonProcessingException e) {
+            return "[]";
+        }
+    }
 }
