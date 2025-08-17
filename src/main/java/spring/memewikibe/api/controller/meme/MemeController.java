@@ -1,15 +1,7 @@
 package spring.memewikibe.api.controller.meme;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Encoding;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
@@ -21,6 +13,13 @@ import spring.memewikibe.support.response.PageResponse;
 
 import java.util.List;
 
+/**
+ * 밈 조회 및 상호작용 API
+ * 
+ * 📝 밈 생성 기능은 관리자 페이지에서만 가능합니다.
+ * - 관리자 로그인: GET /admin/login
+ * - 밈 생성: POST /admin/memes (관리자 인증 필요)
+ */
 @RestController
 @RequestMapping("/api/memes")
 public class MemeController {
@@ -28,14 +27,12 @@ public class MemeController {
     private final MemeAggregationService aggregationService;
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
-    private final MemeCreateService memeCreateService;
     private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, MemeCreateService memeCreateService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
-        this.memeCreateService = memeCreateService;
         this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
     }
 
@@ -100,22 +97,6 @@ public class MemeController {
         return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
     }
 
-    @Operation(
-        summary = "밈 생성",
-        requestBody = @RequestBody(
-            content = @Content(
-                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                encoding = {
-                    @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
-                    @Encoding(name = "image", contentType = "image/*")
-                }
-            )
-        )
-    )
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Long> createMeme(
-        @RequestPart("request") @Valid MemeCreateRequest request,
-        @RequestPart("image") MultipartFile imageFile) {
-        return ApiResponse.success(memeCreateService.createMeme(request, imageFile));
-    }
+    // 밈 생성 기능은 관리자 페이지에서만 가능합니다.
+    // POST /admin/memes 를 사용하세요.
 }

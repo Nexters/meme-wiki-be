@@ -26,6 +26,10 @@ cloudflare:
     endpoint: ${CLOUDFLARE_R2_ENDPOINT:}
     bucket-name: ${CLOUDFLARE_R2_BUCKET_NAME:}
 
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin123}
+
 ---
 spring.config.activate.on-profile: local
 
@@ -47,7 +51,7 @@ spring:
     username: sa
   sql:
     init:
-      mode: never
+      mode: always
 
 ---
 spring.config.activate.on-profile: dev
