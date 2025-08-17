@@ -10,6 +10,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.application.ImageUploadService;
+import spring.memewikibe.application.MemeLookUpService;
+import spring.memewikibe.application.MemeCreateService;
+import spring.memewikibe.api.controller.meme.response.CategoryResponse;
+import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
+import spring.memewikibe.domain.meme.MemeCategory;
+import spring.memewikibe.infrastructure.CategoryRepository;
+import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
@@ -23,6 +30,10 @@ public class AdminController {
 
     private final MemeRepository memeRepository;
     private final ImageUploadService imageUploadService;
+    private final MemeLookUpService memeLookUpService;
+    private final MemeCreateService memeCreateService;
+    private final CategoryRepository categoryRepository;
+    private final MemeCategoryRepository memeCategoryRepository;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -82,10 +93,14 @@ public class AdminController {
         }
 
         List<Meme> memes = memeRepository.findAllByOrderByIdDesc();
+        List<CategoryResponse> categories = memeLookUpService.getAllCategories();
+        
         model.addAttribute("memes", memes);
+        model.addAttribute("categories", categories);
         model.addAttribute("totalCount", memes.size());
         
-        log.info("Admin accessing memes page. Total memes: {}", memes.size());
+        log.info("Admin accessing memes page. Total memes: {}, Total categories: {}", 
+                 memes.size(), categories.size());
         return "admin/memes";
     }
 
@@ -100,6 +115,7 @@ public class AdminController {
                          @RequestParam(required = false) String imgUrl,
                          @RequestParam(required = false) MultipartFile imageFile,
                          @RequestParam(required = false) String trendPeriod,
+                         @RequestParam(required = false) List<Long> categoryIds,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         
@@ -120,21 +136,54 @@ public class AdminController {
                 log.info("🔗 이미지 URL 사용: {}", finalImgUrl);
             }
 
-            Meme meme = Meme.builder()
-                    .title(title.trim())
-                    .origin(origin.trim())
-                    .usageContext(usageContext.trim())
-                    .hashtags(hashtags.trim())
-                    .imgUrl(finalImgUrl)
-                    .trendPeriod(trendPeriod != null ? trendPeriod.trim() : null)
-                    .build();
+            // MemeCreateRequest 생성 (trendPeriod는 필수이므로 기본값 설정)
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
+                ? trendPeriod.trim() : "2024";
+                
+            MemeCreateRequest createRequest = new MemeCreateRequest(
+                title.trim(),
+                origin.trim(),
+                usageContext.trim(),
+                validTrendPeriod,
+                hashtags.trim(),
+                categoryIds != null ? categoryIds : List.of()
+            );
 
-            Meme savedMeme = memeRepository.save(meme);
+            // 밈 생성 (카테고리 포함)
+            Long memeId;
+            if (imageFile != null && !imageFile.isEmpty()) {
+                memeId = memeCreateService.createMeme(createRequest, imageFile);
+            } else {
+                // 이미지 파일이 없는 경우 기존 방식 사용
+                Meme meme = Meme.builder()
+                        .title(title.trim())
+                        .origin(origin.trim())
+                        .usageContext(usageContext.trim())
+                        .hashtags(hashtags.trim())
+                        .imgUrl(finalImgUrl)
+                        .trendPeriod(validTrendPeriod)
+                        .build();
+
+                Meme savedMeme = memeRepository.save(meme);
+                memeId = savedMeme.getId();
+                
+                // 카테고리 연결
+                if (categoryIds != null && !categoryIds.isEmpty()) {
+                    categoryRepository.findAllById(categoryIds)
+                        .forEach(category -> {
+                            MemeCategory memeCategory = MemeCategory.builder()
+                                .meme(savedMeme)
+                                .category(category)
+                                .build();
+                            memeCategoryRepository.save(memeCategory);
+                        });
+                }
+            }
             
-            log.info("✨ New meme added by admin: id={}, title={}, imgUrl={}", 
-                     savedMeme.getId(), savedMeme.getTitle(), savedMeme.getImgUrl());
+            log.info("✨ New meme added by admin: id={}, title={}, categories={}", 
+                     memeId, title.trim(), categoryIds);
             redirectAttributes.addFlashAttribute("success", 
-                "밈이 성공적으로 추가되었습니다! (ID: " + savedMeme.getId() + ")");
+                "밈이 성공적으로 추가되었습니다! (ID: " + memeId + ")");
             
         } catch (Exception e) {
             log.error("❌ Failed to add new meme", e);

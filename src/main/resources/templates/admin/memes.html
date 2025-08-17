@@ -148,9 +148,42 @@
                     <p class="mb-0">밈 추가/삭제</p>
                 </div>
                 <div class="col-md-4">
-                    <div class="emoji">🎯</div>
-                    <h3>RAG</h3>
-                    <p class="mb-0">AI 추천 시스템</p>
+                    <div class="emoji">📂</div>
+                    <h3>카테고리</h3>
+                    <p class="mb-0">분류 관리</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 카테고리 가이드 -->
+        <div class="row mb-4" th:if="${not #lists.isEmpty(categories)}">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📂 현재 등록된 카테고리</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div th:each="category : ${categories}" class="col-md-3 mb-3">
+                                <div class="p-3 bg-light rounded text-center">
+                                    <img th:if="${category.imgUrl}" 
+                                         th:src="${category.imgUrl}" 
+                                         th:alt="${category.name}"
+                                         class="mb-2"
+                                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
+                                    <h6 class="fw-bold text-primary" th:text="|ID: ${category.id}|">ID: 1</h6>
+                                    <p class="mb-0 fw-bold" th:text="${category.name}">카테고리명</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mb-0">
+                            <small>
+                                <strong>💡 팁:</strong> 
+                                위의 카테고리 ID를 참고해서 밈에 적절한 카테고리를 지정해주세요.
+                                밈의 성격과 사용 맥락에 따라 적절한 카테고리를 선택하세요.
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -202,6 +235,38 @@
                                        name="hashtags" 
                                        placeholder="예: #허무 #망함 #폭망 #무한도전"
                                        required>
+                            </div>
+                            
+                            <!-- 카테고리 선택 -->
+                            <div class="mb-3" th:if="${not #lists.isEmpty(categories)}">
+                                <label for="categoryIds" class="form-label fw-bold">카테고리 선택</label>
+                                <div class="card border-light bg-light">
+                                    <div class="card-body p-3">
+                                        <div class="row">
+                                            <div th:each="category : ${categories}" class="col-6 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" 
+                                                           type="checkbox" 
+                                                           th:id="|category_${category.id}|"
+                                                           name="categoryIds" 
+                                                           th:value="${category.id}">
+                                                    <label class="form-check-label d-flex align-items-center" 
+                                                           th:for="|category_${category.id}|">
+                                                        <img th:if="${category.imgUrl}" 
+                                                             th:src="${category.imgUrl}" 
+                                                             th:alt="${category.name}"
+                                                             class="me-2"
+                                                             style="width: 20px; height: 20px; object-fit: cover; border-radius: 50%;">
+                                                        <small th:text="|${category.name} (ID: ${category.id})|">카테고리명 (ID: 1)</small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-text">
+                                            <small>※ 해당하는 카테고리를 모두 선택해주세요 (복수 선택 가능)</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- 이미지 업로드/URL 선택 -->
