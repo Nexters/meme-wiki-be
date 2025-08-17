@@ -24,10 +24,10 @@ public class AdminController {
     private final MemeRepository memeRepository;
     private final ImageUploadService imageUploadService;
 
-    @Value("${ADMIN_USERNAME:admin}")
+    @Value("${admin.username}")
     private String adminUsername;
 
-    @Value("${ADMIN_PASSWORD:admin123}")
+    @Value("${admin.password}")
     private String adminPassword;
 
     /**

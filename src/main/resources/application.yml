@@ -27,8 +27,8 @@ cloudflare:
     bucket-name: ${CLOUDFLARE_R2_BUCKET_NAME:}
 
 admin:
-  username: ${ADMIN_USERNAME}
-  password: ${ADMIN_PASSWORD}
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin123}
 
 ---
 spring.config.activate.on-profile: local
