@@ -125,6 +125,9 @@ jobs:
           export CLOUDFLARE_R2_ENDPOINT='${{ secrets.CLOUDFLARE_R2_ENDPOINT }}'
           export CLOUDFLARE_R2_BUCKET_NAME='${{ secrets.CLOUDFLARE_R2_BUCKET_NAME }}'
 
+          export ADMIN_USERNAME='${{ secrets.ADMIN_USERNAME }}'
+          export ADMIN_PASSWORD='${{ secrets.ADMIN_PASSWORD }}'
+
           docker compose pull app
           docker compose up -d app
           docker compose ps
