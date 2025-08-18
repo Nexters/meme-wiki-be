@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -92,10 +94,20 @@ public class AdminController {
             return "redirect:/admin/login";
         }
 
+        List<Object[]> memeWithCategories = memeRepository.findAllWithCategoryNamesOrderByIdDesc();
         List<Meme> memes = memeRepository.findAllByOrderByIdDesc();
         List<CategoryResponse> categories = memeLookUpService.getAllCategories();
         
+        // 밈별 카테고리 정보 매핑
+        Map<Long, List<String>> memeCategoryMap = memeWithCategories.stream()
+            .filter(row -> row[1] != null) // 카테고리가 있는 경우만
+            .collect(Collectors.groupingBy(
+                row -> ((Meme) row[0]).getId(),
+                Collectors.mapping(row -> (String) row[1], Collectors.toList())
+            ));
+        
         model.addAttribute("memes", memes);
+        model.addAttribute("memeCategoryMap", memeCategoryMap);
         model.addAttribute("categories", categories);
         model.addAttribute("totalCount", memes.size());
         
