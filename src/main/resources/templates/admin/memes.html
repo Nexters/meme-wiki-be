@@ -333,9 +333,38 @@
             <!-- 밈 리스트 -->
             <div class="col-lg-8">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">📝 밈 리스트</h5>
-                        <span class="badge bg-light text-dark" th:text="|총 ${totalCount}개|">총 0개</span>
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">📝 밈 리스트</h5>
+                            <span class="badge bg-light text-dark" id="memeCount" th:text="|총 ${totalCount}개|">총 0개</span>
+                        </div>
+                        
+                        <!-- 검색 및 필터 옵션 -->
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">🔍</span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="searchInput" 
+                                           placeholder="제목, 출처, 사용맥락, 해시태그로 검색...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="categoryFilter">
+                                    <option value="">전체 카테고리</option>
+                                    <option value="미분류">미분류</option>
+                                    <option th:each="category : ${categories}" 
+                                            th:value="${category.name}" 
+                                            th:text="${category.name}">카테고리</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
+                                    🔄 초기화
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -352,7 +381,7 @@
                                         <th width="5%">액션</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="memeTableBody">
                                     <tr th:if="${#lists.isEmpty(memes)}">
                                         <td colspan="8" class="text-center py-5 text-muted">
                                             <div class="emoji">😅</div>
@@ -494,6 +523,102 @@
                 bsAlert.close();
             });
         }, 5000);
+        
+        // 필터링 기능
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        const memeTableBody = document.getElementById('memeTableBody');
+        const memeCount = document.getElementById('memeCount');
+        
+        let allRows = Array.from(memeTableBody.querySelectorAll('tr')).filter(row => 
+            !row.querySelector('td[colspan]') // 빈 상태 메시지 행 제외
+        );
+        const totalCount = allRows.length;
+        
+        function filterMemes() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const selectedCategory = categoryFilter.value.toLowerCase().trim();
+            
+            let visibleCount = 0;
+            
+            allRows.forEach(row => {
+                const title = row.cells[2].textContent.toLowerCase();
+                const origin = row.cells[3].textContent.toLowerCase();
+                const usageContext = row.cells[4].textContent.toLowerCase();
+                const hashtags = row.cells[6].textContent.toLowerCase();
+                const categoryCell = row.cells[5];
+                
+                // 카테고리 정보 추출
+                let rowCategories = [];
+                const categoryBadges = categoryCell.querySelectorAll('.badge');
+                if (categoryBadges.length > 0) {
+                    categoryBadges.forEach(badge => {
+                        rowCategories.push(badge.textContent.toLowerCase().trim());
+                    });
+                } else {
+                    const uncategorizedSpan = categoryCell.querySelector('.text-muted');
+                    if (uncategorizedSpan && uncategorizedSpan.textContent.includes('미분류')) {
+                        rowCategories.push('미분류');
+                    }
+                }
+                
+                // 검색어 필터링
+                const matchesSearch = !searchTerm || 
+                    title.includes(searchTerm) || 
+                    origin.includes(searchTerm) || 
+                    usageContext.includes(searchTerm) || 
+                    hashtags.includes(searchTerm);
+                
+                // 카테고리 필터링
+                const matchesCategory = !selectedCategory || 
+                    rowCategories.some(cat => cat === selectedCategory);
+                
+                if (matchesSearch && matchesCategory) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // 카운트 업데이트
+            memeCount.textContent = `총 ${visibleCount}개`;
+            
+            // 결과가 없을 때 메시지 표시
+            const emptyRow = memeTableBody.querySelector('tr[colspan]');
+            if (visibleCount === 0 && totalCount > 0) {
+                if (!document.getElementById('noResultsRow')) {
+                    const noResultsRow = document.createElement('tr');
+                    noResultsRow.id = 'noResultsRow';
+                    noResultsRow.innerHTML = `
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <div class="emoji">🔍</div>
+                            <p class="mb-0">검색 결과가 없습니다.</p>
+                        </td>
+                    `;
+                    memeTableBody.appendChild(noResultsRow);
+                }
+            } else {
+                const noResultsRow = document.getElementById('noResultsRow');
+                if (noResultsRow) {
+                    noResultsRow.remove();
+                }
+            }
+        }
+        
+        // 이벤트 리스너
+        searchInput.addEventListener('input', filterMemes);
+        categoryFilter.addEventListener('change', filterMemes);
+        
+        clearFiltersBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            categoryFilter.value = '';
+            filterMemes();
+        });
+        
+        // 초기 로드 시 모든 행 표시
+        filterMemes();
     </script>
 </body>
 </html>
