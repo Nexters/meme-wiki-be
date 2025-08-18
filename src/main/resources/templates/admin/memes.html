@@ -343,17 +343,18 @@
                                 <thead>
                                     <tr>
                                         <th width="5%">ID</th>
-                                        <th width="10%">이미지</th>
-                                        <th width="15%">제목</th>
-                                        <th width="20%">출처</th>
-                                        <th width="30%">사용 맥락</th>
+                                        <th width="8%">이미지</th>
+                                        <th width="12%">제목</th>
+                                        <th width="15%">출처</th>
+                                        <th width="25%">사용 맥락</th>
+                                        <th width="15%">카테고리</th>
                                         <th width="15%">해시태그</th>
                                         <th width="5%">액션</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:if="${#lists.isEmpty(memes)}">
-                                        <td colspan="7" class="text-center py-5 text-muted">
+                                        <td colspan="8" class="text-center py-5 text-muted">
                                             <div class="emoji">😅</div>
                                             <p class="mb-0">아직 등록된 밈이 없습니다.</p>
                                         </td>
@@ -381,6 +382,15 @@
                                         </td>
                                         <td class="align-middle">
                                             <div class="text-truncate-2" th:text="${meme.usageContext}">사용 맥락</div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div th:if="${memeCategoryMap[meme.id] != null and not #lists.isEmpty(memeCategoryMap[meme.id])}">
+                                                <span th:each="categoryName, iterStat : ${memeCategoryMap[meme.id]}" 
+                                                      class="badge bg-primary me-1 mb-1"
+                                                      th:text="${categoryName}">카테고리</span>
+                                            </div>
+                                            <span th:unless="${memeCategoryMap[meme.id] != null and not #lists.isEmpty(memeCategoryMap[meme.id])}" 
+                                                  class="text-muted small">미분류</span>
                                         </td>
                                         <td class="align-middle">
                                             <small class="text-muted" th:text="${meme.hashtags}">해시태그</small>
