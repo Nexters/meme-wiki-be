@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class HashtagParser {
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -28,7 +30,10 @@ public class HashtagParser {
             return "[]";
         }
         try {
-            return objectMapper.writeValueAsString(Collections.singletonList(hashtags));
+            List<String> hashtagList = Arrays.stream(hashtags.trim().split("\\s+"))
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+            return objectMapper.writeValueAsString(hashtagList);
         } catch (JsonProcessingException e) {
             return "[]";
         }
