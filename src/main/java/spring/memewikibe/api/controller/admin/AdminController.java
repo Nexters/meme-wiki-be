@@ -3,10 +3,14 @@ package spring.memewikibe.api.controller.admin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import spring.memewikibe.domain.meme.Category;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.application.ImageUploadService;
@@ -14,13 +18,16 @@ import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.application.MemeCreateService;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
-import spring.memewikibe.api.controller.meme.request.MemeUpdateRequest;
+
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -346,6 +353,174 @@ public class AdminController {
         }
 
         return "redirect:/admin/memes";
+    }
+    
+    /**
+     * 밈 수정 후 바로 승인 처리
+     */
+    @PostMapping("/memes/{id}/edit-and-approve")
+    public String editAndApproveMeme(@PathVariable Long id,
+                                   @RequestParam String title,
+                                   @RequestParam String origin,
+                                   @RequestParam String usageContext,
+                                   @RequestParam String hashtags,
+                                   @RequestParam(required = false) String imgUrl,
+                                   @RequestParam(required = false) MultipartFile imageFile,
+                                   @RequestParam(required = false) String trendPeriod,
+                                   @RequestParam(required = false) List<Long> categoryIds,
+                                   HttpSession session,
+                                   RedirectAttributes redirectAttributes) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        try {
+            log.info("✏️ Editing and approving meme: id={}", id);
+            
+            Meme meme = memeRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+
+            // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
+            String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
+            
+            if (imageFile != null && !imageFile.isEmpty()) {
+                log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
+                finalImgUrl = imageUploadService.uploadImage(imageFile);
+                log.info("✅ 새 이미지 파일 업로드 완료: {}", finalImgUrl);
+            } else if (imgUrl != null && !imgUrl.trim().isEmpty() && !imgUrl.equals(meme.getImgUrl())) {
+                finalImgUrl = imgUrl.trim();
+                log.info("🔗 새 이미지 URL 사용: {}", finalImgUrl);
+            }
+
+            // 유행시기 기본값 설정
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
+                ? trendPeriod.trim() : meme.getTrendPeriod();
+            
+            // 밈 정보 업데이트
+            meme.updateMeme(
+                title.trim(),
+                origin.trim(),
+                usageContext.trim(),
+                validTrendPeriod,
+                finalImgUrl,
+                hashtags.trim()
+            );
+            
+            // 승인 처리
+            meme.approve();
+
+            // 카테고리 업데이트
+            memeCategoryRepository.deleteByMemeId(meme.getId());
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                categoryRepository.findAllById(categoryIds)
+                    .forEach(category -> {
+                        MemeCategory memeCategory = MemeCategory.create(meme, category);
+                        memeCategoryRepository.save(memeCategory);
+                    });
+            }
+
+            memeRepository.save(meme);
+            
+            log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}", 
+                     id, title.trim(), categoryIds);
+            redirectAttributes.addFlashAttribute("success", "밈이 수정되고 승인되어 전체 사용자에게 공개되었습니다!");
+            
+            return "redirect:/admin/memes/review";
+            
+        } catch (Exception e) {
+            log.error("❌ Failed to edit and approve meme: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "밈 수정 및 승인 중 오류가 발생했습니다: " + e.getMessage());
+            return "redirect:/admin/memes/" + id + "/edit";
+        }
+    }
+    
+    /**
+     * 검토 대기 중인 밈 (ABNORMAL) 관리 페이지
+     */
+    @GetMapping("/memes/review")
+    public String reviewMemesPage(Model model, HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        // ABNORMAL 상태의 밈들만 조회
+        List<Object[]> abnormalMemesWithCategories = memeRepository.findByFlagWithCategoryNamesOrderByIdDesc(Meme.Flag.ABNORMAL);
+        
+        // 밈과 카테고리 정보 매핑
+        Map<Long, List<String>> memeCategoryMap = new HashMap<>();
+        List<Meme> abnormalMemes = new ArrayList<>();
+        
+        for (Object[] result : abnormalMemesWithCategories) {
+            Meme meme = (Meme) result[0];
+            String categoryName = (String) result[1];
+            
+            if (abnormalMemes.stream().noneMatch(m -> m.getId().equals(meme.getId()))) {
+                abnormalMemes.add(meme);
+            }
+            
+            if (categoryName != null) {
+                memeCategoryMap.computeIfAbsent(meme.getId(), k -> new ArrayList<>()).add(categoryName);
+            }
+        }
+        
+        // 통계 정보
+        long abnormalCount = memeRepository.countByFlag(Meme.Flag.ABNORMAL);
+        long normalCount = memeRepository.countByFlag(Meme.Flag.NORMAL);
+        
+        model.addAttribute("abnormalMemes", abnormalMemes);
+        model.addAttribute("memeCategoryMap", memeCategoryMap);
+        model.addAttribute("abnormalCount", abnormalCount);
+        model.addAttribute("normalCount", normalCount);
+        
+        return "admin/review-memes";
+    }
+    
+    /**
+     * 밈 승인 (ABNORMAL → NORMAL)
+     */
+    @PostMapping("/memes/{id}/approve")
+    @ResponseBody
+    public ResponseEntity<String> approveMeme(@PathVariable Long id, HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
+        }
+        
+        try {
+            Meme meme = memeRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
+            meme.approve();
+            memeRepository.save(meme);
+            
+            return ResponseEntity.ok("밈이 승인되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("승인 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 밈 반려 (NORMAL → ABNORMAL)
+     */
+    @PostMapping("/memes/{id}/reject")
+    @ResponseBody
+    public ResponseEntity<String> rejectMeme(@PathVariable Long id, HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
+        }
+        
+        try {
+            Meme meme = memeRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
+            meme.reject();
+            memeRepository.save(meme);
+            
+            return ResponseEntity.ok("밈이 반려되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("반려 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     private boolean isAuthenticated(HttpSession session) {
