@@ -425,16 +425,23 @@
                                             <small class="text-muted" th:text="${meme.hashtags}">해시태그</small>
                                         </td>
                                         <td class="align-middle">
-                                            <form th:action="@{/admin/memes/{id}/delete(id=${meme.id})}" 
-                                                  method="post" 
-                                                  style="display: inline;"
-                                                  onsubmit="return confirm('정말로 이 밈을 삭제하시겠습니까?');">
-                                                <button type="submit" 
-                                                        class="btn btn-danger btn-sm"
-                                                        title="삭제">
-                                                    🗑️
-                                                </button>
-                                            </form>
+                                            <div class="btn-group" role="group">
+                                                <a th:href="@{/admin/memes/{id}/edit(id=${meme.id})}" 
+                                                   class="btn btn-primary btn-sm"
+                                                   title="수정">
+                                                    ✏️
+                                                </a>
+                                                <form th:action="@{/admin/memes/{id}/delete(id=${meme.id})}" 
+                                                      method="post" 
+                                                      style="display: inline;"
+                                                      onsubmit="return confirm('정말로 이 밈을 삭제하시겠습니까?');">
+                                                    <button type="submit" 
+                                                            class="btn btn-danger btn-sm"
+                                                            title="삭제">
+                                                        🗑️
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>

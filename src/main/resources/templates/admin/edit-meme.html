@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밈 수정 - 밈위키 관리자</title>
+    <link href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            font-weight: 600;
+            padding: 1.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn-secondary {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .meme-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        .loading {
+            display: none;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin/memes">🎭 밈위키 관리자</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/admin/memes">밈 관리</a>
+                <a class="nav-link text-white" href="/admin/logout">로그아웃</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 알림 메시지 -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">✏️ 밈 수정</h5>
+                            <a href="/admin/memes" class="btn btn-outline-light btn-sm">
+                                ← 목록으로 돌아가기
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/memes/{id}/edit(id=${meme.id})}" 
+                              method="post" 
+                              enctype="multipart/form-data" 
+                              id="editMemeForm">
+                            
+                            <div class="row">
+                                <!-- 현재 이미지 미리보기 -->
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">현재 이미지</label>
+                                    <div class="text-center">
+                                        <img th:if="${meme.imgUrl}" 
+                                             th:src="${meme.imgUrl}" 
+                                             th:alt="${meme.title}"
+                                             class="meme-preview img-fluid"
+                                             id="currentImage">
+                                        <div th:unless="${meme.imgUrl}" 
+                                             class="meme-preview d-flex align-items-center justify-content-center bg-light">
+                                            <span class="text-muted">🖼️ 이미지 없음</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 폼 입력 필드들 -->
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="title" class="form-label fw-bold">제목 *</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="title" 
+                                                   name="title" 
+                                                   th:value="${meme.title}"
+                                                   required>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <label for="trendPeriod" class="form-label fw-bold">유행 시기</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="trendPeriod" 
+                                                   name="trendPeriod" 
+                                                   th:value="${meme.trendPeriod}"
+                                                   placeholder="예: 2020">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="origin" class="form-label fw-bold">출처 *</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="origin" 
+                                               name="origin" 
+                                               th:value="${meme.origin}"
+                                               required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="usageContext" class="form-label fw-bold">사용 맥락 *</label>
+                                        <textarea class="form-control" 
+                                                  id="usageContext" 
+                                                  name="usageContext" 
+                                                  rows="3" 
+                                                  required 
+                                                  th:text="${meme.usageContext}"></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="hashtags" class="form-label fw-bold">해시태그</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="hashtags" 
+                                               name="hashtags" 
+                                               th:value="${meme.hashtags}"
+                                               placeholder="예: #웃긴밈 #인기">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 이미지 변경 옵션 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">이미지 변경 (선택사항)</label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label for="imageFile" class="form-label">새 이미지 파일 업로드</label>
+                                        <input type="file" 
+                                               class="form-control" 
+                                               id="imageFile" 
+                                               name="imageFile" 
+                                               accept="image/*"
+                                               onchange="toggleImageOptions(this)">
+                                        <small class="text-muted">최대 10MB, JPG/PNG/GIF 지원</small>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label for="imgUrl" class="form-label">또는 이미지 URL</label>
+                                        <input type="url" 
+                                               class="form-control" 
+                                               id="imgUrl" 
+                                               name="imgUrl" 
+                                               th:value="${meme.imgUrl}"
+                                               placeholder="https://example.com/image.jpg"
+                                               onchange="toggleImageOptions(this)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 카테고리 선택 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">카테고리</label>
+                                <div class="row">
+                                    <div th:each="category : ${categories}" class="col-md-3 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   th:id="|category_${category.id}|"
+                                                   th:value="${category.id}"
+                                                   name="categoryIds"
+                                                   th:checked="${#lists.contains(currentCategoryIds, category.id)}">
+                                            <label class="form-check-label" 
+                                                   th:for="|category_${category.id}|"
+                                                   th:text="${category.name}">
+                                                카테고리명
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 버튼 그룹 -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="loading spinner-border spinner-border-sm me-2"></span>
+                                    💾 수정 완료
+                                </button>
+                                <a href="/admin/memes" class="btn btn-secondary">
+                                    ❌ 취소
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 이미지 옵션 토글 함수
+        function toggleImageOptions(changedElement) {
+            const imageFileInput = document.getElementById('imageFile');
+            const imgUrlInput = document.getElementById('imgUrl');
+            
+            if (changedElement.id === 'imageFile' && changedElement.files.length > 0) {
+                // 파일이 선택되면 URL 입력 비활성화
+                imgUrlInput.disabled = true;
+                imgUrlInput.style.backgroundColor = '#f8f9fa';
+            } else if (changedElement.id === 'imgUrl' && changedElement.value.trim() !== '') {
+                // URL이 입력되면 파일 입력 비활성화
+                imageFileInput.disabled = true;
+                imageFileInput.style.backgroundColor = '#f8f9fa';
+            } else {
+                // 값이 비어있으면 모든 옵션 활성화
+                imageFileInput.disabled = false;
+                imgUrlInput.disabled = false;
+                imageFileInput.style.backgroundColor = '';
+                imgUrlInput.style.backgroundColor = '';
+            }
+        }
+        
+        // 폼 제출 시 로딩 표시
+        document.getElementById('editMemeForm').addEventListener('submit', function(e) {
+            const button = this.querySelector('button[type="submit"]');
+            const loading = button.querySelector('.loading');
+            
+            button.disabled = true;
+            loading.style.display = 'inline-block';
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>수정 중...';
+        });
+        
+        // 파일 선택 시 미리보기 및 크기 체크
+        document.getElementById('imageFile').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // 파일 크기 체크 (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('파일 크기는 10MB 이하여야 합니다.');
+                    this.value = '';
+                    return;
+                }
+                
+                // 이미지 미리보기
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const currentImage = document.getElementById('currentImage');
+                    if (currentImage) {
+                        currentImage.src = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
