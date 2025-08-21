@@ -18,7 +18,7 @@ import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.application.MemeCreateService;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
-import spring.memewikibe.api.controller.meme.request.MemeUpdateRequest;
+
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
@@ -360,9 +360,14 @@ public class AdminController {
      */
     @PostMapping("/memes/{id}/edit-and-approve")
     public String editAndApproveMeme(@PathVariable Long id,
-                                   MemeUpdateRequest request,
-                                   @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-                                   @RequestParam(value = "imgUrl", required = false) String imgUrl,
+                                   @RequestParam String title,
+                                   @RequestParam String origin,
+                                   @RequestParam String usageContext,
+                                   @RequestParam String hashtags,
+                                   @RequestParam(required = false) String imgUrl,
+                                   @RequestParam(required = false) MultipartFile imageFile,
+                                   @RequestParam(required = false) String trendPeriod,
+                                   @RequestParam(required = false) List<Long> categoryIds,
                                    HttpSession session,
                                    RedirectAttributes redirectAttributes) {
         if (!isAuthenticated(session)) {
@@ -375,28 +380,30 @@ public class AdminController {
             Meme meme = memeRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
 
-            // 이미지 처리 로직 (기존과 동일)
-            String finalImgUrl = meme.getImgUrl(); // 기본값은 기존 이미지
+            // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
+            String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
             
             if (imageFile != null && !imageFile.isEmpty()) {
-                // 새 파일 업로드
-                String uploadedUrl = imageUploadService.uploadImage(imageFile);
-                finalImgUrl = uploadedUrl;
-                log.info("📤 New image uploaded: {}", uploadedUrl);
-            } else if (imgUrl != null && !imgUrl.trim().isEmpty()) {
-                // URL 입력
+                log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
+                finalImgUrl = imageUploadService.uploadImage(imageFile);
+                log.info("✅ 새 이미지 파일 업로드 완료: {}", finalImgUrl);
+            } else if (imgUrl != null && !imgUrl.trim().isEmpty() && !imgUrl.equals(meme.getImgUrl())) {
                 finalImgUrl = imgUrl.trim();
-                log.info("🔗 Image URL updated: {}", finalImgUrl);
+                log.info("🔗 새 이미지 URL 사용: {}", finalImgUrl);
             }
 
+            // 유행시기 기본값 설정
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
+                ? trendPeriod.trim() : meme.getTrendPeriod();
+            
             // 밈 정보 업데이트
             meme.updateMeme(
-                request.getTitle(),
-                request.getOrigin(),
-                request.getUsageContext(),
-                request.getTrendPeriod(),
+                title.trim(),
+                origin.trim(),
+                usageContext.trim(),
+                validTrendPeriod,
                 finalImgUrl,
-                request.getHashtags()
+                hashtags.trim()
             );
             
             // 승인 처리
@@ -404,19 +411,18 @@ public class AdminController {
 
             // 카테고리 업데이트
             memeCategoryRepository.deleteByMemeId(meme.getId());
-            if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
-                for (Long categoryId : request.getCategoryIds()) {
-                    Category category = categoryRepository.findById(categoryId)
-                            .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다: " + categoryId));
-                    
-                    MemeCategory memeCategory = MemeCategory.create(meme, category);
-                    memeCategoryRepository.save(memeCategory);
-                }
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                categoryRepository.findAllById(categoryIds)
+                    .forEach(category -> {
+                        MemeCategory memeCategory = MemeCategory.create(meme, category);
+                        memeCategoryRepository.save(memeCategory);
+                    });
             }
 
             memeRepository.save(meme);
             
-            log.info("✅ Meme edited and approved successfully: id={}", id);
+            log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}", 
+                     id, title.trim(), categoryIds);
             redirectAttributes.addFlashAttribute("success", "밈이 수정되고 승인되어 전체 사용자에게 공개되었습니다!");
             
             return "redirect:/admin/memes/review";
