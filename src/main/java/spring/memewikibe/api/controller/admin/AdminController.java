@@ -14,6 +14,7 @@ import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.application.MemeCreateService;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
+import spring.memewikibe.api.controller.meme.request.MemeUpdateRequest;
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
@@ -228,6 +229,120 @@ public class AdminController {
         } catch (Exception e) {
             log.error("Failed to delete meme: id={}", id, e);
             redirectAttributes.addFlashAttribute("error", "밈 삭제 중 오류가 발생했습니다.");
+        }
+
+        return "redirect:/admin/memes";
+    }
+
+    /**
+     * 밈 수정 폼 페이지
+     */
+    @GetMapping("/memes/{id}/edit")
+    public String editMemePage(@PathVariable Long id, Model model, HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        try {
+            Meme meme = memeRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
+            List<CategoryResponse> categories = memeLookUpService.getAllCategories();
+            
+            // 현재 밈의 카테고리 ID 조회
+            List<Long> currentCategoryIds = memeCategoryRepository.findByMemeId(id)
+                    .stream()
+                    .map(memeCategory -> memeCategory.getCategory().getId())
+                    .toList();
+            
+            model.addAttribute("meme", meme);
+            model.addAttribute("categories", categories);
+            model.addAttribute("currentCategoryIds", currentCategoryIds);
+            
+            log.info("Admin accessing edit page for meme: id={}", id);
+            return "admin/edit-meme";
+            
+        } catch (Exception e) {
+            log.error("Failed to load edit page for meme: id={}", id, e);
+            return "redirect:/admin/memes";
+        }
+    }
+
+    /**
+     * 밈 수정 처리
+     */
+    @PostMapping("/memes/{id}/edit")
+    public String updateMeme(@PathVariable Long id,
+                           @RequestParam String title,
+                           @RequestParam String origin,
+                           @RequestParam String usageContext,
+                           @RequestParam String hashtags,
+                           @RequestParam(required = false) String imgUrl,
+                           @RequestParam(required = false) MultipartFile imageFile,
+                           @RequestParam(required = false) String trendPeriod,
+                           @RequestParam(required = false) List<Long> categoryIds,
+                           HttpSession session,
+                           RedirectAttributes redirectAttributes) {
+        
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        try {
+            Meme meme = memeRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
+            // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
+            String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
+            
+            if (imageFile != null && !imageFile.isEmpty()) {
+                log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
+                finalImgUrl = imageUploadService.uploadImage(imageFile);
+                log.info("✅ 새 이미지 파일 업로드 완료: {}", finalImgUrl);
+            } else if (imgUrl != null && !imgUrl.trim().isEmpty() && !imgUrl.equals(meme.getImgUrl())) {
+                finalImgUrl = imgUrl.trim();
+                log.info("🔗 새 이미지 URL 사용: {}", finalImgUrl);
+            }
+
+            // 유행시기 기본값 설정
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
+                ? trendPeriod.trim() : meme.getTrendPeriod();
+            
+            // 밈 정보 업데이트
+            meme.updateMeme(
+                title.trim(),
+                origin.trim(),
+                usageContext.trim(),
+                validTrendPeriod,
+                finalImgUrl,
+                hashtags.trim()
+            );
+            
+            memeRepository.save(meme);
+            
+            // 기존 카테고리 연결 삭제
+            memeCategoryRepository.deleteByMemeId(id);
+            
+            // 새 카테고리 연결
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                categoryRepository.findAllById(categoryIds)
+                    .forEach(category -> {
+                        MemeCategory memeCategory = MemeCategory.builder()
+                            .meme(meme)
+                            .category(category)
+                            .build();
+                        memeCategoryRepository.save(memeCategory);
+                    });
+            }
+            
+            log.info("✨ Meme updated by admin: id={}, title={}, categories={}", 
+                     id, title.trim(), categoryIds);
+            redirectAttributes.addFlashAttribute("success", 
+                "밈이 성공적으로 수정되었습니다! (ID: " + id + ")");
+            
+        } catch (Exception e) {
+            log.error("❌ Failed to update meme: id={}", id, e);
+            redirectAttributes.addFlashAttribute("error", "밈 수정 중 오류가 발생했습니다: " + e.getMessage());
         }
 
         return "redirect:/admin/memes";

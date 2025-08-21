@@ -61,4 +61,17 @@ public class Meme extends BaseEntity {
             this.description = description;
         }
     }
+    
+    /**
+     * 밈 정보를 업데이트합니다.
+     */
+    public void updateMeme(String title, String origin, String usageContext, 
+                          String trendPeriod, String imgUrl, String hashtags) {
+        this.title = title;
+        this.origin = origin;
+        this.usageContext = usageContext;
+        this.trendPeriod = trendPeriod;
+        this.imgUrl = imgUrl;
+        this.hashtags = hashtags;
+    }
 }
