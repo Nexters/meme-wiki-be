@@ -71,7 +71,8 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Transactional(readOnly = true)
     @Override
     public MemeDetailResponse getMemeById(Long id) {
-        Meme meme = memeRepository.findById(id)
+        // NORMAL 상태의 밈만 조회 (보안: ABNORMAL 밈은 일반 사용자에게 노출되지 않음)
+        Meme meme = memeRepository.findByIdAndNormalFlag(id)
             .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
 
         eventPublisher.publishEvent(new MemeViewedEvent(id));
@@ -94,14 +95,15 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     }
 
     private List<Meme> fetchMemesByCategory(Category category, Long next, int limit) {
+        // NORMAL 상태의 밈만 조회 (보안: ABNORMAL 밈은 일반 사용자에게 노출되지 않음)
         if (next == null) {
-            return memeCategoryRepository.findByCategoryOrderByMemeIdDesc(category, Limit.of(limit + 1))
+            return memeCategoryRepository.findByCategoryAndMemeNormalFlagOrderByMemeIdDesc(category, Limit.of(limit + 1))
                 .stream()
                 .map(MemeCategory::getMeme)
                 .toList();
         }
 
-        return memeCategoryRepository.findByCategoryAndMemeIdLessThanOrderByMemeIdDesc(category, next, Limit.of(limit + 1))
+        return memeCategoryRepository.findByCategoryAndMemeIdLessThanAndMemeNormalFlagOrderByMemeIdDesc(category, next, Limit.of(limit + 1))
             .stream()
             .map(MemeCategory::getMeme)
             .toList();
