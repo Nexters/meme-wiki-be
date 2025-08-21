@@ -2,6 +2,7 @@ package spring.memewikibe.infrastructure;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import spring.memewikibe.domain.meme.Meme;
 
 import java.util.List;
@@ -27,4 +28,8 @@ public interface MemeRepository extends JpaRepository<Meme, Long>, MemeAggregati
     
     // 상태별 개수 조회
     long countByFlag(Meme.Flag flag);
+    
+    // ID로 NORMAL 밈만 조회
+    @Query("SELECT m FROM Meme m WHERE m.id = :id AND m.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL")
+    java.util.Optional<Meme> findByIdAndNormalFlag(@Param("id") Long id);
 }
