@@ -27,6 +27,8 @@ services:
     ports:
       - "3306:3306"
 
+
+
   # 메인 애플리케이션
   app:
     image: ${NCP_REGISTRY_URL}/meme-wiki-be:latest
@@ -45,8 +47,21 @@ services:
       CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
       CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
       CLOUDFLARE_R2_BUCKET_NAME: ${CLOUDFLARE_R2_BUCKET_NAME}
+      # Pinecone Settings
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT:-us-east-1-aws}
+      PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME:-meme-recommendations}
+      PINECONE_NAMESPACE: ${PINECONE_NAMESPACE:-}
+      # Vertex AI Settings
+      VERTEX_AI_PROJECT_ID: ${VERTEX_AI_PROJECT_ID}
+      VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-us-central1}
+      VERTEX_AI_GEMINI_MODEL: ${VERTEX_AI_GEMINI_MODEL:-gemini-1.5-pro}
+      VERTEX_AI_EMBEDDING_MODEL: ${VERTEX_AI_EMBEDDING_MODEL:-text-embedding-004}
+      # Google Cloud Authentication
+      GOOGLE_APPLICATION_CREDENTIALS: /app/service-account-key.json
     volumes:
       - /root/logs:/app/logs
+      - ./service-account-key.json:/app/service-account-key.json:ro
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     depends_on:

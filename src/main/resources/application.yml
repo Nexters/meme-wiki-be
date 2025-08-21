@@ -3,7 +3,6 @@ spring:
     name: meme-wiki
   config:
     import: "optional:file:.env[.properties]"
-
   profiles:
     active: local
 
@@ -18,6 +17,28 @@ spring:
       ddl-auto: none
     properties:
       hibernate.default_batch_fetch_size: 100
+
+  ai:
+    vertex:
+      ai:
+        gemini:
+          project-id: ${VERTEX_AI_PROJECT_ID:}
+          location: ${VERTEX_AI_LOCATION:us-central1}
+        embedding:
+          project-id: ${VERTEX_AI_PROJECT_ID:}
+          location: ${VERTEX_AI_LOCATION:us-central1}
+
+    vectorstore:
+      pinecone:
+        apiKey: ${PINECONE_API_KEY:}
+        environment: ${PINECONE_ENVIRONMENT:us-east-1-aws}
+        indexName: ${PINECONE_INDEX_NAME:meme-recommendations}
+        namespace: ${PINECONE_NAMESPACE:}
+
+# Google Cloud 인증 설정
+google:
+  application:
+    credentials: ${GOOGLE_APPLICATION_CREDENTIALS:./service-account-key.json}
 
 cloudflare:
   r2:
@@ -47,7 +68,7 @@ spring:
     username: sa
   sql:
     init:
-      mode: never
+      mode: always
 
 ---
 spring.config.activate.on-profile: dev

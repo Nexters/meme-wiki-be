@@ -1,5 +1,6 @@
 package spring.memewikibe.domain.meme;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,8 +14,10 @@ import spring.memewikibe.domain.BaseEntity;
 public class Meme extends BaseEntity {
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String origin;
 
+    @Column(columnDefinition = "TEXT")
     private String usageContext;
 
     private String trendPeriod;

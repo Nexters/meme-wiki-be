@@ -20,7 +20,7 @@ public class SwaggerConfig {
                 .description("MemeWikiBE API 명세서"))
             .servers(List.of(
                 new Server()
-                    .url("https://api.meme-wiki.net")
+                    .url("http://localhost:8080")
                     .description("Production Server (HTTPS)")
             ));
     }
