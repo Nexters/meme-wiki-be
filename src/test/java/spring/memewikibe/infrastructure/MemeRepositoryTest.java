@@ -123,6 +123,7 @@ class MemeRepositoryTest {
             .trendPeriod("trendPeriod_" + name)
             .imgUrl("imgUrl_" + name)
             .hashtags("#" + name)
+            .flag(Meme.Flag.NORMAL)
             .build();
     }
 

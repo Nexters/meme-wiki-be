@@ -74,6 +74,7 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
                     .add(viewCountExpression.multiply(VIEW_WEIGHT))
             ))
             .from(meme)
+            .where(meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(customCountExpression.multiply(CUSTOM_WEIGHT)
                     .add(shareCountExpression.multiply(SHARE_WEIGHT))
                     .add(viewCountExpression.multiply(VIEW_WEIGHT)).desc(),
@@ -86,7 +87,7 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
     public List<Meme> findByTitleDynamicContainingOrderByIdDesc(String title, Limit limit) {
         return queryFactory
             .selectFrom(meme)
-            .where(titleContains(title))
+            .where(titleContains(title), meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit.max())
             .fetch();
@@ -96,7 +97,7 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
     public List<Meme> findByTitleDynamicContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit) {
         return queryFactory
             .selectFrom(meme)
-            .where(titleContains(title), meme.id.lt(lastId))
+            .where(titleContains(title), meme.id.lt(lastId), meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit.max())
             .fetch();
@@ -111,7 +112,7 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
                 meme.imgUrl
             ))
             .from(meme)
-            .where(excludeIds.isEmpty() ? null : meme.id.notIn(excludeIds))
+            .where(excludeIds.isEmpty() ? null : meme.id.notIn(excludeIds), meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit)
             .fetch();

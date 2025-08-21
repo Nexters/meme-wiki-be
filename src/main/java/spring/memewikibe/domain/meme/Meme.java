@@ -1,7 +1,8 @@
 package spring.memewikibe.domain.meme;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,14 +25,40 @@ public class Meme extends BaseEntity {
 
     private String hashtags;
 
+    @Enumerated(EnumType.STRING)
+    private Flag flag;
+
     @Builder
-    private Meme(String title, String origin, String usageContext, String trendPeriod, String imgUrl, String hashtags) {
+    private Meme(String title, String origin, String usageContext, String trendPeriod, String imgUrl, String hashtags, Flag flag) {
         this.title = title;
         this.origin = origin;
         this.usageContext = usageContext;
         this.trendPeriod = trendPeriod;
         this.imgUrl = imgUrl;
         this.hashtags = hashtags;
+        this.flag = flag;
     }
 
+    public static Meme crawlerMeme(String title, String origin, String usageContext, String trendPeriod, String imgUrl, String hashtags) {
+        return Meme.builder()
+            .title(title)
+            .origin(origin)
+            .usageContext(usageContext)
+            .trendPeriod(trendPeriod)
+            .imgUrl(imgUrl)
+            .hashtags(hashtags)
+            .flag(Flag.ABNORMAL)
+            .build();
+    }
+
+    public enum Flag {
+        NORMAL("정상"),
+        ABNORMAL("비정상");
+
+        private final String description;
+
+        Flag(String description) {
+            this.description = description;
+        }
+    }
 }

@@ -39,8 +39,8 @@ public class MemeController {
         @RequestParam String hashtags,
         @RequestParam MultipartFile imageFile
     ) {
-        MemeCreateRequest request= new MemeCreateRequest(title, "알 수 없음", "알 수 없음", "2025", hashtags, null);
-        return ApiResponse.success(memeCreateService.createMeme(request, imageFile));
+        MemeCreateRequest request = new MemeCreateRequest(title, "알 수 없음", "알 수 없음", "2025", hashtags, null);
+        return ApiResponse.success(memeCreateService.createMemeUsingCrawler(request, imageFile));
     }
 
     @GetMapping
