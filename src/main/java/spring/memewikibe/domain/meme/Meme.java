@@ -74,4 +74,18 @@ public class Meme extends BaseEntity {
         this.imgUrl = imgUrl;
         this.hashtags = hashtags;
     }
+    
+    /**
+     * 밈을 정상 상태로 승인합니다.
+     */
+    public void approve() {
+        this.flag = Flag.NORMAL;
+    }
+    
+    /**
+     * 밈을 비정상 상태로 되돌립니다.
+     */
+    public void reject() {
+        this.flag = Flag.ABNORMAL;
+    }
 }

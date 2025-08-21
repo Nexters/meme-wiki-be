@@ -104,7 +104,20 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">✏️ 밈 수정</h5>
+                            <div>
+                                <h5 class="mb-1">✏️ 밈 수정</h5>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span th:if="${meme.flag != null and meme.flag.name() == 'ABNORMAL'}" 
+                                          class="badge bg-warning text-dark">
+                                        ⏳ 검토 대기 중
+                                    </span>
+                                    <span th:if="${meme.flag != null and meme.flag.name() == 'NORMAL'}" 
+                                          class="badge bg-success">
+                                        ✅ 승인됨 (공개 중)
+                                    </span>
+                                    <small class="text-white-50" th:text="|ID: ${meme.id}|">ID: 1</small>
+                                </div>
+                            </div>
                             <a href="/admin/memes" class="btn btn-outline-light btn-sm">
                                 ← 목록으로 돌아가기
                             </a>
@@ -239,14 +252,32 @@
                             </div>
 
                             <!-- 버튼 그룹 -->
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
                                 <button type="submit" class="btn btn-primary">
                                     <span class="loading spinner-border spinner-border-sm me-2"></span>
                                     💾 수정 완료
                                 </button>
+                                
+                                <!-- 검토 대기 중인 밈인 경우 승인 버튼 표시 -->
+                                <div th:if="${meme.flag != null and meme.flag.name() == 'ABNORMAL'}">
+                                    <button type="button" 
+                                            class="btn btn-success" 
+                                            onclick="submitEditAndApprove()"
+                                            id="editAndApproveBtn">
+                                        ✅ 수정 후 승인
+                                    </button>
+                                </div>
+                                
                                 <a href="/admin/memes" class="btn btn-secondary">
                                     ❌ 취소
                                 </a>
+                                
+                                <!-- 검토 페이지에서 온 경우 돌아가기 버튼 -->
+                                <div th:if="${meme.flag != null and meme.flag.name() == 'ABNORMAL'}">
+                                    <a href="/admin/memes/review" class="btn btn-outline-info">
+                                        🔍 검토 페이지로 돌아가기
+                                    </a>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -289,6 +320,27 @@
             loading.style.display = 'inline-block';
             button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>수정 중...';
         });
+        
+        // 수정 후 승인 함수
+        function submitEditAndApprove() {
+            if (!confirm('이 밈을 수정하고 승인하시겠습니까?\n승인하면 전체 사용자에게 즉시 공개됩니다.')) {
+                return;
+            }
+            
+            const form = document.getElementById('editMemeForm');
+            const button = document.getElementById('editAndApproveBtn');
+            
+            // 버튼 상태 변경
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>수정 및 승인 중...';
+            
+            // 폼 action 변경
+            const currentAction = form.action;
+            form.action = currentAction.replace('/edit', '/edit-and-approve');
+            
+            // 폼 제출
+            form.submit();
+        }
         
         // 파일 선택 시 미리보기 및 크기 체크
         document.getElementById('imageFile').addEventListener('change', function() {

@@ -110,6 +110,8 @@
                 🎭 밈위키 관리자
             </a>
             <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white me-3" href="/admin/memes">📝 전체 밈 관리</a>
+                <a class="nav-link text-white me-3" href="/admin/memes/review">🔍 검토 대기</a>
                 <span class="navbar-text me-3">
                     👋 관리자님, 안녕하세요!
                 </span>
@@ -375,15 +377,16 @@
                                         <th width="8%">이미지</th>
                                         <th width="12%">제목</th>
                                         <th width="15%">출처</th>
-                                        <th width="25%">사용 맥락</th>
-                                        <th width="15%">카테고리</th>
-                                        <th width="15%">해시태그</th>
-                                        <th width="5%">액션</th>
+                                        <th width="20%">사용 맥락</th>
+                                        <th width="12%">카테고리</th>
+                                        <th width="10%">해시태그</th>
+                                        <th width="8%">상태</th>
+                                        <th width="10%">액션</th>
                                     </tr>
                                 </thead>
                                 <tbody id="memeTableBody">
                                     <tr th:if="${#lists.isEmpty(memes)}">
-                                        <td colspan="8" class="text-center py-5 text-muted">
+                                        <td colspan="9" class="text-center py-5 text-muted">
                                             <div class="emoji">😅</div>
                                             <p class="mb-0">아직 등록된 밈이 없습니다.</p>
                                         </td>
@@ -425,22 +428,51 @@
                                             <small class="text-muted" th:text="${meme.hashtags}">해시태그</small>
                                         </td>
                                         <td class="align-middle">
-                                            <div class="btn-group" role="group">
-                                                <a th:href="@{/admin/memes/{id}/edit(id=${meme.id})}" 
-                                                   class="btn btn-primary btn-sm"
-                                                   title="수정">
-                                                    ✏️
-                                                </a>
-                                                <form th:action="@{/admin/memes/{id}/delete(id=${meme.id})}" 
-                                                      method="post" 
-                                                      style="display: inline;"
-                                                      onsubmit="return confirm('정말로 이 밈을 삭제하시겠습니까?');">
-                                                    <button type="submit" 
-                                                            class="btn btn-danger btn-sm"
-                                                            title="삭제">
-                                                        🗑️
+                                            <span th:if="${meme.flag != null and meme.flag.name() == 'NORMAL'}" 
+                                                  class="badge bg-success">✅ 승인</span>
+                                            <span th:if="${meme.flag != null and meme.flag.name() == 'ABNORMAL'}" 
+                                                  class="badge bg-warning text-dark">⏳ 검토대기</span>
+                                            <span th:unless="${meme.flag != null}" 
+                                                  class="badge bg-secondary">미정</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="btn-group-vertical gap-1" role="group">
+                                                <!-- 승인/반려 버튼 -->
+                                                <div th:if="${meme.flag != null and meme.flag.name() == 'ABNORMAL'}" class="btn-group" role="group">
+                                                    <button type="button" 
+                                                            class="btn btn-success btn-sm"
+                                                            th:onclick="|approveMeme(${meme.id})|"
+                                                            title="승인 (정상으로 변경)">
+                                                        ✅
                                                     </button>
-                                                </form>
+                                                </div>
+                                                <div th:if="${meme.flag != null and meme.flag.name() == 'NORMAL'}" class="btn-group" role="group">
+                                                    <button type="button" 
+                                                            class="btn btn-warning btn-sm"
+                                                            th:onclick="|rejectMeme(${meme.id})|"
+                                                            title="반려 (검토대기로 변경)">
+                                                        ⚠️
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- 기존 수정/삭제 버튼 -->
+                                                <div class="btn-group" role="group">
+                                                    <a th:href="@{/admin/memes/{id}/edit(id=${meme.id})}" 
+                                                       class="btn btn-primary btn-sm"
+                                                       title="수정">
+                                                        ✏️
+                                                    </a>
+                                                    <form th:action="@{/admin/memes/{id}/delete(id=${meme.id})}" 
+                                                          method="post" 
+                                                          style="display: inline;"
+                                                          onsubmit="return confirm('정말로 이 밈을 삭제하시겠습니까?');">
+                                                        <button type="submit" 
+                                                                class="btn btn-danger btn-sm"
+                                                                title="삭제">
+                                                            🗑️
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
@@ -626,6 +658,76 @@
         
         // 초기 로드 시 모든 행 표시
         filterMemes();
+        
+        // 밈 승인 함수
+        function approveMeme(memeId) {
+            if (!confirm('이 밈을 승인하시겠습니까? 승인하면 전체 사용자에게 공개됩니다.')) {
+                return;
+            }
+            
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '처리중...';
+            
+            fetch(`/admin/memes/${memeId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                if (data.includes('승인되었습니다')) {
+                    location.reload();
+                } else {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ 처리 중 오류가 발생했습니다.');
+                button.disabled = false;
+                button.textContent = originalText;
+            });
+        }
+        
+        // 밈 반려 함수
+        function rejectMeme(memeId) {
+            if (!confirm('이 밈을 검토대기 상태로 되돌리시겠습니까?')) {
+                return;
+            }
+            
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '처리중...';
+            
+            fetch(`/admin/memes/${memeId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                if (data.includes('반려되었습니다')) {
+                    location.reload();
+                } else {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ 처리 중 오류가 발생했습니다.');
+                button.disabled = false;
+                button.textContent = originalText;
+            });
+        }
     </script>
 </body>
 </html>

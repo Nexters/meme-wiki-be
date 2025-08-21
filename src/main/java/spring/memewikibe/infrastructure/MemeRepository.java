@@ -14,4 +14,17 @@ public interface MemeRepository extends JpaRepository<Meme, Long>, MemeAggregati
            "LEFT JOIN Category c ON mc.category.id = c.id " +
            "ORDER BY m.id DESC")
     List<Object[]> findAllWithCategoryNamesOrderByIdDesc();
+    
+    // Flag별 조회 메서드
+    List<Meme> findByFlagOrderByIdDesc(Meme.Flag flag);
+    
+    @Query("SELECT DISTINCT m, c.name FROM Meme m " +
+           "LEFT JOIN MemeCategory mc ON m.id = mc.meme.id " +
+           "LEFT JOIN Category c ON mc.category.id = c.id " +
+           "WHERE m.flag = :flag " +
+           "ORDER BY m.id DESC")
+    List<Object[]> findByFlagWithCategoryNamesOrderByIdDesc(Meme.Flag flag);
+    
+    // 상태별 개수 조회
+    long countByFlag(Meme.Flag flag);
 }
