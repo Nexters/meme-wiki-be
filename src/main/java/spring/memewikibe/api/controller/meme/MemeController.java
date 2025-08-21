@@ -2,6 +2,8 @@ package spring.memewikibe.api.controller.meme;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
@@ -13,13 +15,6 @@ import spring.memewikibe.support.response.PageResponse;
 
 import java.util.List;
 
-/**
- * 밈 조회 및 상호작용 API
- * 
- * 📝 밈 생성 기능은 관리자 페이지에서만 가능합니다.
- * - 관리자 로그인: GET /admin/login
- * - 밈 생성: POST /admin/memes (관리자 인증 필요)
- */
 @RestController
 @RequestMapping("/api/memes")
 public class MemeController {
@@ -28,12 +23,24 @@ public class MemeController {
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
     private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
+    private final MemeCreateService memeCreateService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService, MemeCreateService memeCreateService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
+        this.memeCreateService = memeCreateService;
+    }
+
+    @PostMapping
+    public ApiResponse<Long> createMeme(
+        @RequestParam String title,
+        @RequestParam String hashtags,
+        @RequestParam MultipartFile imageFile
+    ) {
+        MemeCreateRequest request= new MemeCreateRequest(title, null, null, null, hashtags, null);
+        return ApiResponse.success(memeCreateService.createMeme(request, imageFile));
     }
 
     @GetMapping
