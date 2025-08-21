@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import spring.memewikibe.domain.meme.Category;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.application.ImageUploadService;
@@ -23,6 +25,9 @@ import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

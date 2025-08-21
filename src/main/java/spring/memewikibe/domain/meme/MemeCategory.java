@@ -26,4 +26,14 @@ public class MemeCategory extends BaseEntity {
         this.meme = meme;
         this.category = category;
     }
+    
+    /**
+     * MemeCategory 생성을 위한 정적 팩토리 메서드
+     */
+    public static MemeCategory create(Meme meme, Category category) {
+        return MemeCategory.builder()
+                .meme(meme)
+                .category(category)
+                .build();
+    }
 }
