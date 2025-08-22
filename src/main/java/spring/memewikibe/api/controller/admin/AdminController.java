@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -27,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,6 +238,55 @@ public class AdminController {
         } catch (Exception e) {
             log.error("Failed to delete meme: id={}", id, e);
             redirectAttributes.addFlashAttribute("error", "밈 삭제 중 오류가 발생했습니다.");
+        }
+
+        return "redirect:/admin/memes";
+    }
+
+    /**
+     * 밈 일괄 삭제
+     */
+    @PostMapping("/memes/delete-multiple")
+    @Transactional
+    public String deleteMultipleMemes(@RequestParam("memeIds") String memeIdsString,
+                                     HttpSession session,
+                                     RedirectAttributes redirectAttributes) {
+        
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        try {
+            if (memeIdsString == null || memeIdsString.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "삭제할 밈을 선택해주세요.");
+                return "redirect:/admin/memes";
+            }
+
+            // 문자열을 파싱해서 Long 리스트로 변환
+            List<Long> memeIds;
+            try {
+                memeIds = Arrays.stream(memeIdsString.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(Long::valueOf)
+                        .toList();
+            } catch (NumberFormatException e) {
+                redirectAttributes.addFlashAttribute("error", "잘못된 밈 ID 형식입니다.");
+                return "redirect:/admin/memes";
+            }
+
+            if (memeIds.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "삭제할 밈을 선택해주세요.");
+                return "redirect:/admin/memes";
+            }
+
+            memeRepository.deleteByIdIn(memeIds);
+            log.info("Memes deleted by admin: ids={}", memeIds);
+            redirectAttributes.addFlashAttribute("success", 
+                    memeIds.size() + "개의 밈이 삭제되었습니다.");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "밈 일괄 삭제 중 오류가 발생했습니다.");
         }
 
         return "redirect:/admin/memes";
