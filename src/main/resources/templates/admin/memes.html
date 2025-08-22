@@ -409,8 +409,7 @@
                                         <td class="align-middle">
                                             <input type="checkbox" 
                                                    class="form-check-input meme-checkbox" 
-                                                   th:value="${meme.id}"
-                                                   onchange="updateDeleteButton()">
+                                                   th:value="${meme.id}">
                                         </td>
                                         <td class="align-middle">
                                             <span class="badge bg-secondary" th:text="${meme.id}">1</span>
@@ -678,11 +677,40 @@
         // 초기 로드 시 모든 행 표시
         filterMemes();
         
-        // 체크박스 관련 기능
+        // 성능 최적화된 체크박스 관리
         const selectAllCheckbox = document.getElementById('selectAllCheckbox');
         const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
         const deleteMultipleForm = document.getElementById('deleteMultipleForm');
         const selectedMemeIds = document.getElementById('selectedMemeIds');
+        
+        // Set 기반 선택된 밈 ID 관리
+        const checkedMemeIds = new Set();
+        
+        // 디바운싱 함수
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // 이벤트 위임: 테이블 전체에 단일 이벤트 리스너
+        document.getElementById('memeTableBody').addEventListener('change', function(e) {
+            if (e.target.matches('.meme-checkbox')) {
+                const memeId = e.target.value;
+                if (e.target.checked) {
+                    checkedMemeIds.add(memeId);
+                } else {
+                    checkedMemeIds.delete(memeId);
+                }
+                debouncedUpdateDeleteButton();
+            }
+        });
         
         // 전체 선택 체크박스
         selectAllCheckbox.addEventListener('change', function() {
@@ -691,28 +719,40 @@
                 checkbox.closest('tr').style.display !== 'none'
             );
             
+            checkedMemeIds.clear(); // 기존 선택 초기화
+            
             visibleCheckboxes.forEach(checkbox => {
                 checkbox.checked = this.checked;
+                if (this.checked) {
+                    checkedMemeIds.add(checkbox.value);
+                }
             });
             
-            updateDeleteButton();
+            updateDeleteButtonOptimized();
         });
         
-        // 선택 삭제 버튼 상태 업데이트 (전역 함수로 선언)
-        window.updateDeleteButton = function() {
-            const checkedBoxes = document.querySelectorAll('.meme-checkbox:checked');
-            deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+        // 최적화된 선택 삭제 버튼 상태 업데이트
+        function updateDeleteButtonOptimized() {
+            // Set 기반으로 빠른 체크
+            deleteSelectedBtn.disabled = checkedMemeIds.size === 0;
             
-            // 전체 선택 체크박스 상태 업데이트
+            // 전체 선택 체크박스 상태 업데이트 (필요시에만)
             const visibleCheckboxes = Array.from(document.querySelectorAll('.meme-checkbox')).filter(checkbox => 
                 checkbox.closest('tr').style.display !== 'none'
             );
-            const checkedVisibleBoxes = visibleCheckboxes.filter(checkbox => checkbox.checked);
             
-            if (checkedVisibleBoxes.length === 0) {
+            // 보이는 체크박스들 중 선택된 것들의 개수
+            let checkedVisibleCount = 0;
+            visibleCheckboxes.forEach(checkbox => {
+                if (checkedMemeIds.has(checkbox.value)) {
+                    checkedVisibleCount++;
+                }
+            });
+            
+            if (checkedVisibleCount === 0) {
                 selectAllCheckbox.indeterminate = false;
                 selectAllCheckbox.checked = false;
-            } else if (checkedVisibleBoxes.length === visibleCheckboxes.length) {
+            } else if (checkedVisibleCount === visibleCheckboxes.length) {
                 selectAllCheckbox.indeterminate = false;
                 selectAllCheckbox.checked = true;
             } else {
@@ -720,10 +760,15 @@
             }
         }
         
-        // 선택 삭제 버튼 클릭
+        // 디바운싱된 업데이트 함수
+        const debouncedUpdateDeleteButton = debounce(updateDeleteButtonOptimized, 50);
+        
+        // 전역 함수 (기존 HTML onchange와의 호환성)
+        window.updateDeleteButton = debouncedUpdateDeleteButton;
+        
+        // 최적화된 선택 삭제 버튼 클릭
         deleteSelectedBtn.addEventListener('click', function() {
-            const checkedBoxes = document.querySelectorAll('.meme-checkbox:checked');
-            const selectedIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+            const selectedIds = Array.from(checkedMemeIds);
             
             if (selectedIds.length === 0) {
                 alert('삭제할 밈을 선택해주세요.');
@@ -742,8 +787,17 @@
         const originalFilterMemes = filterMemes;
         filterMemes = function() {
             originalFilterMemes();
-            updateDeleteButton();
+            updateDeleteButtonOptimized();
         };
+        
+        // 페이지 로드 시 초기 상태 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            // 기존에 체크된 체크박스들을 Set에 추가 (새로고침 등의 경우)
+            document.querySelectorAll('.meme-checkbox:checked').forEach(checkbox => {
+                checkedMemeIds.add(checkbox.value);
+            });
+            updateDeleteButtonOptimized();
+        });
         
         // 밈 승인 함수
         function approveMeme(memeId) {
