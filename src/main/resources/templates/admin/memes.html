@@ -343,7 +343,7 @@
                         
                         <!-- 검색 및 필터 옵션 -->
                         <div class="row g-2">
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="input-group">
                                     <span class="input-group-text bg-white">🔍</span>
                                     <input type="text" 
@@ -352,7 +352,7 @@
                                            placeholder="제목, 출처, 사용맥락, 해시태그로 검색...">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <select class="form-select" id="categoryFilter">
                                     <option value="">전체 카테고리</option>
                                     <option value="미분류">미분류</option>
@@ -366,33 +366,52 @@
                                     🔄 초기화
                                 </button>
                             </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger w-100" id="deleteSelectedBtn" disabled>
+                                    🗑️ 선택 삭제
+                                </button>
+                            </div>
                         </div>
+                        
+                        <!-- 일괄 삭제 폼 -->
+                        <form id="deleteMultipleForm" th:action="@{/admin/memes/delete-multiple}" method="post" style="display: none;">
+                            <input type="hidden" name="memeIds" id="selectedMemeIds">
+                        </form>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead>
                                     <tr>
+                                        <th width="3%">
+                                            <input type="checkbox" class="form-check-input" id="selectAllCheckbox">
+                                        </th>
                                         <th width="5%">ID</th>
                                         <th width="8%">이미지</th>
                                         <th width="12%">제목</th>
-                                        <th width="15%">출처</th>
-                                        <th width="20%">사용 맥락</th>
+                                        <th width="12%">출처</th>
+                                        <th width="17%">사용 맥락</th>
                                         <th width="12%">카테고리</th>
                                         <th width="10%">해시태그</th>
                                         <th width="8%">상태</th>
-                                        <th width="10%">액션</th>
+                                        <th width="12%">액션</th>
                                     </tr>
                                 </thead>
                                 <tbody id="memeTableBody">
                                     <tr th:if="${#lists.isEmpty(memes)}">
-                                        <td colspan="9" class="text-center py-5 text-muted">
+                                        <td colspan="10" class="text-center py-5 text-muted">
                                             <div class="emoji">😅</div>
                                             <p class="mb-0">아직 등록된 밈이 없습니다.</p>
                                         </td>
                                     </tr>
                                     
                                     <tr th:each="meme : ${memes}">
+                                        <td class="align-middle">
+                                            <input type="checkbox" 
+                                                   class="form-check-input meme-checkbox" 
+                                                   th:value="${meme.id}"
+                                                   onchange="updateDeleteButton()">
+                                        </td>
                                         <td class="align-middle">
                                             <span class="badge bg-secondary" th:text="${meme.id}">1</span>
                                         </td>
@@ -631,7 +650,7 @@
                     const noResultsRow = document.createElement('tr');
                     noResultsRow.id = 'noResultsRow';
                     noResultsRow.innerHTML = `
-                        <td colspan="8" class="text-center py-5 text-muted">
+                        <td colspan="10" class="text-center py-5 text-muted">
                             <div class="emoji">🔍</div>
                             <p class="mb-0">검색 결과가 없습니다.</p>
                         </td>
@@ -658,6 +677,73 @@
         
         // 초기 로드 시 모든 행 표시
         filterMemes();
+        
+        // 체크박스 관련 기능
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const deleteMultipleForm = document.getElementById('deleteMultipleForm');
+        const selectedMemeIds = document.getElementById('selectedMemeIds');
+        
+        // 전체 선택 체크박스
+        selectAllCheckbox.addEventListener('change', function() {
+            const memeCheckboxes = document.querySelectorAll('.meme-checkbox');
+            const visibleCheckboxes = Array.from(memeCheckboxes).filter(checkbox => 
+                checkbox.closest('tr').style.display !== 'none'
+            );
+            
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            
+            updateDeleteButton();
+        });
+        
+        // 선택 삭제 버튼 상태 업데이트 (전역 함수로 선언)
+        window.updateDeleteButton = function() {
+            const checkedBoxes = document.querySelectorAll('.meme-checkbox:checked');
+            deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+            
+            // 전체 선택 체크박스 상태 업데이트
+            const visibleCheckboxes = Array.from(document.querySelectorAll('.meme-checkbox')).filter(checkbox => 
+                checkbox.closest('tr').style.display !== 'none'
+            );
+            const checkedVisibleBoxes = visibleCheckboxes.filter(checkbox => checkbox.checked);
+            
+            if (checkedVisibleBoxes.length === 0) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = false;
+            } else if (checkedVisibleBoxes.length === visibleCheckboxes.length) {
+                selectAllCheckbox.indeterminate = false;
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+        
+        // 선택 삭제 버튼 클릭
+        deleteSelectedBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.meme-checkbox:checked');
+            const selectedIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+            
+            if (selectedIds.length === 0) {
+                alert('삭제할 밈을 선택해주세요.');
+                return;
+            }
+            
+            if (!confirm(`선택한 ${selectedIds.length}개의 밈을 정말로 삭제하시겠습니까?`)) {
+                return;
+            }
+            
+            selectedMemeIds.value = selectedIds.join(',');
+            deleteMultipleForm.submit();
+        });
+        
+        // 필터링 후 체크박스 상태 업데이트
+        const originalFilterMemes = filterMemes;
+        filterMemes = function() {
+            originalFilterMemes();
+            updateDeleteButton();
+        };
         
         // 밈 승인 함수
         function approveMeme(memeId) {

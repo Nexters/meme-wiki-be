@@ -28,7 +28,10 @@ public interface MemeRepository extends JpaRepository<Meme, Long>, MemeAggregati
     
     // 상태별 개수 조회
     long countByFlag(Meme.Flag flag);
-    
+
+    // 일괄 삭제 메서드
+    void deleteByIdIn(List<Long> ids);
+
     // ID로 NORMAL 밈만 조회
     @Query("SELECT m FROM Meme m WHERE m.id = :id AND m.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL")
     java.util.Optional<Meme> findByIdAndNormalFlag(@Param("id") Long id);
