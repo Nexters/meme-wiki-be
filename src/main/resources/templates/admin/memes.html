@@ -362,6 +362,20 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
+                                <div class="form-check d-flex align-items-center h-100 ps-3">
+                                    <input class="form-check-input me-2" 
+                                           type="checkbox" 
+                                           id="approvalFilter"
+                                           th:checked="${showApprovedOnly}"
+                                           onchange="toggleApprovalFilter()">
+                                    <label class="form-check-label fw-bold text-nowrap" 
+                                           for="approvalFilter"
+                                           style="font-size: 0.9rem;">
+                                        승인된 밈만 보기
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
                                 <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
                                     🔄 초기화
                                 </button>
@@ -671,7 +685,14 @@
         clearFiltersBtn.addEventListener('click', function() {
             searchInput.value = '';
             categoryFilter.value = '';
-            filterMemes();
+            
+            // 승인 상태 체크박스도 초기화 (전체 보기로)
+            const checkbox = document.getElementById('approvalFilter');
+            checkbox.checked = false;
+            
+            const url = new URL(window.location);
+            url.searchParams.delete('showApprovedOnly');
+            window.location.href = url.toString();
         });
         
         // 초기 로드 시 모든 행 표시
@@ -867,6 +888,22 @@
                 button.disabled = false;
                 button.textContent = originalText;
             });
+        }
+        
+        // 승인 상태 토글 함수
+        function toggleApprovalFilter() {
+            const checkbox = document.getElementById('approvalFilter');
+            const isChecked = checkbox.checked;
+            const url = new URL(window.location);
+            
+            if (isChecked) {
+                url.searchParams.set('showApprovedOnly', 'true');
+            } else {
+                url.searchParams.delete('showApprovedOnly');
+            }
+            
+            // 페이지 새로고침으로 필터 적용
+            window.location.href = url.toString();
         }
     </script>
 </body>

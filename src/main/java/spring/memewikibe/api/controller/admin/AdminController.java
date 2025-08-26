@@ -11,7 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import spring.memewikibe.domain.meme.Category;
+
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.application.ImageUploadService;
@@ -99,13 +99,25 @@ public class AdminController {
      * 밈 관리 메인 페이지 (리스트 + 추가 폼)
      */
     @GetMapping("/memes")
-    public String memesPage(Model model, HttpSession session) {
+    public String memesPage(@RequestParam(name = "showApprovedOnly", defaultValue = "false") boolean showApprovedOnly,
+                           Model model, HttpSession session) {
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
 
-        List<Object[]> memeWithCategories = memeRepository.findAllWithCategoryNamesOrderByIdDesc();
-        List<Meme> memes = memeRepository.findAllByOrderByIdDesc();
+        List<Object[]> memeWithCategories;
+        List<Meme> memes;
+        
+        if (showApprovedOnly) {
+            // 승인된 밈만 조회
+            memeWithCategories = memeRepository.findByFlagWithCategoryNamesOrderByIdDesc(Meme.Flag.NORMAL);
+            memes = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
+        } else {
+            // 모든 밈 조회
+            memeWithCategories = memeRepository.findAllWithCategoryNamesOrderByIdDesc();
+            memes = memeRepository.findAllByOrderByIdDesc();
+        }
+        
         List<CategoryResponse> categories = memeLookUpService.getAllCategories();
         
         // 밈별 카테고리 정보 매핑
@@ -120,6 +132,7 @@ public class AdminController {
         model.addAttribute("memeCategoryMap", memeCategoryMap);
         model.addAttribute("categories", categories);
         model.addAttribute("totalCount", memes.size());
+        model.addAttribute("showApprovedOnly", showApprovedOnly);
         
         log.info("Admin accessing memes page. Total memes: {}, Total categories: {}", 
                  memes.size(), categories.size());
