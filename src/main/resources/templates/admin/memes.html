@@ -686,12 +686,12 @@
             searchInput.value = '';
             categoryFilter.value = '';
             
-            // 승인 상태 체크박스도 초기화 (전체 보기로)
+            // 승인 상태 체크박스도 초기화 (기본값인 승인된 밈만 보기로)
             const checkbox = document.getElementById('approvalFilter');
-            checkbox.checked = false;
+            checkbox.checked = true;
             
             const url = new URL(window.location);
-            url.searchParams.delete('showApprovedOnly');
+            url.searchParams.set('showApprovedOnly', 'true');
             window.location.href = url.toString();
         });
         
@@ -896,11 +896,8 @@
             const isChecked = checkbox.checked;
             const url = new URL(window.location);
             
-            if (isChecked) {
-                url.searchParams.set('showApprovedOnly', 'true');
-            } else {
-                url.searchParams.delete('showApprovedOnly');
-            }
+            // 명시적으로 true/false 값을 설정
+            url.searchParams.set('showApprovedOnly', isChecked ? 'true' : 'false');
             
             // 페이지 새로고침으로 필터 적용
             window.location.href = url.toString();

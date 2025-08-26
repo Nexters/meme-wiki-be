@@ -99,7 +99,7 @@ public class AdminController {
      * 밈 관리 메인 페이지 (리스트 + 추가 폼)
      */
     @GetMapping("/memes")
-    public String memesPage(@RequestParam(name = "showApprovedOnly", defaultValue = "false") boolean showApprovedOnly,
+    public String memesPage(@RequestParam(name = "showApprovedOnly", defaultValue = "true") boolean showApprovedOnly,
                            Model model, HttpSession session) {
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
