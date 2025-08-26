@@ -6,7 +6,7 @@ import spring.memewikibe.domain.meme.Meme;
 import java.util.List;
 
 public interface MemeRepositoryCustom {
-    List<Meme> findByTitleDynamicContainingOrderByIdDesc(String title, Limit limit);
+    List<Meme> findByTitleOrHashtagsContainingOrderByIdDesc(String title, Limit limit);
 
-    List<Meme> findByTitleDynamicContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit);
+    List<Meme> findByTitleOrHashtagsContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit);
 }

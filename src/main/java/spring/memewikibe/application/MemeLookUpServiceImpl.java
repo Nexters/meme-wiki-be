@@ -61,10 +61,10 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
         int validatedLimit = Math.min(Math.max(limit, 1), 30);
 
         if (next == null) {
-            List<Meme> foundMemes = memeRepository.findByTitleDynamicContainingOrderByIdDesc(query, Limit.of(validatedLimit + 1));
+            List<Meme> foundMemes = memeRepository.findByTitleOrHashtagsContainingOrderByIdDesc(query, Limit.of(validatedLimit + 1));
             return createPageResponseBy(foundMemes, validatedLimit);
         }
-        List<Meme> foundMemes = memeRepository.findByTitleDynamicContainingAndIdLessThanOrderByIdDesc(query, next, Limit.of(validatedLimit + 1));
+        List<Meme> foundMemes = memeRepository.findByTitleOrHashtagsContainingAndIdLessThanOrderByIdDesc(query, next, Limit.of(validatedLimit + 1));
         return createPageResponseBy(foundMemes, validatedLimit);
     }
 

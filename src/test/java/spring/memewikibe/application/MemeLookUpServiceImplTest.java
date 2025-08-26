@@ -279,20 +279,20 @@ class MemeLookUpServiceImplTest {
             .hashtags("[\"#비정상\"]")
             .flag(Meme.Flag.ABNORMAL)
             .build();
-        
+
         memeRepository.saveAll(List.of(normal밈, abnormal밈));
 
         // when & then: NORMAL 밈은 조회 가능
         MemeDetailResponse normalResponse = memeLookUpService.getMemeById(normal밈.getId());
         then(normalResponse.title()).isEqualTo("정상 밈");
-        
+
         // when & then: ABNORMAL 밈은 조회 불가 (MEME_NOT_FOUND 예외 발생)
         thenThrownBy(() -> memeLookUpService.getMemeById(abnormal밈.getId()))
             .isInstanceOf(MemeWikiApplicationException.class)
             .extracting(exception -> ((MemeWikiApplicationException) exception).getErrorType())
             .isEqualTo(ErrorType.MEME_NOT_FOUND);
     }
-    
+
     @Test
     void 카테고리별_밈_조회시_ABNORMAL_밈은_제외된다() {
         // given
@@ -318,9 +318,9 @@ class MemeLookUpServiceImplTest {
             .hashtags("[\"#비정상\"]")
             .flag(Meme.Flag.ABNORMAL)
             .build();
-        
+
         memeRepository.saveAll(List.of(normal밈, abnormal밈));
-        
+
         // 카테고리 연결
         memeCategoryRepository.saveAll(List.of(
             MemeCategory.builder().category(테스트카테고리).meme(normal밈).build(),
@@ -334,6 +334,71 @@ class MemeLookUpServiceImplTest {
         then(response.getResults()).hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactly("정상 밈");
+    }
+
+    @Test
+    void hashtags로_밈을_검색한다() {
+        // given
+        Meme 밈1 = Meme.builder()
+            .title("무야호 밈")
+            .hashtags("[\"#무한도전\", \"#무야호\", \"#알래스카\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+        Meme 밈2 = Meme.builder()
+            .title("원영적 사고")
+            .hashtags("[\"#장원영\", \"#럭키비키\", \"#긍정\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+        Meme 밈3 = Meme.builder()
+            .title("다른 밈")
+            .hashtags("[\"#다른태그\", \"#테스트\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+
+        memeRepository.saveAll(List.of(밈1, 밈2, 밈3));
+
+        // when: hashtag로 검색
+        PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery("무한도전", null, 10);
+
+        // then: hashtag에서 매칭되는 밈이 검색됨
+        then(response.getResults()).hasSize(1)
+            .extracting(MemeDetailResponse::title)
+            .containsExactly("무야호 밈");
+    }
+
+    @Test
+    void title과_hashtags_모두에서_검색된다() {
+        // given
+        Meme 제목매칭밈 = Meme.builder()
+            .title("테스트 밈입니다")
+            .hashtags("[\"#다른태그\", \"#무야호\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+        Meme 해시태그매칭밈 = Meme.builder()
+            .title("원영적 사고")
+            .hashtags("[\"#테스트\", \"#럭키비키\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+        Meme 둘다매칭밈 = Meme.builder()
+            .title("테스트용 밈")
+            .hashtags("[\"#테스트\", \"#검색\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+        Meme 매칭안되는밈 = Meme.builder()
+            .title("다른 밈")
+            .hashtags("[\"#다른태그\", \"#무야호\"]")
+            .flag(Meme.Flag.NORMAL)
+            .build();
+
+        memeRepository.saveAll(List.of(제목매칭밈, 해시태그매칭밈, 둘다매칭밈, 매칭안되는밈));
+
+        // when: "테스트"로 검색 (title과 hashtags 모두에서 검색)
+        PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery("테스트", null, 10);
+
+        // then: title 또는 hashtags에 "테스트"가 포함된 3개 밈이 검색됨
+        then(response.getResults()).hasSize(3)
+            .extracting(MemeDetailResponse::title)
+            .containsExactlyInAnyOrder("테스트 밈입니다", "원영적 사고", "테스트용 밈");
     }
 
     @Test

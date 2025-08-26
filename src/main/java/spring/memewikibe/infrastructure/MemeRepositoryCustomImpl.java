@@ -20,26 +20,30 @@ public class MemeRepositoryCustomImpl implements MemeRepositoryCustom {
     }
 
     @Override
-    public List<Meme> findByTitleDynamicContainingOrderByIdDesc(String title, Limit limit) {
+    public List<Meme> findByTitleOrHashtagsContainingOrderByIdDesc(String title, Limit limit) {
         return queryFactory
             .selectFrom(meme)
-            .where(titleContains(title), meme.flag.eq(Meme.Flag.NORMAL))
+            .where(titleOrHashtagsContains(title), meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit.max())
             .fetch();
     }
 
     @Override
-    public List<Meme> findByTitleDynamicContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit) {
+    public List<Meme> findByTitleOrHashtagsContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit) {
         return queryFactory
             .selectFrom(meme)
-            .where(titleContains(title), meme.id.lt(lastId), meme.flag.eq(Meme.Flag.NORMAL))
+            .where(titleOrHashtagsContains(title), meme.id.lt(lastId), meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit.max())
             .fetch();
     }
 
-    private BooleanExpression titleContains(String title) {
-        return title != null && !title.trim().isEmpty() ? meme.title.containsIgnoreCase(title) : null;
+    private BooleanExpression titleOrHashtagsContains(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return null;
+        }
+        return meme.title.containsIgnoreCase(query)
+            .or(meme.hashtags.containsIgnoreCase(query));
     }
 }
