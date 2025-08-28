@@ -55,33 +55,4 @@ public class MemeCreateService {
         log.info("밈 생성 완료: {}", savedMeme.getId());
         return savedMeme.getId();
     }
-
-    public long createMemeUsingCrawler(MemeCreateRequest request, MultipartFile imageFile) {
-        String imageUrl = imageUploadService.uploadImage(imageFile);
-
-        Meme meme = Meme.crawlerMeme(
-            request.title(),
-            request.origin(),
-            request.usageContext(),
-            request.trendPeriod(),
-            imageUrl,
-            HashtagParser.toJson(request.hashtags())
-        );
-
-        Meme savedMeme = memeRepository.save(meme);
-
-        Optional.ofNullable(request.categoryIds())
-            .filter(ids -> !ids.isEmpty())
-            .map(categoryRepository::findAllById)
-            .map(categories -> categories.stream()
-                .map(category -> MemeCategory.builder()
-                    .meme(savedMeme)
-                    .category(category)
-                    .build())
-                .toList())
-            .ifPresent(memeCategoryRepository::saveAll);
-
-        log.info("크롤러를 통한 밈 생성 완료: {}", savedMeme.getId());
-        return savedMeme.getId();
-    }
 } 
