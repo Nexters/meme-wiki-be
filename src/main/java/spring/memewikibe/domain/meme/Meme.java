@@ -39,29 +39,6 @@ public class Meme extends BaseEntity {
         this.flag = flag;
     }
 
-    public static Meme crawlerMeme(String title, String origin, String usageContext, String trendPeriod, String imgUrl, String hashtags) {
-        return Meme.builder()
-            .title(title)
-            .origin(origin)
-            .usageContext(usageContext)
-            .trendPeriod(trendPeriod)
-            .imgUrl(imgUrl)
-            .hashtags(hashtags)
-            .flag(Flag.ABNORMAL)
-            .build();
-    }
-
-    public enum Flag {
-        NORMAL("정상"),
-        ABNORMAL("비정상");
-
-        private final String description;
-
-        Flag(String description) {
-            this.description = description;
-        }
-    }
-
     /**
      * 밈 정보를 업데이트합니다.
      */
@@ -87,5 +64,16 @@ public class Meme extends BaseEntity {
      */
     public void reject() {
         this.flag = Flag.ABNORMAL;
+    }
+
+    public enum Flag {
+        NORMAL("정상"),
+        ABNORMAL("비정상");
+
+        private final String description;
+
+        Flag(String description) {
+            this.description = description;
+        }
     }
 }

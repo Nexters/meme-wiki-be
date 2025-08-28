@@ -2,8 +2,6 @@ package spring.memewikibe.api.controller.meme;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
@@ -31,16 +29,6 @@ public class MemeController {
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
         this.memeCreateService = memeCreateService;
-    }
-
-    @PostMapping
-    public ApiResponse<Long> createMeme(
-        @RequestParam String title,
-        @RequestParam String hashtags,
-        @RequestParam MultipartFile imageFile
-    ) {
-        MemeCreateRequest request = new MemeCreateRequest(title, "알 수 없음", "알 수 없음", "2025", hashtags, null);
-        return ApiResponse.success(memeCreateService.createMemeUsingCrawler(request, imageFile));
     }
 
     @GetMapping
