@@ -30,6 +30,9 @@ admin:
   username: ${ADMIN_USERNAME:admin}
   password: ${ADMIN_PASSWORD:admin123}
 
+clova:
+  api-key: ${CLOVA_API_KEY:}
+
 ---
 spring.config.activate.on-profile: local
 
