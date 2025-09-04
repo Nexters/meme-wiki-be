@@ -1,6 +1,6 @@
 package spring.memewikibe.external.response;
 
-import spring.memewikibe.external.MemeDoc;
+import spring.memewikibe.external.domain.MemeDoc;
 
 import java.util.List;
 

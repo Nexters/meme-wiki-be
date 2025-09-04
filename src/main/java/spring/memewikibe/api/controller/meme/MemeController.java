@@ -7,7 +7,7 @@ import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
 import spring.memewikibe.application.*;
-import spring.memewikibe.external.MemeDoc;
+import spring.memewikibe.external.domain.MemeDoc;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
@@ -24,7 +24,7 @@ public class MemeController {
     private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
     private final MemeSearchService memeSearchService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService, MemeCreateService memeCreateService, MemeSearchService memeSearchService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService, MemeSearchService memeSearchService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;

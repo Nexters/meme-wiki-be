@@ -1,4 +1,4 @@
-package spring.memewikibe.external;
+package spring.memewikibe.external.domain;
 
 import spring.memewikibe.domain.meme.Meme;
 

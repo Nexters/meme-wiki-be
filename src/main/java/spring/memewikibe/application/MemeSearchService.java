@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import spring.memewikibe.domain.meme.Meme;
-import spring.memewikibe.external.MemeDoc;
+import spring.memewikibe.external.domain.MemeDoc;
 import spring.memewikibe.external.NaverClovaClient;
 import spring.memewikibe.external.request.ClovaRerankerRequest;
 import spring.memewikibe.external.response.ClovaRerankerResponse;
