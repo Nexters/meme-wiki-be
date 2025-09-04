@@ -2,10 +2,7 @@ package spring.memewikibe.api.controller.meme;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import spring.memewikibe.api.controller.meme.response.CategoryResponse;
-import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
-import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
-import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
+import spring.memewikibe.api.controller.meme.response.*;
 import spring.memewikibe.application.*;
 import spring.memewikibe.external.domain.MemeDoc;
 import spring.memewikibe.support.response.ApiResponse;
@@ -94,7 +91,7 @@ public class MemeController {
     }
 
     @GetMapping("/clova")
-    public ApiResponse<List<MemeDoc>> getRerankerMemes(
+    public ApiResponse<MemeRerankerResponse> getRerankerMemes(
         @RequestParam String query
     ) {
         return ApiResponse.success(memeSearchService.getRerankerMeme(query));
