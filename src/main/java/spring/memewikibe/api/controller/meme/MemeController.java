@@ -2,11 +2,9 @@ package spring.memewikibe.api.controller.meme;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import spring.memewikibe.api.controller.meme.response.CategoryResponse;
-import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
-import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
-import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
+import spring.memewikibe.api.controller.meme.response.*;
 import spring.memewikibe.application.*;
+import spring.memewikibe.external.domain.MemeDoc;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
@@ -21,14 +19,14 @@ public class MemeController {
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
     private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
-    private final MemeCreateService memeCreateService;
+    private final MemeSearchService memeSearchService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService, MemeCreateService memeCreateService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService, MemeSearchService memeSearchService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
-        this.memeCreateService = memeCreateService;
+        this.memeSearchService = memeSearchService;
     }
 
     @GetMapping
@@ -92,6 +90,10 @@ public class MemeController {
         return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
     }
 
-    // 밈 생성 기능은 관리자 페이지에서만 가능합니다.
-    // POST /admin/memes 를 사용하세요.
+    @GetMapping("/clova")
+    public ApiResponse<MemeRerankerResponse> getRerankerMemes(
+        @RequestParam String query
+    ) {
+        return ApiResponse.success(memeSearchService.getRerankerMeme(query));
+    }
 }

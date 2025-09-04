@@ -127,6 +127,8 @@ jobs:
 
           export ADMIN_USERNAME='${{ secrets.ADMIN_USERNAME }}'
           export ADMIN_PASSWORD='${{ secrets.ADMIN_PASSWORD }}'
+          
+          export CLOVA_API_KEY='${{ secrets.CLOVA_API_KEY }}'
 
           docker compose pull app
           docker compose up -d app
