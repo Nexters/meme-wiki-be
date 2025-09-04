@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import spring.memewikibe.external.ClovaException;
 import spring.memewikibe.support.error.ErrorType;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 import spring.memewikibe.support.response.ApiResponse;
@@ -34,6 +35,12 @@ public class ControllerAdvice {
 
         log.warn("Static resource not found: {}", e.getMessage());
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ClovaException.class)
+    public ResponseEntity<ApiResponse<?>> handleClovaException(ClovaException e) {
+        log.error("ClovaException : {}", e.getMessage(), e);
+        return new ResponseEntity<>(ApiResponse.error(e.getErrorType()), e.getErrorType().getStatus());
     }
 
     @ExceptionHandler(Exception.class)

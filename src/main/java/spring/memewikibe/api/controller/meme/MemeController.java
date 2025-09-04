@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import spring.memewikibe.api.controller.meme.response.*;
 import spring.memewikibe.application.*;
-import spring.memewikibe.external.domain.MemeDoc;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
@@ -90,7 +89,7 @@ public class MemeController {
         return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
     }
 
-    @GetMapping("/clova")
+    @GetMapping("/search/reranker")
     public ApiResponse<MemeRerankerResponse> getRerankerMemes(
         @RequestParam String query
     ) {

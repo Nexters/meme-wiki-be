@@ -38,14 +38,14 @@ public class MemeSearchService {
 
         if (!reranker.isSuccess()) {
             log.error("clova reranker error | code: {}, message: {}", reranker.status().code(), reranker.status().message());
-            throw new ClovaException(ErrorType.EXTERNAL_SERVICE_ERROR);
+            throw new ClovaException(ErrorType.EXTERNAL_SERVICE_ERROR, reranker.status());
         }
 
         if (reranker.isNotFound()) {
             log.warn("clova reranker is worked but failed to find relevant memes | query: '{}'", query);
             return MemeRerankerResponse.failure(
                 reranker.result().result(),
-                List.of(),
+                reranker.result().citedDocuments(),
                 reranker.result().suggestedQueries()
             );
         }
