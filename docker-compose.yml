@@ -47,6 +47,7 @@ services:
       CLOUDFLARE_R2_BUCKET_NAME: ${CLOUDFLARE_R2_BUCKET_NAME}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      CLOVA_API_KEY: ${CLOVA_API_KEY}
     volumes:
       - /root/logs:/app/logs
     labels:
