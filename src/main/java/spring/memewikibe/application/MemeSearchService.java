@@ -2,7 +2,6 @@ package spring.memewikibe.application;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.external.domain.MemeDoc;
@@ -21,16 +20,12 @@ public class MemeSearchService {
     private final NaverClovaClient naverClovaClient;
     private final MemeRepository memeRepository;
 
-    @Value("${clova.api-key}")
-    private String clovaApiKey;
-
     public List<MemeDoc> getRerankerMeme(String query) {
         List<Meme> candidateMemes = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
         List<MemeDoc> memeDocs = candidateMemes.stream()
             .map(MemeDoc::from)
             .toList();
-        String authorization = "Bearer " + clovaApiKey;
-        ClovaRerankerResponse reranker = naverClovaClient.reranker(authorization, new ClovaRerankerRequest(memeDocs, query));
+        ClovaRerankerResponse reranker = naverClovaClient.reranker(new ClovaRerankerRequest(memeDocs, query));
         if (reranker.status().code().equals("20000")) {
             if (reranker.result().citedDocuments().isEmpty()) {
                 log.info("result: " + reranker.result().result() + "suggestedQueries" + reranker.result().suggestedQueries().toString());
