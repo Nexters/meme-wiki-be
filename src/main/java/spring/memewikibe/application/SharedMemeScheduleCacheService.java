@@ -7,6 +7,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
+import spring.memewikibe.common.util.TimeProvider;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,20 +16,22 @@ import java.util.List;
 @Service
 public class SharedMemeScheduleCacheService {
 
-    private static final String CRON_EXPRESSION = "0 0 4 * * *";
+    private static final String SHARED_MEME_RENEWAL_CRON = "0 0 4 * * *";
 
-    private final CronExpression cronExpression = CronExpression.parse(CRON_EXPRESSION);
+    private final CronExpression cronExpression = CronExpression.parse(SHARED_MEME_RENEWAL_CRON);
     private final MemeAggregationLookUpService memeAggregationLookUpService;
+    private final TimeProvider timeProvider;
 
     private volatile MostSharedMemes cachedData;
 
-    public SharedMemeScheduleCacheService(MemeAggregationLookUpServiceImpl memeAggregationLookUpService) {
+    public SharedMemeScheduleCacheService(MemeAggregationLookUpServiceImpl memeAggregationLookUpService, TimeProvider timeProvider) {
         this.memeAggregationLookUpService = memeAggregationLookUpService;
+        this.timeProvider = timeProvider;
     }
 
     public MostSharedMemes getMostSharedMemes() {
         if (cachedData == null) {
-            refreshCache();
+            refreshCache(timeProvider);
         }
         return cachedData;
     }
@@ -36,19 +39,19 @@ public class SharedMemeScheduleCacheService {
     @PostConstruct
     public void initializeCache() {
         log.info("Initializing shared meme cache");
-        refreshCache();
+        refreshCache(timeProvider);
     }
 
-    @Scheduled(cron = CRON_EXPRESSION)
+    @Scheduled(cron = SHARED_MEME_RENEWAL_CRON)
     public void scheduledRefresh() {
         log.info("Scheduled refresh of shared meme cache");
-        refreshCache();
+        refreshCache(timeProvider);
     }
 
-    private void refreshCache() {
+    private void refreshCache(TimeProvider timeProvider) {
         try {
             List<MemeSimpleResponse> memes = memeAggregationLookUpService.getMostFrequentSharedMemes();
-            LocalDateTime nextUpdateTime = cronExpression.next(LocalDateTime.now());
+            LocalDateTime nextUpdateTime = cronExpression.next(timeProvider.now());
 
             cachedData = new MostSharedMemes(memes, nextUpdateTime);
 
