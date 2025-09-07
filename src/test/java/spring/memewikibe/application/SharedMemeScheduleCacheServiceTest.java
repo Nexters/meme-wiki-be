@@ -3,11 +3,11 @@ package spring.memewikibe.application;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
+import spring.memewikibe.common.util.TimeProvider;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -19,12 +19,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SharedMemeScheduleCacheServiceTest {
 
+    private final StubTimeProvider stubTimeProvider = new StubTimeProvider(LocalDateTime.of(2025, 9, 6, 11, 50));
     @Mock
     private MemeAggregationLookUpServiceImpl mockOriginService;
-
-    @InjectMocks
     private SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
-
     private List<MemeSimpleResponse> testMemes;
 
     @BeforeEach
@@ -34,6 +32,7 @@ class SharedMemeScheduleCacheServiceTest {
             new MemeSimpleResponse(2L, "나만 아니면 돼", "나만아니면돼.jpg"),
             new MemeSimpleResponse(3L, "전남친 토스트", "전남친토스트.jpg")
         );
+        sharedMemeScheduleCacheService = new SharedMemeScheduleCacheService(mockOriginService, stubTimeProvider);
     }
 
     @Test
@@ -134,5 +133,22 @@ class SharedMemeScheduleCacheServiceTest {
         MostSharedMemes result = sharedMemeScheduleCacheService.getMostSharedMemes();
         then(result.memes()).isEqualTo(testMemes);
         verify(mockOriginService, times(1)).getMostFrequentSharedMemes();
+    }
+
+    public static class StubTimeProvider implements TimeProvider {
+        private LocalDateTime fixedTime;
+
+        public StubTimeProvider(LocalDateTime fixedTime) {
+            this.fixedTime = fixedTime;
+        }
+
+        @Override
+        public LocalDateTime now() {
+            return fixedTime;
+        }
+
+        public void setFixedTime(LocalDateTime fixedTime) {
+            this.fixedTime = fixedTime;
+        }
     }
 }
