@@ -1,5 +1,6 @@
 package spring.memewikibe.application;
 
+import lombok.Setter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +20,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SharedMemeScheduleCacheServiceTest {
 
-    private final StubTimeProvider stubTimeProvider = new StubTimeProvider(LocalDateTime.of(2025, 9, 6, 11, 50));
+    private final LocalDateTime FIXED_DATE_TIME = LocalDateTime.of(2025, 9, 6, 11, 50);
+    private final StubTimeProvider stubTimeProvider = new StubTimeProvider(FIXED_DATE_TIME);
     @Mock
     private MemeAggregationLookUpServiceImpl mockOriginService;
     private SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
@@ -45,7 +47,7 @@ class SharedMemeScheduleCacheServiceTest {
 
         // then
         then(result.memes()).isEqualTo(testMemes);
-        then(result.nextFetchTime()).isAfter(LocalDateTime.now());
+        then(result.nextFetchTime()).isAfter(FIXED_DATE_TIME);
         verify(mockOriginService, times(1)).getMostFrequentSharedMemes();
     }
 
@@ -61,7 +63,7 @@ class SharedMemeScheduleCacheServiceTest {
 
         // then
         then(result.memes()).isEqualTo(testMemes);
-        then(result.nextFetchTime()).isAfter(LocalDateTime.now());
+        then(result.nextFetchTime()).isAfter(FIXED_DATE_TIME);
         verify(mockOriginService, never()).getMostFrequentSharedMemes();
     }
 
@@ -85,7 +87,7 @@ class SharedMemeScheduleCacheServiceTest {
     }
 
     @Test
-    void nextFetchTime은_매일_새벽_4시를_반환한다() {
+    void nextFetchTime은_현재시각보다_이후의_cronjob이_동작하는시간이다() {
         // given
         when(mockOriginService.getMostFrequentSharedMemes()).thenReturn(testMemes);
 
@@ -93,11 +95,7 @@ class SharedMemeScheduleCacheServiceTest {
         MostSharedMemes result = sharedMemeScheduleCacheService.getMostSharedMemes();
 
         // then
-        LocalDateTime nextFetchTime = result.nextFetchTime();
-        then(nextFetchTime.getHour()).isEqualTo(4);
-        then(nextFetchTime.getMinute()).isEqualTo(0);
-        then(nextFetchTime.getSecond()).isEqualTo(0);
-        then(nextFetchTime).isAfter(LocalDateTime.now());
+        then(result.nextFetchTime()).isAfter(FIXED_DATE_TIME);
     }
 
     @Test
@@ -136,7 +134,7 @@ class SharedMemeScheduleCacheServiceTest {
     }
 
     public static class StubTimeProvider implements TimeProvider {
-        private LocalDateTime fixedTime;
+        private final LocalDateTime fixedTime;
 
         public StubTimeProvider(LocalDateTime fixedTime) {
             this.fixedTime = fixedTime;
@@ -147,8 +145,5 @@ class SharedMemeScheduleCacheServiceTest {
             return fixedTime;
         }
 
-        public void setFixedTime(LocalDateTime fixedTime) {
-            this.fixedTime = fixedTime;
-        }
     }
 }
