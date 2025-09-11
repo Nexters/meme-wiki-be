@@ -74,25 +74,16 @@ jobs:
 
     # Infrastructure changes detection and deployment
     - name: Check for infrastructure changes
+      uses: dorny/paths-filter@v2
       id: changes
-      run: |
-        BEFORE="${{ github.event.before }}"
-        AFTER="${{ github.sha }}"
-        if [ -z "$BEFORE" ] || [ "$BEFORE" = "$AFTER" ]; then
-          git fetch --depth=2 origin ${{ github.ref }} | cat
-          BEFORE=$(git rev-parse HEAD~1)
-        fi
-        echo "Comparing range: $BEFORE..$AFTER"
-        if git diff --name-only "$BEFORE" "$AFTER" | grep -E "(docker-compose\.yml|init-scripts/)" > /dev/null; then
-          echo "infra_changed=true" >> $GITHUB_OUTPUT
-          echo "🔧 Infrastructure changes detected"
-        else
-          echo "infra_changed=false" >> $GITHUB_OUTPUT
-          echo "📦 Code-only changes detected"
-        fi
+      with:
+        filters: |
+          infra:
+            - 'docker-compose.yml'
+            - 'init-scripts/**'
 
     - name: Deploy infrastructure changes
-      if: steps.changes.outputs.infra_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_infra_deploy == 'true')
+      if: steps.changes.outputs.infra == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_infra_deploy == 'true')
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.NCP_SERVER_HOST }}
@@ -103,7 +94,7 @@ jobs:
         overwrite: true
 
     - name: Restart services for infrastructure changes
-      if: steps.changes.outputs.infra_changed == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_infra_deploy == 'true')
+      if: steps.changes.outputs.infra == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_infra_deploy == 'true')
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.NCP_SERVER_HOST }}
@@ -111,7 +102,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd /home/ubuntu/app
-          echo "🔄 Restarting services (infra_changed=${{ steps.changes.outputs.infra_changed }}, force=${{ inputs.force_infra_deploy }})..."
+          echo "🔄 Restarting services (infra_changed=${{ steps.changes.outputs.infra }}, force=${{ inputs.force_infra_deploy }})..."
           # Export runtime env vars from GitHub Secrets (no .env file needed)
           export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
           export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
@@ -138,8 +129,8 @@ jobs:
     - name: Deployment completed
       run: |
         echo "✅ 이미지 배포 완료: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
-        echo "event=${{ github.event_name }} infra_changed=${{ steps.changes.outputs.infra_changed }} force=${{ inputs.force_infra_deploy }}"
-        if [ "${{ steps.changes.outputs.infra_changed }}" == "true" ] || { [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.force_infra_deploy }}" == "true" ]; }; then
+        echo "event=${{ github.event_name }} infra_changed=${{ steps.changes.outputs.infra }} force=${{ inputs.force_infra_deploy }}"
+        if [ "${{ steps.changes.outputs.infra }}" == "true" ] || { [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.force_infra_deploy }}" == "true" ]; }; then
           echo "🔧 Infrastructure changes deployed via SSH"
           echo "🐳 Services restarted with new configuration"
         else
