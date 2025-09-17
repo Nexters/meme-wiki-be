@@ -32,6 +32,9 @@ admin:
 
 clova:
   api-key: ${CLOVA_API_KEY:}
+  base-url: ${CLOVA_BASE_URL:https://clovastudio.stream.ntruss.com}
+  connect-timeout: ${CLOVA_CONNECT_TIMEOUT:5000}
+  read-timeout: ${CLOVA_READ_TIMEOUT:30000}
 
 ---
 spring.config.activate.on-profile: local
