@@ -45,13 +45,13 @@ public class ClovaClientConfig {
                     String clovaCode = errorResponse.status().code();
                     String clovaMessage = errorResponse.status().message();
 
-                    throw new ClovaApiException(clovaCode, clovaMessage, response.getStatusCode());
+                    throw ClovaApiException.of(Integer.parseInt(clovaCode), clovaMessage);
 
                 } catch (ClovaApiException e) {
                     throw e; // 이미 파싱된 Clova 에러는 그대로 전파
                 } catch (Exception e) {
                     log.error("Failed to parse Clova error response", e);
-                    throw new ClovaApiException("UNKNOWN", "외부 서비스 에러", response.getStatusCode());
+                    throw ClovaApiException.of(-1, "외부 서비스 에러");
                 }
             })
             .build();

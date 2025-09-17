@@ -5,13 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import spring.memewikibe.api.controller.meme.response.MemeRerankerResponse;
 import spring.memewikibe.domain.meme.Meme;
-import spring.memewikibe.external.ClovaException;
 import spring.memewikibe.external.NaverClovaClient;
 import spring.memewikibe.external.domain.MemeDoc;
 import spring.memewikibe.external.request.ClovaRerankerRequest;
 import spring.memewikibe.external.response.ClovaRerankerResponse;
 import spring.memewikibe.infrastructure.MemeRepository;
-import spring.memewikibe.support.error.ErrorType;
 
 import java.util.List;
 
@@ -35,11 +33,6 @@ public class MemeSearchService {
         int total = reranker.result().usage().totalTokens();
 
         log.info("clova token usage | prompt: {}, completion: {}, total: {}", prompt, completion, total);
-
-        if (!reranker.isSuccess()) {
-            log.error("clova reranker error | code: {}, message: {}", reranker.status().code(), reranker.status().message());
-            throw new ClovaException(ErrorType.EXTERNAL_SERVICE_ERROR, reranker.status());
-        }
 
         if (reranker.isNotFound()) {
             log.warn("clova reranker is worked but failed to find relevant memes | query: '{}'", query);
