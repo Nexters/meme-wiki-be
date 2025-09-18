@@ -1,9 +1,11 @@
 package spring.memewikibe.infrastructure;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Repository;
+import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
 
 import java.util.List;
@@ -36,6 +38,21 @@ public class MemeRepositoryCustomImpl implements MemeRepositoryCustom {
             .where(titleOrHashtagsContains(title), meme.id.lt(lastId), meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit.max())
+            .fetch();
+    }
+
+    @Override
+    public List<MemeSimpleResponse> findLatestMemesExcludingIds(List<Long> excludeIds, int limit) {
+        return queryFactory
+            .select(Projections.constructor(MemeSimpleResponse.class,
+                meme.id,
+                meme.title,
+                meme.imgUrl
+            ))
+            .from(meme)
+            .where(excludeIds.isEmpty() ? null : meme.id.notIn(excludeIds), meme.flag.eq(Meme.Flag.NORMAL))
+            .orderBy(meme.id.desc())
+            .limit(limit)
             .fetch();
     }
 

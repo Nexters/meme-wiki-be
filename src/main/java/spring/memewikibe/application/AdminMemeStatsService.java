@@ -1,7 +1,5 @@
 package spring.memewikibe.application;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import spring.memewikibe.api.controller.admin.response.MemePopularityListResponse;
 import spring.memewikibe.api.controller.admin.response.MemePopularityResponse;
@@ -17,7 +15,7 @@ public class AdminMemeStatsService {
 
     private final MemeAggregationRepository memeAggregationRepository;
 
-    public AdminMemeStatsService(@Qualifier("memeAggregationRepositoryImpl") MemeAggregationRepository memeAggregationRepository) {
+    public AdminMemeStatsService(MemeAggregationRepository memeAggregationRepository) {
         this.memeAggregationRepository = memeAggregationRepository;
     }
 
