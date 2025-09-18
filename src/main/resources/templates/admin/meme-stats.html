@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인기 밈 통계 - 밈위키 관리자</title>
+    <link href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+            font-weight: 600;
+            padding: 1.5rem;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .rank-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+        }
+        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #808080); }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); }
+        .rank-other { background: linear-gradient(135deg, #6c757d, #495057); }
+        .meme-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .score-breakdown {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .period-tab {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .period-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .meme-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/admin/memes">
+                📊 밈위키 통계 관리
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white me-3" href="/admin/memes">📝 전체 밈 관리</a>
+                <a class="nav-link text-white me-3" href="/admin/memes/review">🔍 검토 대기</a>
+                <a class="nav-link text-white me-3 active" href="/admin/memes/stats">📊 인기 밈 통계</a>
+                <span class="navbar-text me-3">
+                    👋 관리자님, 안녕하세요!
+                </span>
+                <a class="btn btn-outline-light btn-sm" th:href="@{/admin/logout}">
+                    🚪 로그아웃
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- 페이지 헤더 -->
+        <div class="stats-card">
+            <div class="row text-center">
+                <div class="col-md-12">
+                    <h1 class="display-6 mb-0">📊 인기 밈 통계</h1>
+                    <p class="mb-0">조회수, 공유수, 커스텀수를 기반으로 한 인기 밈 랭킹</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 기간 선택 탭 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <ul class="nav nav-pills justify-content-center">
+                            <li class="nav-item">
+                                <a class="nav-link period-tab" href="#" data-days="1">📅 일간</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link period-tab active" href="#" data-days="7">📊 주간</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link period-tab" href="#" data-days="30">📈 월간</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 로딩 인디케이터 -->
+        <div class="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">통계 데이터를 불러오는 중...</p>
+        </div>
+
+        <!-- 통계 결과 -->
+        <div id="statsResults">
+            <!-- JavaScript로 동적 로딩 -->
+        </div>
+    </div>
+
+    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentDays = 7;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats(currentDays);
+
+            // 탭 클릭 이벤트
+            document.querySelectorAll('.period-tab').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // 활성 탭 변경
+                    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // 데이터 로딩
+                    currentDays = parseInt(this.dataset.days);
+                    loadStats(currentDays);
+                });
+            });
+        });
+
+        function loadStats(days) {
+            showLoading(true);
+
+            fetch(`/admin/memes/stats/popular?days=${days}&limit=20`)
+                .then(response => response.json())
+                .then(data => {
+                    showLoading(false);
+                    renderStats(data);
+                })
+                .catch(error => {
+                    showLoading(false);
+                    console.error('Error:', error);
+                    document.getElementById('statsResults').innerHTML =
+                        '<div class="alert alert-danger">통계 데이터를 불러오는데 실패했습니다.</div>';
+                });
+        }
+
+        function showLoading(show) {
+            document.querySelector('.loading').style.display = show ? 'block' : 'none';
+            document.getElementById('statsResults').style.display = show ? 'none' : 'block';
+        }
+
+        function renderStats(data) {
+            const container = document.getElementById('statsResults');
+
+            if (!data.popularMemes || data.popularMemes.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <h4>📊 ${data.period} 통계</h4>
+                            <p class="text-muted">통계 데이터가 없습니다.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">🏆 ${data.period} 인기 밈 TOP ${data.totalCount}</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>순위</th>
+                                        <th>밈</th>
+                                        <th>제목</th>
+                                        <th>조회수</th>
+                                        <th>공유수</th>
+                                        <th>커스텀수</th>
+                                        <th>총점</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+
+            data.popularMemes.forEach(meme => {
+                const rankClass = getRankClass(meme.rank);
+                html += `
+                    <tr>
+                        <td>
+                            <div class="rank-badge ${rankClass}">
+                                ${meme.rank}
+                            </div>
+                        </td>
+                        <td>
+                            <img src="${meme.imgUrl}" alt="${meme.title}" class="meme-img"
+                                 onerror="this.src='/images/default-meme.png'">
+                        </td>
+                        <td>
+                            <div class="meme-title">${meme.title}</div>
+                            <div class="score-breakdown">
+                                ID: ${meme.id}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">${meme.viewCount}</span>
+                            <div class="score-breakdown">×1 = ${meme.viewCount}점</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">${meme.shareCount}</span>
+                            <div class="score-breakdown">×2 = ${meme.shareCount * 2}점</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">${meme.customCount}</span>
+                            <div class="score-breakdown">×3 = ${meme.customCount * 3}점</div>
+                        </td>
+                        <td>
+                            <h5 class="mb-0 text-primary fw-bold">${meme.totalScore}</h5>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5>📋 점수 계산 방식</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-info me-2">조회수</span>
+                                    <span>× 1점</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-warning me-2">공유수</span>
+                                    <span>× 2점</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-success me-2">커스텀수</span>
+                                    <span>× 3점</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-0">총점 = (조회수 × 1) + (공유수 × 2) + (커스텀수 × 3)</p>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function getRankClass(rank) {
+            if (rank === 1) return 'rank-1';
+            if (rank === 2) return 'rank-2';
+            if (rank === 3) return 'rank-3';
+            return 'rank-other';
+        }
+    </script>
+</body>
+</html>
