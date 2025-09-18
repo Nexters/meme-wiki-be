@@ -24,6 +24,8 @@ import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import org.springframework.web.multipart.MultipartFile;
+import spring.memewikibe.application.AdminMemeStatsService;
+import spring.memewikibe.api.controller.admin.response.MemePopularityListResponse;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -46,6 +48,7 @@ public class AdminController {
     private final MemeCreateService memeCreateService;
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
+    private final AdminMemeStatsService adminMemeStatsService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -585,6 +588,52 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("반려 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    /**
+     * 어드민용 인기 밈 통계 조회 API
+     */
+    @GetMapping("/memes/stats/popular")
+    @ResponseBody
+    public ResponseEntity<MemePopularityListResponse> getPopularMemes(
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "20") int limit,
+            HttpSession session) {
+
+        if (!isAuthenticated(session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            MemePopularityListResponse response;
+            switch (days) {
+                case 1 -> response = adminMemeStatsService.getDailyPopularMemes(limit);
+                case 7 -> response = adminMemeStatsService.getWeeklyPopularMemes(limit);
+                case 30 -> response = adminMemeStatsService.getMonthlyPopularMemes(limit);
+                default -> response = adminMemeStatsService.getPopularMemes(
+                    java.time.Duration.ofDays(days), limit);
+            }
+
+            log.info("Admin requested popular memes: period={}days, limit={}, count={}",
+                     days, limit, response.totalCount());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to get popular memes stats", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * 어드민용 인기 밈 통계 페이지
+     */
+    @GetMapping("/memes/stats")
+    public String statsPage(HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        return "admin/meme-stats";
     }
 
     private boolean isAuthenticated(HttpSession session) {

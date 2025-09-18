@@ -4,10 +4,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.MemeAggregationResult;
+import spring.memewikibe.infrastructure.MemeAggregationRepository;
 import spring.memewikibe.infrastructure.MemeCustomLogRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.infrastructure.MemeShareLogRepository;
-import spring.memewikibe.infrastructure.MemeViewLogRepository;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -23,11 +23,13 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     private final MemeCustomLogRepository customLogRepository;
     private final MemeShareLogRepository shareLogRepository;
     private final MemeRepository memeRepository;
+    private final MemeAggregationRepository memeAggregationRepository;
 
-    public MemeAggregationLookUpServiceImpl(MemeCustomLogRepository customLogRepository, MemeViewLogRepository viewLogRepository, MemeShareLogRepository shareLogRepository, MemeRepository memeRepository) {
+    public MemeAggregationLookUpServiceImpl(MemeCustomLogRepository customLogRepository, MemeShareLogRepository shareLogRepository, MemeRepository memeRepository, MemeAggregationRepository memeAggregationRepository) {
         this.customLogRepository = customLogRepository;
         this.shareLogRepository = shareLogRepository;
         this.memeRepository = memeRepository;
+        this.memeAggregationRepository = memeAggregationRepository;
     }
 
 
@@ -54,7 +56,7 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     @Transactional(readOnly = true)
     @Override
     public List<MemeSimpleResponse> getMostPopularMemes() {
-        List<MemeAggregationResult> aggregationResult = memeRepository.findTopRatedMemesBy(AGGREGATION_DURATION_PERIOD, MOST_POPULAR_MEMES_COUNT);
+        List<MemeAggregationResult> aggregationResult = memeAggregationRepository.findTopRatedMemesBy(AGGREGATION_DURATION_PERIOD, MOST_POPULAR_MEMES_COUNT);
         List<MemeSimpleResponse> response = aggregationResult.stream()
             .map(it -> new MemeSimpleResponse(it.id(), it.title(), it.imgUrl()))
             .toList();

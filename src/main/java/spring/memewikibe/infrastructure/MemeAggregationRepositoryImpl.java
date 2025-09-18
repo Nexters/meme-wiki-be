@@ -7,7 +7,6 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLSubQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Repository;
-import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeAggregationResult;
 
@@ -23,6 +22,9 @@ import static spring.memewikibe.domain.meme.QMemeViewLog.memeViewLog;
 @Repository
 public class MemeAggregationRepositoryImpl implements MemeAggregationRepository {
 
+    private static final int CUSTOM_WEIGHT = 3;
+    private static final int SHARE_WEIGHT = 2;
+    private static final int VIEW_WEIGHT = 1;
     private final JPAQueryFactory queryFactory;
 
     public MemeAggregationRepositoryImpl(JPAQueryFactory queryFactory) {
@@ -32,10 +34,6 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
     @Override
     public List<MemeAggregationResult> findTopRatedMemesBy(Duration duration, int limit) {
         LocalDateTime aggregationPoint = LocalDateTime.now().minus(duration);
-
-        final int CUSTOM_WEIGHT = 3;
-        final int SHARE_WEIGHT = 2;
-        final int VIEW_WEIGHT = 1;
 
         JPQLSubQuery<Long> customCount = JPAExpressions
             .select(memeCustomLog.count())
@@ -81,20 +79,5 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
             .fetch();
     }
 
-
-    @Override
-    public List<MemeSimpleResponse> findLatestMemesExcludingIds(List<Long> excludeIds, int limit) {
-        return queryFactory
-            .select(Projections.constructor(MemeSimpleResponse.class,
-                meme.id,
-                meme.title,
-                meme.imgUrl
-            ))
-            .from(meme)
-            .where(excludeIds.isEmpty() ? null : meme.id.notIn(excludeIds), meme.flag.eq(Meme.Flag.NORMAL))
-            .orderBy(meme.id.desc())
-            .limit(limit)
-            .fetch();
-    }
 
 }

@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import static spring.memewikibe.domain.meme.Meme.Flag;
 
-public interface MemeRepository extends JpaRepository<Meme, Long>, MemeAggregationRepository, MemeRepositoryCustom {
+public interface MemeRepository extends JpaRepository<Meme, Long>, MemeRepositoryCustom {
     List<Meme> findAllByOrderByIdDesc();
 
     @Query("SELECT DISTINCT m, c.name FROM Meme m " +
