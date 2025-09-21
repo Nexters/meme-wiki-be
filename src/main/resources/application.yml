@@ -36,6 +36,9 @@ clova:
   connect-timeout: ${CLOVA_CONNECT_TIMEOUT:5000}
   read-timeout: ${CLOVA_READ_TIMEOUT:30000}
 
+fcm:
+  service-account-key-path: ${FCM_SERVICE_ACCOUNT_KEY_PATH:}
+
 ---
 spring.config.activate.on-profile: local
 
