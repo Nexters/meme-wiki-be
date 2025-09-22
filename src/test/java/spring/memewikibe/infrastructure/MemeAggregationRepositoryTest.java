@@ -15,18 +15,20 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest
 @Transactional
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-class MemeRepositoryTest {
+class MemeAggregationRepositoryTest {
 
-    private final MemeRepository sut;
+    private final MemeAggregationRepository sut;
+    private final MemeRepository memeRepository;
     private final MemeCustomLogRepository customLogRepository;
     private final MemeShareLogRepository shareLogRepository;
     private final MemeViewLogRepository viewLogRepository;
 
-    MemeRepositoryTest(MemeRepository sut,
-                       MemeCustomLogRepository customLogRepository,
-                       MemeShareLogRepository shareLogRepository,
-                       MemeViewLogRepository viewLogRepository) {
+    MemeAggregationRepositoryTest(MemeAggregationRepository memeAggregationRepository, MemeAggregationRepository sut, MemeRepository memeRepository,
+                                  MemeCustomLogRepository customLogRepository,
+                                  MemeShareLogRepository shareLogRepository,
+                                  MemeViewLogRepository viewLogRepository) {
         this.sut = sut;
+        this.memeRepository = memeRepository;
         this.customLogRepository = customLogRepository;
         this.shareLogRepository = shareLogRepository;
         this.viewLogRepository = viewLogRepository;
@@ -37,7 +39,7 @@ class MemeRepositoryTest {
         customLogRepository.deleteAllInBatch();
         shareLogRepository.deleteAllInBatch();
         viewLogRepository.deleteAllInBatch();
-        sut.deleteAllInBatch();
+        memeRepository.deleteAllInBatch();
     }
 
     @Test
@@ -49,7 +51,7 @@ class MemeRepositoryTest {
         Meme 전남친_토스트 = createMeme("전남친 토스트");
         Meme 맑은_눈의_광인 = createMeme("맑은 눈의 광인");
 
-        sut.saveAll(List.of(무야호, 나만_아니면_돼, 전남친_토스트, 맑은_눈의_광인));
+        memeRepository.saveAll(List.of(무야호, 나만_아니면_돼, 전남친_토스트, 맑은_눈의_광인));
 
         // 전남친 토스트: custom 1개, share 2개, view 1개 = 8점
         customLogRepository.save(createMemeCustomLog(전남친_토스트));
@@ -81,7 +83,7 @@ class MemeRepositoryTest {
         Meme 무야호 = createMeme("무야호");
         Meme 나만_아니면_돼 = createMeme("나만 아니면 돼");
 
-        sut.saveAll(List.of(무야호, 나만_아니면_돼));
+        memeRepository.saveAll(List.of(무야호, 나만_아니면_돼));
 
         // 둘 다 custom 1개씩 = 3점
         customLogRepository.saveAll(List.of(createMemeCustomLog(무야호), createMemeCustomLog(나만_아니면_돼)));
@@ -101,7 +103,7 @@ class MemeRepositoryTest {
         Meme 무야호 = createMeme("무야호");
         Meme 로그없는밈 = createMeme("로그없는밈");
 
-        sut.saveAll(List.of(무야호, 로그없는밈));
+        memeRepository.saveAll(List.of(무야호, 로그없는밈));
 
         // 무야호만 로그 추가
         customLogRepository.save(createMemeCustomLog(무야호));
