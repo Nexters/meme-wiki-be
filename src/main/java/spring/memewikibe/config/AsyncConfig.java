@@ -15,6 +15,8 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import static java.util.concurrent.ThreadPoolExecutor.*;
+
 @Configuration
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
@@ -32,6 +34,21 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setTaskDecorator(new MdcTaskDecorator());
         executor.initialize();
         executor.getThreadPoolExecutor().prestartAllCoreThreads();
+        return executor;
+    }
+
+    @Bean(name = "fcmExecutor")
+    public ThreadPoolTaskExecutor fcmExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("FCM-");
+        executor.setAwaitTerminationSeconds(5);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setTaskDecorator(new MdcTaskDecorator());
+        executor.setRejectedExecutionHandler(new CallerRunsPolicy());
+        executor.initialize();
         return executor;
     }
 

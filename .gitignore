@@ -44,3 +44,6 @@ src/main/generated/
 .env.local
 .env.production
 .env.staging
+
+### FCM service account keys (never commit secrets) ###
+src/main/resources/fcm/
