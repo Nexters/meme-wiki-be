@@ -10,7 +10,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationTokenRegister notificationTokenRegister;
 
     @Override
-    public void registerNotificationToken(String token, String deviceId, String platform) {
-        notificationTokenRegister.registerToken(token, deviceId, platform);
+    public void registerNotificationToken(String token) {
+        notificationTokenRegister.registerToken(token);
     }
 }

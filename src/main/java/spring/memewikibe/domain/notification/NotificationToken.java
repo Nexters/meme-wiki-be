@@ -1,6 +1,8 @@
 package spring.memewikibe.domain.notification;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,15 +21,6 @@ public class NotificationToken {
     @Id
     private String token;
 
-    private String deviceId;
-
-    @Enumerated(EnumType.STRING)
-    private DevicePlatform platform;
-
-    private boolean isActive;
-
-    private boolean pushEnabled;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -37,26 +30,13 @@ public class NotificationToken {
     private LocalDateTime updatedAt;
 
     @Builder
-    private NotificationToken(String token, String deviceId, DevicePlatform platform, boolean isActive, boolean pushEnabled) {
+    private NotificationToken(String token) {
         this.token = token;
-        this.deviceId = deviceId;
-        this.platform = platform;
-        this.isActive = isActive;
-        this.pushEnabled = pushEnabled;
     }
 
-    public static NotificationToken create(String token, String deviceId, DevicePlatform platform) {
+    public static NotificationToken create(String token) {
         return NotificationToken.builder()
             .token(token)
-            .deviceId(deviceId)
-            .platform(platform)
-            .isActive(true)
-            .pushEnabled(true)
             .build();
-    }
-
-    public enum DevicePlatform {
-        ANDROID,
-        IOS;
     }
 }

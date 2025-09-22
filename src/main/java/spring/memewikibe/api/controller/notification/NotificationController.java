@@ -20,7 +20,7 @@ public class NotificationController {
     public ApiResponse<?> registerToken(
         @Valid @RequestBody NotificationCreateTokenRequest request
     ) {
-        notificationService.registerNotificationToken(request.token(), request.deviceId(), request.platform());
+        notificationService.registerNotificationToken(request.token());
         return ApiResponse.success();
     }
 

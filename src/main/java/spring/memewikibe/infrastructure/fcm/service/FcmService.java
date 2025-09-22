@@ -58,7 +58,7 @@ public class FcmService {
     }
 
     private List<String> getActiveTokens() {
-        return notificationTokenRepository.findByIsActiveTrueAndPushEnabledTrue()
+        return notificationTokenRepository.findAll()
             .stream()
             .map(NotificationToken::getToken)
             .toList();

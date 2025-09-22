@@ -1,5 +1,6 @@
 package spring.memewikibe.domain.meme;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -15,8 +16,9 @@ import spring.memewikibe.domain.BaseEntity;
 public class Meme extends BaseEntity {
     private String title;
 
+    @Column(length = 1000)
     private String origin;
-
+    @Column(length = 1000)
     private String usageContext;
 
     private String trendPeriod;
