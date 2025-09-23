@@ -15,17 +15,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.memewikibe.api.controller.admin.response.MemePopularityListResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
-import spring.memewikibe.application.AdminMemeStatsService;
 import spring.memewikibe.api.controller.notification.request.NotificationSendRequest;
+import spring.memewikibe.application.AdminMemeStatsService;
 import spring.memewikibe.application.ImageUploadService;
 import spring.memewikibe.application.MemeCreateService;
 import spring.memewikibe.application.MemeLookUpService;
+import spring.memewikibe.application.notification.MemeNotificationService;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
-import spring.memewikibe.infrastructure.fcm.service.FcmService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,7 +43,7 @@ public class AdminController {
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
     private final AdminMemeStatsService adminMemeStatsService;
-    private final FcmService fcmService;
+    private final MemeNotificationService memeNotificationService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -650,7 +650,7 @@ public class AdminController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("존재하지 않는 밈입니다.");
             }
 
-            fcmService.sendMemeNotification(memeId, request.title(), request.body());
+            memeNotificationService.sendMemeNotification(memeId, request.title(), request.body());
             log.info("Admin sent meme notification: memeId={}, title={}, body={}",
                 memeId, request.title(), request.body());
 
