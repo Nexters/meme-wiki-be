@@ -48,8 +48,10 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       CLOVA_API_KEY: ${CLOVA_API_KEY}
+      FCM_SERVICE_ACCOUNT_KEY_PATH: /app/config/fcm-service-account.json
     volumes:
       - /root/logs:/app/logs
+      - /root/config/fcm-service-account.json:/app/config/fcm-service-account.json:ro
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     depends_on:

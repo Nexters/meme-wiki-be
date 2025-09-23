@@ -507,6 +507,14 @@
                                                             🗑️
                                                         </button>
                                                     </form>
+                                                    <button type="button"
+                                                            class="btn btn-info btn-sm"
+                                                            title="푸시 알림 보내기"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#sendNotificationModal"
+                                                            th:attr="data-meme-id=${meme.id},data-meme-title=${meme.title}">
+                                                        📣
+                                                    </button>
                                                 </div>
                                             </div>
                                         </td>
@@ -522,6 +530,34 @@
 
     <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Push Notification Modal -->
+    <div class="modal fade" id="sendNotificationModal" tabindex="-1" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sendNotificationModalLabel">푸시 알림 보내기</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="notifyMemeId" />
+                    <div class="mb-3">
+                        <label for="notifyTitle" class="form-label">제목 (선택)</label>
+                        <input type="text" class="form-control" id="notifyTitle" placeholder="미입력 시 밈 제목 사용" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="notifyBody" class="form-label">본문 (선택)</label>
+                        <input type="text" class="form-control" id="notifyBody" placeholder="미입력 시 기본 문구 사용" />
+                        <div class="form-text">기본 문구: "밈을 보러 오세요"</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" id="sendNotifyBtn" class="btn btn-primary">보내기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 이미지 옵션 토글 함수
         function toggleImageOptions(changedElement) {
@@ -546,6 +582,59 @@
                 imgUrlInput.style.backgroundColor = '';
             }
         }
+
+        // ===== Push Notification UI =====
+        const notifyModal = document.getElementById('sendNotificationModal');
+        const notifyTitleInput = document.getElementById('notifyTitle');
+        const notifyBodyInput = document.getElementById('notifyBody');
+        const notifyMemeIdInput = document.getElementById('notifyMemeId');
+        const sendNotifyBtn = document.getElementById('sendNotifyBtn');
+
+        notifyModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const memeId = button.getAttribute('data-meme-id');
+            const memeTitle = button.getAttribute('data-meme-title');
+            notifyMemeIdInput.value = memeId;
+            // 프리필은 비워두고 placeholder만 제공 (기본값은 서버에서 처리)
+            notifyTitleInput.value = '';
+            notifyBodyInput.value = '';
+            notifyTitleInput.placeholder = memeTitle ? `미입력 시: ${memeTitle}` : '미입력 시 밈 제목 사용';
+        });
+
+        sendNotifyBtn.addEventListener('click', function () {
+            const memeId = notifyMemeIdInput.value;
+            const title = notifyTitleInput.value.trim();
+            const body = notifyBodyInput.value.trim();
+
+            if (!memeId) {
+                alert('밈 정보가 올바르지 않습니다.');
+                return;
+            }
+
+            sendNotifyBtn.disabled = true;
+            const originalText = sendNotifyBtn.textContent;
+            sendNotifyBtn.textContent = '전송 중...';
+
+            fetch(`/admin/notifications/send-meme?memeId=${memeId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title || undefined, body: body || undefined })
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert(msg);
+                const modal = bootstrap.Modal.getInstance(notifyModal);
+                modal.hide();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('알림 전송 중 오류가 발생했습니다.');
+            })
+            .finally(() => {
+                sendNotifyBtn.disabled = false;
+                sendNotifyBtn.textContent = originalText;
+            });
+        });
         
         // 폼 제출 시 로딩 표시 및 validation
         document.getElementById('addMemeForm').addEventListener('submit', function(e) {
