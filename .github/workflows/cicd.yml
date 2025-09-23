@@ -121,6 +121,11 @@ jobs:
           
           export CLOVA_API_KEY='${{ secrets.CLOVA_API_KEY }}'
 
+          # FCM 서비스 계정 키 파일 생성
+          mkdir -p /root/config
+          echo '${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}' > /root/config/fcm-service-account.json
+          chmod 600 /root/config/fcm-service-account.json
+
           docker compose pull app
           docker compose up -d app
           docker compose ps
