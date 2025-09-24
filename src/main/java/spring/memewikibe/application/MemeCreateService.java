@@ -12,6 +12,7 @@ import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
+import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
 
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ public class MemeCreateService {
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
     private final ImageUploadService imageUploadService;
+    private final MemeVectorIndexService vectorIndexService;
 
     public long createMeme(MemeCreateRequest request, MultipartFile imageFile) {
         String imageUrl = imageUploadService.uploadImage(imageFile);
@@ -53,6 +55,40 @@ public class MemeCreateService {
             .ifPresent(memeCategoryRepository::saveAll);
 
         log.info("밈 생성 완료: {}", savedMeme.getId());
+        try {
+            vectorIndexService.index(savedMeme);
+        } catch (Exception e) {
+            log.warn("Failed to index meme {} to Pinecone: {}", savedMeme.getId(), e.toString());
+        }
+        return savedMeme.getId();
+    }
+
+    public long createMemeUsingCrawler(MemeCreateRequest request, MultipartFile imageFile) {
+        String imageUrl = imageUploadService.uploadImage(imageFile);
+
+        Meme meme = Meme.crawlerMeme(
+            request.title(),
+            request.origin(),
+            request.usageContext(),
+            request.trendPeriod(),
+            imageUrl,
+            HashtagParser.toJson(request.hashtags())
+        );
+
+        Meme savedMeme = memeRepository.save(meme);
+
+        Optional.ofNullable(request.categoryIds())
+            .filter(ids -> !ids.isEmpty())
+            .map(categoryRepository::findAllById)
+            .map(categories -> categories.stream()
+                .map(category -> MemeCategory.builder()
+                    .meme(savedMeme)
+                    .category(category)
+                    .build())
+                .toList())
+            .ifPresent(memeCategoryRepository::saveAll);
+
+        log.info("크롤러를 통한 밈 생성 완료: {}", savedMeme.getId());
         return savedMeme.getId();
     }
 } 

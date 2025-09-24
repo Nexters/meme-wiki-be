@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.memewikibe.api.controller.admin.response.MemePopularityListResponse;
+import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
 import spring.memewikibe.api.controller.image.response.GeneratedImagesResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
@@ -42,9 +43,6 @@ public class AdminController {
     private final MemeCreateService memeCreateService;
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
-    private final AdminMemeStatsService adminMemeStatsService;
-    private final MemeNotificationService memeNotificationService;
-    private final ImageEditService imageEditService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -390,6 +388,11 @@ public class AdminController {
 
             memeRepository.save(meme);
 
+            // Reindex in vector store
+            try {
+                vectorIndexService.reindex(meme);
+            } catch (Exception ignored) {}
+
             // 기존 카테고리 연결 삭제
             memeCategoryRepository.deleteByMemeId(id);
 
@@ -484,8 +487,13 @@ public class AdminController {
 
             memeRepository.save(meme);
 
-            log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}",
-                id, title.trim(), categoryIds);
+            // Reindex after approve
+            try {
+                vectorIndexService.reindex(meme);
+            } catch (Exception ignored) {}
+
+            log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}", 
+                     id, title.trim(), categoryIds);
             redirectAttributes.addFlashAttribute("success", "밈이 수정되고 승인되어 전체 사용자에게 공개되었습니다!");
 
             return "redirect:/admin/memes/review";
@@ -707,6 +715,39 @@ public class AdminController {
         }
     }
 
+
+    /**
+     * 모든 승인된(NORMAL) 밈을 벡터 스토어로 일괄 usert
+     */
+    @PostMapping("/memes/reindex-vectors")
+    public String reindexAllApprovedMemes(HttpSession session, RedirectAttributes redirectAttributes,
+                                          @RequestParam(name = "batchSize", required = false, defaultValue = "100") int batchSize) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        List<Meme> approved = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
+        int total = approved.size();
+        if (total == 0) {
+            redirectAttributes.addFlashAttribute("info", "승인된 밈이 없습니다.");
+            return "redirect:/admin/memes";
+        }
+        if (batchSize <= 0) batchSize = 100;
+
+        int batches = 0;
+        for (int start = 0; start < total; start += batchSize) {
+            int end = Math.min(start + batchSize, total);
+            List<Meme> chunk = approved.subList(start, end);
+            try {
+                vectorIndexService.upsertVectors(chunk);
+            } catch (Exception e) {
+                log.warn("일부 배치 업서트 실패: {}-{}: {}", start, end, e.toString());
+            }
+            batches++;
+        }
+
+        return "redirect:/admin/memes";
+    }
 
     private boolean isAuthenticated(HttpSession session) {
         Boolean authenticated = (Boolean) session.getAttribute("admin_authenticated");
