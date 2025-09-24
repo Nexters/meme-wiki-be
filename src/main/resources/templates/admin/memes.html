@@ -135,6 +135,12 @@
             <span th:text="${error}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        
+        <div th:if="${info}" class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle"></i>
+            <span th:text="${info}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
         <!-- 통계 카드 -->
         <div class="stats-card">
@@ -390,6 +396,15 @@
                         <!-- 일괄 삭제 폼 -->
                         <form id="deleteMultipleForm" th:action="@{/admin/memes/delete-multiple}" method="post" style="display: none;">
                             <input type="hidden" name="memeIds" id="selectedMemeIds">
+                        </form>
+
+                        <!-- 벡터 스토어 전체 재색인 (승인된 밈) -->
+                        <form class="mt-3 d-flex align-items-center gap-2" th:action="@{/admin/memes/reindex-vectors}" method="post" onsubmit="return confirm('승인된 모든 밈을 벡터 스토어에 재색인하시겠습니까?');">
+                            <label for="batchSize" class="form-label mb-0">배치 크기</label>
+                            <input type="number" class="form-control" name="batchSize" id="batchSize" value="100" min="1" style="max-width: 120px;">
+                            <button type="submit" class="btn btn-primary">
+                                📚 승인된 밈 전체 RAG 반영
+                            </button>
                         </form>
                     </div>
                     <div class="card-body p-0">

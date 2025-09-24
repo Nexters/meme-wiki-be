@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -30,6 +31,7 @@ public class CloudflareR2Config {
     private String bucketName;
 
     @Bean("s3Client")
+    @ConditionalOnProperty(prefix = "cloudflare.r2", name = {"endpoint", "access-key-id", "secret-access-key", "bucket-name"})
     public S3Client r2Client() {
         logConfiguration();
 
@@ -69,6 +71,7 @@ public class CloudflareR2Config {
 
     @Bean
     @Qualifier("r2BucketName")
+    @ConditionalOnProperty(prefix = "cloudflare.r2", name = {"bucket-name"})
     public String bucketName() {
         return bucketName;
     }

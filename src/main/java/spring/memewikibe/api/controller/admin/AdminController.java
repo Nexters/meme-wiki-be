@@ -17,6 +17,7 @@ import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.application.ImageUploadService;
 import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.application.MemeCreateService;
+import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 
@@ -46,6 +47,7 @@ public class AdminController {
     private final MemeCreateService memeCreateService;
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
+    private final MemeVectorIndexService vectorIndexService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -390,6 +392,11 @@ public class AdminController {
             );
             
             memeRepository.save(meme);
+
+            // Reindex in vector store
+            try {
+                vectorIndexService.reindex(meme);
+            } catch (Exception ignored) {}
             
             // 기존 카테고리 연결 삭제
             memeCategoryRepository.deleteByMemeId(id);
@@ -484,6 +491,11 @@ public class AdminController {
             }
 
             memeRepository.save(meme);
+
+            // Reindex after approve
+            try {
+                vectorIndexService.reindex(meme);
+            } catch (Exception ignored) {}
             
             log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}", 
                      id, title.trim(), categoryIds);
@@ -585,6 +597,46 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("반려 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    /**
+     * 모든 승인된(NORMAL) 밈을 벡터 스토어로 일괄 업서트합니다.
+     * - Pinecone 설정이 없으면 서비스 내부에서 경고를 남기고 스킵됩니다.
+     * - 대량 데이터 고려해 batchSize 단위로 업서트합니다.
+     */
+    @PostMapping("/memes/reindex-vectors")
+    public String reindexAllApprovedMemes(HttpSession session, RedirectAttributes redirectAttributes,
+                                          @RequestParam(name = "batchSize", required = false, defaultValue = "100") int batchSize) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+        try {
+            List<Meme> approved = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
+            int total = approved.size();
+            if (total == 0) {
+                redirectAttributes.addFlashAttribute("info", "승인된 밈이 없습니다.");
+                return "redirect:/admin/memes";
+            }
+            if (batchSize <= 0) batchSize = 100;
+
+            int batches = 0;
+            for (int start = 0; start < total; start += batchSize) {
+                int end = Math.min(start + batchSize, total);
+                List<Meme> chunk = approved.subList(start, end);
+                try {
+                    vectorIndexService.upsertVectors(chunk);
+                } catch (Exception e) {
+                    log.warn("일부 배치 업서트 실패: {}-{}: {}", start, end, e.toString());
+                }
+                batches++;
+            }
+            log.info("✅ Reindex completed. total={}, batchSize={}, batches={}", total, batchSize, batches);
+            redirectAttributes.addFlashAttribute("success", "벡터 인덱스 재구성 완료: 총 " + total + "건, 배치 " + batches + "개");
+        } catch (Exception e) {
+            log.error("❌ Reindex failed", e);
+            redirectAttributes.addFlashAttribute("error", "벡터 인덱스 재구성 중 오류: " + e.getMessage());
+        }
+        return "redirect:/admin/memes";
     }
 
     private boolean isAuthenticated(HttpSession session) {
