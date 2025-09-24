@@ -39,6 +39,11 @@ clova:
 fcm:
   service-account-key-path: ${FCM_SERVICE_ACCOUNT_KEY_PATH:}
 
+google:
+  genai:
+    api-key: ${GOOGLE_GENAI_API_KEY:}
+    base-url: ${GOOGLE_GENAI_BASE_URL:https://generativelanguage.googleapis.com}
+
 ---
 spring.config.activate.on-profile: local
 
