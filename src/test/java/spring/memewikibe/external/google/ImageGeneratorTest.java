@@ -28,4 +28,13 @@ class ImageGeneratorTest {
         BDDAssertions.then(response).isNotNull();
     }
 
+    @Test
+    void 이미지수정요청() {
+        // given
+        // when
+        GenerateContentResponse response = imageGenerator.generateImageWithExistingImage("얼굴을 트럼프와 푸틴으로 바꿔줘", "https://img.meme-wiki.net/meme-wiki/da1b97e5-f3ef-431c-b4d1-7e6c6ebec14d.jpg");
+        // then
+        System.out.println(response);
+        BDDAssertions.then(response).isNotNull();
+    }
 }
