@@ -32,10 +32,7 @@ public class ImageGenerator {
             DEFAULT_MODEL,
             request
         );
-        log.info("====token usage====  promptTokenCount: {}, candidatesTokenCount: {}, cachedContentTokenCount: {}",
-            response.usageMetadata().promptTokenCount(),
-            response.usageMetadata().candidatesTokenCount(),
-            response.usageMetadata().cachedContentTokenCount());
+        logTokenUsage(response);
         return response;
     }
 
@@ -81,6 +78,47 @@ public class ImageGenerator {
             throw new RuntimeException("Failed to generate image with existing image", e);
         }
     }
+
+    public GenerateContentResponse generateImageWithInlineBase64(String naturalLanguage, String mimeType, String base64Data) {
+        GenerateContentRequest.Part textPart = new GenerateContentRequest.Part(
+            naturalLanguage,
+            null,
+            null,
+            null
+        );
+
+        GenerateContentRequest.Part imagePart = new GenerateContentRequest.Part(
+            null,
+            new GenerateContentRequest.InlineData(mimeType, base64Data),
+            null,
+            null
+        );
+
+        GenerateContentRequest request = new GenerateContentRequest(
+            java.util.List.of(
+                new GenerateContentRequest.Content(
+                    java.util.List.of(textPart, imagePart),
+                    null
+                )
+            )
+        );
+
+        GenerateContentResponse response = googleGenAiClient.generateContent(
+            DEFAULT_VERSION,
+            DEFAULT_MODEL,
+            request
+        );
+        logTokenUsage(response);
+        return response;
+    }
+
+    private void logTokenUsage(GenerateContentResponse response) {
+        log.info("====token usage====  promptTokenCount: {}, candidatesTokenCount: {}, cachedContentTokenCount: {}",
+            response.usageMetadata().promptTokenCount(),
+            response.usageMetadata().candidatesTokenCount(),
+            response.usageMetadata().cachedContentTokenCount());
+    }
+
 
     private static byte[] downloadBytes(String url) throws java.io.IOException {
         URL u = new URL(url);
