@@ -36,12 +36,13 @@ public class MemeNotificationService {
             return;
         }
 
-        String imageUrl = (meme.getImgUrl() != null && !meme.getImgUrl().isBlank()) ? meme.getImgUrl() : null;
+        log.info("Preparing to send meme notification: memeId={}, memeTitle: {}, memeImageUrl={}, notificationTitle={}, notificationBody={}, tokensCount={}",
+            memeId, meme.getTitle(), meme.getImgUrl(), title, body, tokens.size());
 
         NotificationSender.NotificationSendCommand command = new NotificationSender.NotificationSendCommand(
             title,
             body,
-            imageUrl,
+            meme.getImgUrl(),
             Map.of(
                 "meme_id", memeId.toString(),
                 "deep_link", "/memes/" + memeId

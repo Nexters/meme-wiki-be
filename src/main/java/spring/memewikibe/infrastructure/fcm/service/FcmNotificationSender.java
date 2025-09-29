@@ -23,15 +23,12 @@ public class FcmNotificationSender implements NotificationSender {
             return new SendResult(0, 0, List.of());
         }
 
-        Notification.Builder notificationBuilder = Notification.builder()
+        Notification notification = Notification.builder()
             .setTitle(command.title())
-            .setBody(command.body());
+            .setBody(command.body())
+            .setImage(command.imageUrl())
+            .build();
 
-        if (command.imageUrl() != null && !command.imageUrl().isBlank()) {
-            notificationBuilder.setImage(command.imageUrl());
-        }
-
-        Notification notification = notificationBuilder.build();
 
         MulticastMessage.Builder messageBuilder = MulticastMessage.builder()
             .setNotification(notification)
@@ -61,6 +58,7 @@ public class FcmNotificationSender implements NotificationSender {
             SendResponse sendResponse = responses.get(i);
             if (!sendResponse.isSuccessful()) {
                 MessagingErrorCode code = sendResponse.getException().getMessagingErrorCode();
+                log.info("Token send failed: token={}, error={}", tokens.get(i), code);
                 if (code == MessagingErrorCode.INVALID_ARGUMENT ||
                     code == MessagingErrorCode.UNREGISTERED ||
                     code == MessagingErrorCode.SENDER_ID_MISMATCH) {
