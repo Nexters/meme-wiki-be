@@ -120,6 +120,7 @@ jobs:
           export ADMIN_PASSWORD='${{ secrets.ADMIN_PASSWORD }}'
           
           export CLOVA_API_KEY='${{ secrets.CLOVA_API_KEY }}'
+          export GOOGLE_GENAI_API_KEY='${{ secrets.GOOGLE_GENAI_API_KEY }}'
 
           # FCM 서비스 계정 키 파일 생성
           mkdir -p /root/config
