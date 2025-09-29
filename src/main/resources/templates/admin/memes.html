@@ -541,12 +541,12 @@
                 <div class="modal-body">
                     <input type="hidden" id="notifyMemeId" />
                     <div class="mb-3">
-                        <label for="notifyTitle" class="form-label">제목 (선택)</label>
-                        <input type="text" class="form-control" id="notifyTitle" placeholder="미입력 시 밈 제목 사용" />
+                        <label for="notifyTitle" class="form-label">푸시 알림의 제목(필수)</label>
+                        <input type="text" class="form-control" id="notifyTitle" placeholder="입력 필수" />
                     </div>
                     <div class="mb-3">
-                        <label for="notifyBody" class="form-label">본문 (선택)</label>
-                        <input type="text" class="form-control" id="notifyBody" placeholder="미입력 시 기본 문구 사용" />
+                        <label for="notifyBody" class="form-label">푸시 알림 본문 본문(필수)</label>
+                        <input type="text" class="form-control" id="notifyBody" placeholder="입력 필수" />
                         <div class="form-text">기본 문구: "밈을 보러 오세요"</div>
                     </div>
                 </div>
@@ -598,7 +598,7 @@
             // 프리필은 비워두고 placeholder만 제공 (기본값은 서버에서 처리)
             notifyTitleInput.value = '';
             notifyBodyInput.value = '';
-            notifyTitleInput.placeholder = memeTitle ? `미입력 시: ${memeTitle}` : '미입력 시 밈 제목 사용';
+            notifyTitleInput.placeholder = '알림의 제목을 필수로 채워주세요';
         });
 
         sendNotifyBtn.addEventListener('click', function () {
