@@ -11,5 +11,7 @@ public interface MemeRepositoryCustom {
 
     List<Meme> findByTitleOrHashtagsContainingAndIdLessThanOrderByIdDesc(String title, Long lastId, Limit limit);
 
+    List<Meme> findKeywordCandidatesAcrossFields(String query, Limit limit);
+
     List<MemeSimpleResponse> findLatestMemesExcludingIds(List<Long> excludeIds, int limit);
 }

@@ -56,11 +56,31 @@ public class MemeRepositoryCustomImpl implements MemeRepositoryCustom {
             .fetch();
     }
 
+    @Override
+    public List<Meme> findKeywordCandidatesAcrossFields(String query, Limit limit) {
+        return queryFactory
+            .selectFrom(meme)
+            .where(acrossFieldsContains(query), meme.flag.eq(Meme.Flag.NORMAL))
+            .orderBy(meme.id.desc())
+            .limit(limit.max())
+            .fetch();
+    }
+
     private BooleanExpression titleOrHashtagsContains(String query) {
         if (query == null || query.trim().isEmpty()) {
             return null;
         }
         return meme.title.containsIgnoreCase(query)
             .or(meme.hashtags.containsIgnoreCase(query));
+    }
+
+    private BooleanExpression acrossFieldsContains(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return null;
+        }
+        return meme.title.containsIgnoreCase(query)
+            .or(meme.hashtags.containsIgnoreCase(query))
+            .or(meme.origin.containsIgnoreCase(query))
+            .or(meme.usageContext.containsIgnoreCase(query));
     }
 }

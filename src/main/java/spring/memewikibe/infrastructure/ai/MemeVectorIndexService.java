@@ -20,7 +20,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemeVectorIndexService {
 
-    private final EmbeddingService embeddingService;
+    private final KoreanEmbeddingService embeddingService;
+    // Optional beans for hybrid search and heavy rerank
+    private final java.util.Optional<MemeVectorIndexService.KeywordSearchService> keywordSearchService;
+    private final java.util.Optional<MemeVectorIndexService.Reranker> heavyReranker;
+
+    // Simple in-memory cache (TTL) for query results
+    private final SearchCache cache = new SearchCache(java.time.Duration.ofSeconds(60));
 
     @Value("${PINECONE_API_KEY:}")
     private String apiKey;
@@ -82,6 +88,66 @@ public class MemeVectorIndexService {
     }
 
     public List<Long> query(String text, int topK) {
+        // Delegate to options API with defaults
+        SearchOptions options = SearchOptions.defaults().withTopK(topK);
+        List<SearchHit> hits = queryWithOptions(text, options);
+        return hits.stream().map(SearchHit::id).toList();
+    }
+
+    /**
+     * Options-based query supporting hybrid fusion, conditional reranking, and caching.
+     */
+    public List<SearchHit> queryWithOptions(String query, SearchOptions options) {
+        if (query == null || query.isBlank()) return List.of();
+        String cacheKey = options.cacheEnabled() ? (query.strip().toLowerCase(java.util.Locale.ROOT) + "|" + options.cacheSignature()) : null;
+        if (options.cacheEnabled()) {
+            List<SearchHit> cached = cache.get(cacheKey);
+            if (cached != null) return cached;
+        }
+
+        // 1) Dense search (vector)
+        List<SearchHit> denseHits = denseSearch(query, options);
+
+        // 2) Optional hybrid (sparse keyword)
+        List<SearchHit> fused = denseHits;
+        if (options.enableHybrid() && keywordSearchService != null && keywordSearchService.isPresent()) {
+            List<SearchHit> sparseHits = keywordSearchService.get().searchWithScores(query, Math.max(options.topK(), options.lightRerankTopN()));
+            fused = fuseScores(denseHits, sparseHits, options);
+        }
+
+        // 3) Conditional rerank skip by margin
+        if (shouldSkipRerank(fused, options)) {
+            List<SearchHit> top = takeTopK(fused, options.topK());
+            cache.put(cacheKey, top, options);
+            return top;
+        }
+
+        // 4) Light rerank (score-sort head only)
+        List<SearchHit> light = lightRerank(fused, options);
+
+        // 5) Optional heavy reranker on top-M
+        List<SearchHit> finalHits = heavyRerankIfEnabled(query, light, options);
+
+        List<SearchHit> top = takeTopK(finalHits, options.topK());
+        cache.put(cacheKey, top, options);
+        return top;
+    }
+
+    private List<SearchHit> denseSearch(String query, SearchOptions options) {
+        // Prefer real Pinecone scores; fallback to rank-based if unavailable
+        List<SearchHit> hits = this.queryDenseHits(query, Math.max(options.topK(), options.lightRerankTopN()));
+        if (hits != null && !hits.isEmpty()) return hits;
+        List<Long> ids = this.queryDenseIds(query, Math.max(options.topK(), options.lightRerankTopN()));
+        java.util.List<SearchHit> out = new java.util.ArrayList<>(ids.size());
+        double k = 60.0;
+        for (int i = 0; i < ids.size(); i++) {
+            double score = 1.0 / (k + (i + 1));
+            out.add(new SearchHit(ids.get(i), score, "dense"));
+        }
+        return out;
+    }
+
+    private List<SearchHit> queryDenseHits(String text, int topK) {
         ensureIndexHost();
         if (!isConfigured()) {
             log.warn("Pinecone not fully configured ({}). Returning empty query result.", missingConfig());
@@ -104,7 +170,43 @@ public class MemeVectorIndexService {
                 .build();
             HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
-                // very light parsing to extract ids: assumes JSON contains matches:[{id: "123", score:...},...]
+                var matches = JsonLightParser.extractMatches(resp.body());
+                java.util.List<SearchHit> out = new java.util.ArrayList<>(matches.size());
+                for (var m : matches) out.add(new SearchHit(m.id, m.score, "dense"));
+                return out;
+            } else {
+                log.error("Pinecone query failed: {} - {}", resp.statusCode(), resp.body());
+                return List.of();
+            }
+        } catch (Exception e) {
+            log.error("Failed to query Pinecone", e);
+            return List.of();
+        }
+    }
+
+    private List<Long> queryDenseIds(String text, int topK) {
+        ensureIndexHost();
+        if (!isConfigured()) {
+            log.warn("Pinecone not fully configured ({}). Returning empty query result.", missingConfig());
+            return List.of();
+        }
+        try {
+            float[] v = embeddingService.embed(text);
+            v = ensureVectorDimension(v);
+            String vec = arrayToJson(v);
+            String body = "{" +
+                "\"vector\":" + vec + "," +
+                "\"topK\":" + topK + "," +
+                "\"namespace\":\"" + namespace + "\"" +
+                "}";
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(indexHost + "/query"))
+                .header("Content-Type", "application/json")
+                .header("Api-Key", apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+            HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
                 return JsonLightParser.extractIds(resp.body());
             } else {
                 log.error("Pinecone query failed: {} - {}", resp.statusCode(), resp.body());
@@ -114,6 +216,70 @@ public class MemeVectorIndexService {
             log.error("Failed to query Pinecone", e);
             return List.of();
         }
+    }
+
+    private List<SearchHit> fuseScores(List<SearchHit> dense, List<SearchHit> sparse, SearchOptions options) {
+        java.util.Map<Long, Double> d = rankToScoreMap(dense);
+        java.util.Map<Long, Double> s = rankToScoreMap(sparse);
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        ids.addAll(d.keySet());
+        ids.addAll(s.keySet());
+        double dw = options.denseWeight();
+        double sw = options.sparseWeight();
+        java.util.List<SearchHit> fused = new java.util.ArrayList<>(ids.size());
+        for (Long id : ids) {
+            double ds = d.getOrDefault(id, 0.0);
+            double ss = s.getOrDefault(id, 0.0);
+            double score = ds * dw + ss * sw;
+            fused.add(new SearchHit(id, score, "fused"));
+        }
+        fused.sort(java.util.Comparator.comparingDouble(SearchHit::score).reversed());
+        return takeTopK(fused, Math.max(options.topK(), options.lightRerankTopN()));
+    }
+
+    private java.util.Map<Long, Double> rankToScoreMap(java.util.List<SearchHit> hits) {
+        double k = 60.0;
+        java.util.Map<Long, Double> m = new java.util.HashMap<>();
+        for (int i = 0; i < hits.size(); i++) {
+            long id = hits.get(i).id();
+            double rrf = 1.0 / (k + (i + 1));
+            m.merge(id, rrf, Double::sum);
+        }
+        return m;
+    }
+
+    private boolean shouldSkipRerank(java.util.List<SearchHit> hits, SearchOptions options) {
+        if (hits.size() < 2) return true;
+        SearchHit a = hits.get(0);
+        SearchHit b = hits.get(1);
+        return (a.score() - b.score()) >= options.skipIfMarginGte();
+    }
+
+    private java.util.List<SearchHit> lightRerank(java.util.List<SearchHit> hits, SearchOptions options) {
+        int n = Math.min(options.lightRerankTopN(), hits.size());
+        java.util.List<SearchHit> head = new java.util.ArrayList<>(hits.subList(0, n));
+        head.sort(java.util.Comparator.comparingDouble(SearchHit::score).reversed());
+        java.util.List<SearchHit> tail = hits.subList(n, hits.size());
+        java.util.List<SearchHit> out = new java.util.ArrayList<>(hits.size());
+        out.addAll(head);
+        out.addAll(tail);
+        return out;
+    }
+
+    private java.util.List<SearchHit> heavyRerankIfEnabled(String query, java.util.List<SearchHit> hits, SearchOptions options) {
+        if (heavyReranker == null || heavyReranker.isEmpty() || options.heavyRerankTopM() <= 0) return hits;
+        int m = Math.min(options.heavyRerankTopM(), hits.size());
+        java.util.List<SearchHit> head = new java.util.ArrayList<>(hits.subList(0, m));
+        java.util.List<SearchHit> reranked = heavyReranker.get().rerank(query, head);
+        java.util.List<SearchHit> out = new java.util.ArrayList<>(hits.size());
+        out.addAll(reranked);
+        out.addAll(hits.subList(m, hits.size()));
+        return out;
+    }
+
+    private <T> java.util.List<T> takeTopK(java.util.List<T> list, int k) {
+        if (list.size() <= k) return list;
+        return new java.util.ArrayList<>(list.subList(0, k));
     }
 
     private void ensureIndexHost() {
@@ -198,6 +364,7 @@ public class MemeVectorIndexService {
             String metadata = toJson(Map.of(
                 "title", nullSafe(m.getTitle()),
                 "origin", nullSafe(m.getOrigin()),
+                "usageContext", nullSafe(m.getUsageContext()),
                 "hashtags", nullSafe(m.getHashtags()),
                 "imgUrl", nullSafe(m.getImgUrl())
             ));
@@ -215,13 +382,26 @@ public class MemeVectorIndexService {
     }
 
     private String textFor(Meme m) {
-        return String.join(" \n ",
-            nullSafe(m.getTitle()),
-            nullSafe(m.getOrigin()),
-            nullSafe(m.getUsageContext()),
-            nullSafe(m.getTrendPeriod()),
-            nullSafe(m.getHashtags())
-        );
+        // Weighted concatenation; usageContext and hashtags prioritized for Korean semantics
+        String title = spring.memewikibe.common.util.TextNormalizer.normalize(nullSafe(m.getTitle()));
+        String origin = spring.memewikibe.common.util.TextNormalizer.normalize(nullSafe(m.getOrigin()));
+        String usage = spring.memewikibe.common.util.TextNormalizer.normalize(nullSafe(m.getUsageContext()));
+        String tags = spring.memewikibe.common.util.TextNormalizer.normalize(nullSafe(m.getHashtags()));
+        StringBuilder sb = new StringBuilder();
+        // weights: usage x3, tags x3, title x1, origin x1
+        repeatAppend(sb, usage, 3);
+        repeatAppend(sb, tags, 3);
+        repeatAppend(sb, title, 1);
+        repeatAppend(sb, origin, 1);
+        return sb.toString();
+    }
+
+    private static void repeatAppend(StringBuilder sb, String text, int times) {
+        if (text == null || text.isBlank() || times <= 0) return;
+        for (int i = 0; i < times; i++) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(text);
+        }
     }
 
     private boolean isConfigured() {
@@ -334,5 +514,116 @@ public class MemeVectorIndexService {
             }
             return ids;
         }
+        static java.util.List<Match> extractMatches(String json) {
+            // Extract pairs (id, score) from Pinecone response: "matches":[{"id":"...","score":0.xx},...]
+            java.util.List<Match> matches = new java.util.ArrayList<>();
+            int arrPos = json.indexOf("\"matches\"");
+            if (arrPos < 0) return matches;
+            int lb = json.indexOf('[', arrPos);
+            int rb = json.indexOf(']', lb);
+            if (lb < 0 || rb < 0) return matches;
+            String arr = json.substring(lb + 1, rb);
+            int idx = 0;
+            while (true) {
+                int idKey = arr.indexOf("\"id\"", idx);
+                if (idKey < 0) break;
+                int colon = arr.indexOf(':', idKey);
+                int q1 = arr.indexOf('"', colon + 1);
+                int q2 = arr.indexOf('"', q1 + 1);
+                if (q1 < 0 || q2 < 0) break;
+                String idStr = arr.substring(q1 + 1, q2);
+                long id;
+                try { id = Long.parseLong(idStr); } catch (NumberFormatException e) { id = -1L; }
+                int scoreKey = arr.indexOf("\"score\"", q2);
+                if (scoreKey < 0) break;
+                int scolon = arr.indexOf(':', scoreKey);
+                int end = scolon + 1;
+                // parse until comma or end of object
+                while (end < arr.length() && "-+.0123456789eE".indexOf(arr.charAt(end)) >= 0) end++;
+                double score = 0.0;
+                try { score = Double.parseDouble(arr.substring(scolon + 1, end).trim()); } catch (Exception ignored) {}
+                if (id >= 0) matches.add(new Match(id, score));
+                idx = end;
+            }
+            return matches;
+        }
+        static final class Match { final long id; final double score; Match(long i,double s){id=i;score=s;} }
+    }
+
+    // --- Options / DTOs / Interfaces for hybrid + rerank + cache ---
+    public record SearchHit(Long id, double score, String source) {}
+
+    public record SearchOptions(
+        int topK,
+        int lightRerankTopN,
+        int heavyRerankTopM,
+        double skipIfMarginGte,
+        boolean enableHybrid,
+        double sparseWeight,
+        double denseWeight,
+        Integer efSearch,
+        boolean cacheEnabled
+    ) {
+        public static SearchOptions defaults() {
+            return new SearchOptions(
+                100, // topK
+                40,  // lightRerankTopN
+                15,  // heavyRerankTopM
+                0.12, // skipIfMarginGte
+                false, // enableHybrid
+                0.3, // sparseWeight
+                0.7, // denseWeight
+                null, // efSearch
+                true  // cacheEnabled
+            );
+        }
+        public SearchOptions withTopK(int k) {
+            return new SearchOptions(k, lightRerankTopN, heavyRerankTopM, skipIfMarginGte, enableHybrid, sparseWeight, denseWeight, efSearch, cacheEnabled);
+        }
+        public String cacheSignature() {
+            return String.join(":",
+                String.valueOf(topK),
+                String.valueOf(lightRerankTopN),
+                String.valueOf(heavyRerankTopM),
+                String.valueOf(skipIfMarginGte),
+                String.valueOf(enableHybrid),
+                String.valueOf(sparseWeight),
+                String.valueOf(denseWeight),
+                String.valueOf(efSearch),
+                String.valueOf(cacheEnabled)
+            );
+        }
+    }
+
+    public interface Reranker {
+        java.util.List<SearchHit> rerank(String query, java.util.List<SearchHit> candidates);
+    }
+
+    public interface KeywordSearchService {
+        java.util.List<SearchHit> searchWithScores(String query, int topK);
+    }
+
+    public interface MemeDocumentProvider {
+        String textOf(Long memeId);
+    }
+
+    static final class SearchCache {
+        private final java.time.Duration ttl;
+        private final java.util.Map<String, Entry> map = new java.util.concurrent.ConcurrentHashMap<>();
+        SearchCache(java.time.Duration ttl) { this.ttl = ttl; }
+        java.util.List<SearchHit> get(String key) {
+            if (key == null) return null;
+            Entry e = map.get(key);
+            if (e == null || java.time.Instant.now().isAfter(e.expireAt)) {
+                map.remove(key);
+                return null;
+            }
+            return e.value;
+        }
+        void put(String key, java.util.List<SearchHit> value, SearchOptions options) {
+            if (key == null || !options.cacheEnabled()) return;
+            map.put(key, new Entry(value, java.time.Instant.now().plus(ttl)));
+        }
+        record Entry(java.util.List<SearchHit> value, java.time.Instant expireAt) {}
     }
 }

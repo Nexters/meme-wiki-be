@@ -25,6 +25,27 @@ logging:
     org.apache.coyote.http11: ERROR
     org.apache.tomcat.util.net: ERROR
 
+# Recommendation pipeline defaults (can be overridden in .env)
+recommend:
+  alpha: 0.6
+  mmr:
+    lambda: 0.7
+  vector:
+    topK: 200
+  keyword:
+    topK: 200
+  reranker:
+    enabled: false
+    topN: 50
+  rewrite:
+    enabled: true
+  cross:
+    enabled: true
+    topM: 20
+  eval:
+    log:
+      enabled: true
+
 cloudflare:
   r2:
     access-key-id: ${CLOUDFLARE_R2_ACCESS_KEY_ID:}

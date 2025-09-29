@@ -39,4 +39,7 @@ public interface MemeRepository extends JpaRepository<Meme, Long>, MemeRepositor
     @Query("SELECT m FROM Meme m WHERE m.id = :id AND m.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL")
     Optional<Meme> findByIdAndNormalFlag(@Param("id") Long id);
 
+    // MySQL Full-Text Search across title, usage_context, hashtags (NORMAL only). Fallback is handled by service.
+    @Query(value = "SELECT * FROM meme m WHERE m.flag = 'NORMAL' AND MATCH (title, usage_context, hashtags) AGAINST (:q IN NATURAL LANGUAGE MODE) LIMIT :limit", nativeQuery = true)
+    List<Meme> findCandidatesByFullTextSearch(@Param("q") String query, @Param("limit") int limit);
 }

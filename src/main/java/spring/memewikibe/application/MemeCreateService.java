@@ -55,11 +55,18 @@ public class MemeCreateService {
             .ifPresent(memeCategoryRepository::saveAll);
 
         log.info("밈 생성 완료: {}", savedMeme.getId());
-        try {
-            vectorIndexService.index(savedMeme);
-        } catch (Exception e) {
-            log.warn("Failed to index meme {} to Pinecone: {}", savedMeme.getId(), e.toString());
-        }
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+            new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        vectorIndexService.index(savedMeme);
+                    } catch (Exception e) {
+                        log.warn("[afterCommit] Failed to index meme {} to Pinecone: {}", savedMeme.getId(), e.toString());
+                    }
+                }
+            }
+        );
         return savedMeme.getId();
     }
 
@@ -89,6 +96,18 @@ public class MemeCreateService {
             .ifPresent(memeCategoryRepository::saveAll);
 
         log.info("크롤러를 통한 밈 생성 완료: {}", savedMeme.getId());
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+            new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        vectorIndexService.index(savedMeme);
+                    } catch (Exception e) {
+                        log.warn("[afterCommit] Failed to index (crawler) meme {}: {}", savedMeme.getId(), e.toString());
+                    }
+                }
+            }
+        );
         return savedMeme.getId();
     }
 } 
