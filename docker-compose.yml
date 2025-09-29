@@ -48,6 +48,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       CLOVA_API_KEY: ${CLOVA_API_KEY}
+      GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY}
       FCM_SERVICE_ACCOUNT_KEY_PATH: file:/app/config/fcm-service-account.json
     volumes:
       - /root/logs:/app/logs
@@ -97,4 +98,4 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge 
+    driver: bridge

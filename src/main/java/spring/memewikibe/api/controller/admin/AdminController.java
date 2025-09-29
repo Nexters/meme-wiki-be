@@ -13,19 +13,19 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import spring.memewikibe.api.controller.admin.response.MemePopularityListResponse;
+import spring.memewikibe.api.controller.image.response.GeneratedImagesResponse;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.notification.request.NotificationSendRequest;
-import spring.memewikibe.application.AdminMemeStatsService;
-import spring.memewikibe.application.ImageUploadService;
-import spring.memewikibe.application.MemeCreateService;
-import spring.memewikibe.application.MemeLookUpService;
+import spring.memewikibe.application.*;
 import spring.memewikibe.application.notification.MemeNotificationService;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
+import spring.memewikibe.support.error.ErrorType;
+import spring.memewikibe.support.response.ApiResponse;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,6 +44,7 @@ public class AdminController {
     private final MemeCategoryRepository memeCategoryRepository;
     private final AdminMemeStatsService adminMemeStatsService;
     private final MemeNotificationService memeNotificationService;
+    private final ImageEditService imageEditService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -659,6 +660,50 @@ public class AdminController {
             log.error("Failed to send meme notification: memeId={}", memeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("밈 알림 전송 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 이미지 편집 테스트 페이지
+     */
+    @GetMapping("/image-edit")
+    public String imageEditPage(HttpSession session, Model model) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/admin/login";
+        }
+
+        // 승인된 밈 목록 가져오기
+        List<Meme> memes = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
+        model.addAttribute("memes", memes);
+
+        return "admin/image-edit";
+    }
+
+    /**
+     * 이미지 편집 API 엔드포인트
+     */
+    @PostMapping("/image-edit/test")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<GeneratedImagesResponse>> testImageEdit(
+        @RequestParam Long memeId,
+        @RequestParam String prompt,
+        @RequestParam(required = false) MultipartFile image,
+        HttpSession session
+    ) {
+        if (!isAuthenticated(session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            GeneratedImagesResponse response = imageEditService.editWithMemeId(prompt, memeId, image);
+            log.info("Admin tested image edit: memeId={}, prompt={}, hasImage={}",
+                memeId, prompt, image != null && !image.isEmpty());
+
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (Exception e) {
+            log.error("Failed to edit image in admin: memeId={}, prompt={}", memeId, prompt, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body((ApiResponse<GeneratedImagesResponse>) ApiResponse.error(ErrorType.DEFAULT_ERROR));
         }
     }
 
