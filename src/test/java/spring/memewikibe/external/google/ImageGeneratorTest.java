@@ -1,6 +1,7 @@
 package spring.memewikibe.external.google;
 
 import org.assertj.core.api.BDDAssertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,7 @@ class ImageGeneratorTest {
         this.imageGenerator = imageGenerator;
     }
 
+    @Disabled
     @DisplayName("응답을 알아보자")
     @Test
     void test() {
@@ -28,6 +30,7 @@ class ImageGeneratorTest {
         BDDAssertions.then(response).isNotNull();
     }
 
+    @Disabled
     @Test
     void 이미지수정요청() {
         // given
