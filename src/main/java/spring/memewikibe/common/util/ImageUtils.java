@@ -46,7 +46,7 @@ public class ImageUtils {
         }
     }
 
-    public static String detectMimeType(String imageUrl, byte[] data) throws IOException {
+    public static String detectMimeType(String imageUrl, byte[] data) {
         // Try by HTTP response header
         try {
             URI uri = new URI(imageUrl);
@@ -74,7 +74,7 @@ public class ImageUtils {
         return getMimeTypeByExtension(imageUrl);
     }
 
-    public static String sniffMimeType(byte[] data, String filename) throws IOException {
+    public static String sniffMimeType(byte[] data, String filename) {
         String guessed = guessContentTypeFromBytes(data);
         if (StringUtils.hasText(guessed)) return guessed;
         return getMimeTypeByExtension(filename);
@@ -86,19 +86,19 @@ public class ImageUtils {
         }
         
         // Check common image file signatures
-        if (data.length >= 8 && data[0] == (byte) 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) {
+        if (data[0] == (byte) 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) {
             return "image/png";
         }
-        if (data.length >= 3 && data[0] == (byte) 0xFF && data[1] == (byte) 0xD8 && data[2] == (byte) 0xFF) {
+        if (data[0] == (byte) 0xFF && data[1] == (byte) 0xD8 && data[2] == (byte) 0xFF) {
             return "image/jpeg";
         }
-        if (data.length >= 6 && data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38) {
+        if (data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38) {
             return "image/gif";
         }
         if (data.length >= 12 && data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
             return "image/webp";
         }
-        if (data.length >= 2 && data[0] == 0x42 && data[1] == 0x4D) {
+        if (data[0] == 0x42 && data[1] == 0x4D) {
             return "image/bmp";
         }
         
