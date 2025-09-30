@@ -25,6 +25,6 @@ public class ImageController {
         @RequestPart("prompt") String prompt,
         @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        return ApiResponse.success(imageEditService.editWithMemeId(prompt, memeId, image));
+        return ApiResponse.success(imageEditService.editMemeImg(prompt, memeId, image));
     }
 }

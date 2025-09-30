@@ -695,7 +695,7 @@ public class AdminController {
         }
 
         try {
-            GeneratedImagesResponse response = imageEditService.editWithMemeId(prompt, memeId, image);
+            GeneratedImagesResponse response = imageEditService.editMemeImg(prompt, memeId, image);
             log.info("Admin tested image edit: memeId={}, prompt={}, hasImage={}",
                 memeId, prompt, image != null && !image.isEmpty());
 

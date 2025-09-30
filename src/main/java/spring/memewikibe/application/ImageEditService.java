@@ -1,10 +1,12 @@
 package spring.memewikibe.application;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import spring.memewikibe.api.controller.image.response.Base64Image;
 import spring.memewikibe.api.controller.image.response.GeneratedImagesResponse;
+import spring.memewikibe.common.util.ImageUtils;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.external.google.application.ImageGenerator;
 import spring.memewikibe.external.google.client.response.GenerateContentResponse;
@@ -12,14 +14,12 @@ import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.support.error.ErrorType;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ImageEditService {
 
@@ -31,35 +31,33 @@ public class ImageEditService {
         this.memeRepository = memeRepository;
     }
 
-    private GeneratedImagesResponse editWithMemeId(String prompt, Long memeId) {
-        Meme meme = memeRepository.findByIdAndNormalFlag(memeId)
-            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
-        String imageUrl = meme.getImgUrl();
-        if (!StringUtils.hasText(imageUrl)) {
-            throw new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND);
+    public GeneratedImagesResponse editMemeImg(String prompt, Long memeId, MultipartFile userImg) {
+        Meme candidateMeme = getMemeBy(memeId);
+        if (userImg != null && !userImg.isEmpty()) {
+            return editMemeImgWithWithUserRequestImg(prompt, candidateMeme.getImgUrl(), userImg);
         }
-        GenerateContentResponse response = imageGenerator.generateImageWithExistingImage(prompt, imageUrl);
+        return editMemeImgWithOnlyText(prompt, candidateMeme.getImgUrl());
+    }
+
+    private GeneratedImagesResponse editMemeImgWithOnlyText(String prompt, String memeImgUrl) {
+        GenerateContentResponse response = imageGenerator.generateImageWithExistingImage(prompt, memeImgUrl);
         List<Base64Image> images = getBase64Images(response);
 
         return new GeneratedImagesResponse(images);
     }
 
-    public GeneratedImagesResponse editWithMemeId(String prompt, Long memeId, MultipartFile maybeFile) {
-        if (maybeFile != null && !maybeFile.isEmpty()) {
-            return editWithFile(prompt, maybeFile);
-        }
-        return editWithMemeId(prompt, memeId);
+    private Meme getMemeBy(Long memeId) {
+        return memeRepository.findByIdAndNormalFlag(memeId)
+            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
     }
 
-    private GeneratedImagesResponse editWithFile(String prompt, MultipartFile file) {
+    private GeneratedImagesResponse editMemeImgWithWithUserRequestImg(String prompt, String existingMemeImgUrl, MultipartFile file) {
         try {
-            byte[] bytes = file.getBytes();
-            String mime = file.getContentType();
-            if (!StringUtils.hasText(mime)) {
-                mime = sniffMimeType(bytes, file.getOriginalFilename());
-            }
-            String base64 = Base64.getEncoder().encodeToString(bytes);
-            GenerateContentResponse response = imageGenerator.generateImageWithInlineBase64(prompt, mime, base64);
+            Base64Image existingImage = convertUrlToBase64Image(existingMemeImgUrl);
+            Base64Image userRequestImg = convertMultipartFileToBase64Image(file);
+            List<Base64Image> requestImages = List.of(existingImage, userRequestImg);
+
+            GenerateContentResponse response = imageGenerator.generateImageCombine(prompt, requestImages);
             List<Base64Image> images = getBase64Images(response);
 
             return new GeneratedImagesResponse(images);
@@ -68,20 +66,27 @@ public class ImageEditService {
         }
     }
 
-    private static String sniffMimeType(byte[] data, String filename) throws IOException {
-        try (InputStream is = new ByteArrayInputStream(data)) {
-            String guessed = URLConnection.guessContentTypeFromStream(is);
-            if (StringUtils.hasText(guessed)) return guessed;
+    private Base64Image convertUrlToBase64Image(String imageUrl) {
+        try {
+            byte[] imageBytes = ImageUtils.downloadBytes(imageUrl);
+            String mimeType = ImageUtils.detectMimeType(imageUrl, imageBytes);
+            String base64Data = Base64.getEncoder().encodeToString(imageBytes);
+            return new Base64Image(mimeType, base64Data);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to convert URL to Base64 image: " + imageUrl, e);
         }
-        if (filename != null) {
-            String lower = filename.toLowerCase();
-            if (lower.endsWith(".png")) return "image/png";
-            if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-            if (lower.endsWith(".gif")) return "image/gif";
-            if (lower.endsWith(".webp")) return "image/webp";
-        }
-        return "application/octet-stream";
     }
+
+    private Base64Image convertMultipartFileToBase64Image(MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
+        String mimeType = file.getContentType();
+        if (!StringUtils.hasText(mimeType)) {
+            mimeType = ImageUtils.sniffMimeType(bytes, file.getOriginalFilename());
+        }
+        String base64Data = Base64.getEncoder().encodeToString(bytes);
+        return new Base64Image(mimeType, base64Data);
+    }
+
 
     private List<Base64Image> getBase64Images(GenerateContentResponse response) {
         List<Base64Image> images = new ArrayList<>();
