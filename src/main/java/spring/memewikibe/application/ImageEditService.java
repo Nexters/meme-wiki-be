@@ -41,9 +41,11 @@ public class ImageEditService {
 
     private GeneratedImagesResponse editMemeImgWithOnlyText(String prompt, String memeImgUrl) {
         GenerateContentResponse response = imageGenerator.generateImageWithExistingImage(prompt, memeImgUrl);
-        List<Base64Image> images = getBase64Images(response);
 
-        return new GeneratedImagesResponse(images);
+        List<Base64Image> images = getBase64Images(response);
+        List<String> texts = extractTextsFrom(response);
+
+        return new GeneratedImagesResponse(images, texts);
     }
 
     private Meme getMemeBy(Long memeId) {
@@ -58,9 +60,11 @@ public class ImageEditService {
             List<Base64Image> requestImages = List.of(existingImage, userRequestImg);
 
             GenerateContentResponse response = imageGenerator.generateImageCombine(prompt, requestImages);
-            List<Base64Image> images = getBase64Images(response);
 
-            return new GeneratedImagesResponse(images);
+            List<Base64Image> images = getBase64Images(response);
+            List<String> texts = extractTextsFrom(response);
+
+            return new GeneratedImagesResponse(images, texts);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read uploaded file", e);
         }
@@ -87,7 +91,6 @@ public class ImageEditService {
         return new Base64Image(mimeType, base64Data);
     }
 
-
     private List<Base64Image> getBase64Images(GenerateContentResponse response) {
         List<Base64Image> images = new ArrayList<>();
         if (response.candidates() != null) {
@@ -101,6 +104,14 @@ public class ImageEditService {
             }
         }
         return images;
+    }
+
+    private List<String> extractTextsFrom(GenerateContentResponse response) {
+        return response.candidates().stream()
+            .map(GenerateContentResponse.Candidate::content)
+            .map(GenerateContentResponse.Content::parts)
+            .flatMap(it -> it.stream().map(GenerateContentResponse.Part::text))
+            .toList();
     }
 
 }

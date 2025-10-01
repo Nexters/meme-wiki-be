@@ -2,7 +2,7 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>이미지 편집 테스트 - 밈위키 관리자</title>
     <link href="/webjars/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -10,21 +10,25 @@
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .navbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
+
         .card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
             margin-bottom: 2rem;
         }
+
         .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
+
         .card-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -33,6 +37,7 @@
             font-weight: 600;
             padding: 1.5rem;
         }
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -40,19 +45,23 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
+
         .form-control, .form-select {
             border-radius: 8px;
             border: 2px solid #e9ecef;
             transition: all 0.3s ease;
         }
+
         .form-control:focus, .form-select:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
+
         .meme-option {
             padding: 0.75rem;
             border: 2px solid #e9ecef;
@@ -61,14 +70,17 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
         .meme-option:hover {
             border-color: #667eea;
             background-color: #f8f9fc;
         }
+
         .meme-option.selected {
             border-color: #667eea;
             background-color: #e7e9fc;
         }
+
         .meme-image {
             width: 60px;
             height: 60px;
@@ -76,6 +88,7 @@
             border-radius: 8px;
             border: 2px solid #e9ecef;
         }
+
         .generated-image {
             max-width: 100%;
             height: auto;
@@ -83,12 +96,15 @@
             border: 2px solid #e9ecef;
             margin-bottom: 1rem;
         }
+
         .result-container {
             display: none;
         }
+
         .loading-spinner {
             display: none;
         }
+
         .stats-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -99,204 +115,205 @@
     </style>
 </head>
 <body>
-    <!-- 네비게이션 -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">
-                🎭 밈위키 관리자
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link text-white me-3" href="/admin/memes">📝 전체 밈 관리</a>
-                <a class="nav-link text-white me-3" href="/admin/memes/review">🔍 검토 대기</a>
-                <a class="nav-link text-white me-3" href="/admin/memes/stats">📊 인기 밈 통계</a>
-                <a class="nav-link text-white me-3" href="/admin/image-edit">🎨 이미지 편집</a>
-                <span class="navbar-text me-3">
+<!-- 네비게이션 -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">
+            🎭 밈위키 관리자
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white me-3" href="/admin/memes">📝 전체 밈 관리</a>
+            <a class="nav-link text-white me-3" href="/admin/memes/review">🔍 검토 대기</a>
+            <a class="nav-link text-white me-3" href="/admin/memes/stats">📊 인기 밈 통계</a>
+            <a class="nav-link text-white me-3" href="/admin/image-edit">🎨 이미지 편집</a>
+            <span class="navbar-text me-3">
                     👋 관리자님, 안녕하세요!
                 </span>
-                <a class="btn btn-outline-light btn-sm" th:href="@{/admin/logout}">
-                    🚪 로그아웃
-                </a>
-            </div>
+            <a class="btn btn-outline-light btn-sm" th:href="@{/admin/logout}">
+                🚪 로그아웃
+            </a>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <div class="container-fluid py-4">
-        <!-- 페이지 헤더 -->
-        <div class="stats-card">
-            <div class="text-center">
-                <div style="font-size: 3rem;">🎨</div>
-                <h2>이미지 편집 테스트</h2>
-                <p class="mb-0">AI를 활용한 밈 이미지 편집 기능을 테스트해보세요</p>
-            </div>
+<div class="container-fluid py-4">
+    <!-- 페이지 헤더 -->
+    <div class="stats-card">
+        <div class="text-center">
+            <div style="font-size: 3rem;">🎨</div>
+            <h2>이미지 편집 테스트</h2>
+            <p class="mb-0">AI를 활용한 밈 이미지 편집 기능을 테스트해보세요</p>
         </div>
+    </div>
 
-        <div class="row">
-            <!-- 편집 폼 -->
-            <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">🎯 이미지 편집 설정</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="imageEditForm" enctype="multipart/form-data">
-                            <!-- 밈 선택 -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold">📋 기존 밈 선택</label>
-                                <div class="row" style="max-height: 300px; overflow-y: auto;">
-                                    <div th:each="meme : ${memes}" class="col-12">
-                                        <div class="meme-option"
-                                             th:data-meme-id="${meme.id}"
-                                             onclick="selectMeme(this)">
-                                            <div class="d-flex align-items-center">
-                                                <img th:if="${meme.imgUrl}"
-                                                     th:src="${meme.imgUrl}"
-                                                     th:alt="${meme.title}"
-                                                     class="meme-image me-3">
-                                                <div th:unless="${meme.imgUrl}"
-                                                     class="meme-image me-3 d-flex align-items-center justify-content-center bg-light">
-                                                    <span class="text-muted">🖼️</span>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <h6 class="mb-1 fw-bold" th:text="${meme.title}">밈 제목</h6>
-                                                    <small class="text-muted" th:text="|ID: ${meme.id}|">ID: 1</small>
-                                                    <br>
-                                                    <small class="text-muted" th:text="${#strings.abbreviate(meme.origin, 50)}">출처</small>
-                                                </div>
+    <div class="row">
+        <!-- 편집 폼 -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">🎯 이미지 편집 설정</h5>
+                </div>
+                <div class="card-body">
+                    <form enctype="multipart/form-data" id="imageEditForm">
+                        <!-- 밈 선택 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">📋 기존 밈 선택</label>
+                            <div class="row" style="max-height: 300px; overflow-y: auto;">
+                                <div class="col-12" th:each="meme : ${memes}">
+                                    <div class="meme-option"
+                                         onclick="selectMeme(this)"
+                                         th:data-meme-id="${meme.id}">
+                                        <div class="d-flex align-items-center">
+                                            <img class="meme-image me-3"
+                                                 th:alt="${meme.title}"
+                                                 th:if="${meme.imgUrl}"
+                                                 th:src="${meme.imgUrl}">
+                                            <div class="meme-image me-3 d-flex align-items-center justify-content-center bg-light"
+                                                 th:unless="${meme.imgUrl}">
+                                                <span class="text-muted">🖼️</span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-bold" th:text="${meme.title}">밈 제목</h6>
+                                                <small class="text-muted" th:text="|ID: ${meme.id}|">ID: 1</small>
+                                                <br>
+                                                <small class="text-muted"
+                                                       th:text="${#strings.abbreviate(meme.origin, 50)}">출처</small>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <input type="hidden" id="selectedMemeId" name="memeId" required>
-                                <div class="form-text">편집할 기존 밈을 선택해주세요</div>
                             </div>
+                            <input id="selectedMemeId" name="memeId" required type="hidden">
+                            <div class="form-text">편집할 기존 밈을 선택해주세요</div>
+                        </div>
 
-                            <!-- 편집 프롬프트 -->
-                            <div class="mb-4">
-                                <label for="prompt" class="form-label fw-bold">✏️ 편집 요청 *</label>
-                                <textarea class="form-control"
-                                          id="prompt"
-                                          name="prompt"
-                                          rows="4"
-                                          placeholder="예: 배경을 우주로 바꿔주세요, 색상을 더 밝게 만들어주세요, 텍스트를 추가해주세요 등"
-                                          required></textarea>
-                                <div class="form-text">어떻게 이미지를 편집하고 싶은지 자세히 설명해주세요</div>
-                            </div>
+                        <!-- 편집 프롬프트 -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold" for="prompt">✏️ 편집 요청 *</label>
+                            <textarea class="form-control"
+                                      id="prompt"
+                                      name="prompt"
+                                      placeholder="예: 배경을 우주로 바꿔주세요, 색상을 더 밝게 만들어주세요, 텍스트를 추가해주세요 등"
+                                      required
+                                      rows="4"></textarea>
+                            <div class="form-text">어떻게 이미지를 편집하고 싶은지 자세히 설명해주세요</div>
+                        </div>
 
-                            <!-- 추가 이미지 업로드 (선택사항) -->
-                            <div class="mb-4">
-                                <label for="additionalImage" class="form-label fw-bold">📁 추가 이미지 (선택사항)</label>
-                                <input type="file"
-                                       class="form-control"
-                                       id="additionalImage"
-                                       name="image"
-                                       accept="image/*">
-                                <div class="form-text">
-                                    <small>기존 밈 이미지와 함께 편집할 추가 이미지가 있다면 업로드해주세요</small>
-                                </div>
+                        <!-- 추가 이미지 업로드 (선택사항) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold" for="additionalImage">📁 추가 이미지 (선택사항)</label>
+                            <input accept="image/*"
+                                   class="form-control"
+                                   id="additionalImage"
+                                   name="image"
+                                   type="file">
+                            <div class="form-text">
+                                <small>기존 밈 이미지와 함께 편집할 추가 이미지가 있다면 업로드해주세요</small>
                             </div>
+                        </div>
 
-                            <!-- 제출 버튼 -->
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                                    🎨 이미지 편집 시작
-                                </button>
-                            </div>
-                        </form>
+                        <!-- 제출 버튼 -->
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-lg" id="submitBtn" type="submit">
+                                🎨 이미지 편집 시작
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결과 표시 -->
+        <div class="col-lg-6">
+            <!-- 로딩 스피너 -->
+            <div class="card loading-spinner" id="loadingSpinner">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
+                    <h5 class="mt-3">AI가 이미지를 편집하고 있습니다...</h5>
+                    <p class="text-muted">잠시만 기다려주세요. 보통 10-30초 정도 소요됩니다.</p>
                 </div>
             </div>
 
             <!-- 결과 표시 -->
-            <div class="col-lg-6">
-                <!-- 로딩 스피너 -->
-                <div class="card loading-spinner" id="loadingSpinner">
-                    <div class="card-body text-center py-5">
-                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <h5 class="mt-3">AI가 이미지를 편집하고 있습니다...</h5>
-                        <p class="text-muted">잠시만 기다려주세요. 보통 10-30초 정도 소요됩니다.</p>
-                    </div>
+            <div class="card result-container" id="resultContainer">
+                <div class="card-header">
+                    <h5 class="mb-0">✨ 편집 결과</h5>
                 </div>
-
-                <!-- 결과 표시 -->
-                <div class="card result-container" id="resultContainer">
-                    <div class="card-header">
-                        <h5 class="mb-0">✨ 편집 결과</h5>
-                    </div>
-                    <div class="card-body" id="resultContent">
-                        <!-- 결과가 여기에 표시됩니다 -->
-                    </div>
+                <div class="card-body" id="resultContent">
+                    <!-- 결과가 여기에 표시됩니다 -->
                 </div>
+            </div>
 
-                <!-- 사용법 안내 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">💡 사용법 안내</h5>
-                    </div>
-                    <div class="card-body">
-                        <ol class="mb-0">
-                            <li class="mb-2"><strong>밈 선택:</strong> 편집할 기존 밈을 클릭하여 선택하세요</li>
-                            <li class="mb-2"><strong>편집 요청:</strong> 어떻게 편집하고 싶은지 구체적으로 작성하세요</li>
-                            <li class="mb-2"><strong>추가 이미지:</strong> 필요시 합성할 추가 이미지를 업로드하세요</li>
-                            <li class="mb-0"><strong>편집 시작:</strong> 버튼을 클릭하고 결과를 기다리세요</li>
-                        </ol>
+            <!-- 사용법 안내 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">💡 사용법 안내</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2"><strong>밈 선택:</strong> 편집할 기존 밈을 클릭하여 선택하세요</li>
+                        <li class="mb-2"><strong>편집 요청:</strong> 어떻게 편집하고 싶은지 구체적으로 작성하세요</li>
+                        <li class="mb-2"><strong>추가 이미지:</strong> 필요시 합성할 추가 이미지를 업로드하세요</li>
+                        <li class="mb-0"><strong>편집 시작:</strong> 버튼을 클릭하고 결과를 기다리세요</li>
+                    </ol>
 
-                        <hr class="my-3">
+                    <hr class="my-3">
 
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading">편집 요청 예시:</h6>
-                            <ul class="mb-0">
-                                <li>"배경을 해변으로 바꿔주세요"</li>
-                                <li>"이미지를 더 밝고 화려하게 만들어주세요"</li>
-                                <li>"상단에 '대박!' 텍스트를 추가해주세요"</li>
-                                <li>"인물의 표정을 더 웃는 모습으로 바꿔주세요"</li>
-                            </ul>
-                        </div>
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">편집 요청 예시:</h6>
+                        <ul class="mb-0">
+                            <li>"배경을 해변으로 바꿔주세요"</li>
+                            <li>"이미지를 더 밝고 화려하게 만들어주세요"</li>
+                            <li>"상단에 '대박!' 텍스트를 추가해주세요"</li>
+                            <li>"인물의 표정을 더 웃는 모습으로 바꿔주세요"</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 밈 선택 함수
-        function selectMeme(element) {
-            // 기존 선택 해제
-            document.querySelectorAll('.meme-option').forEach(option => {
-                option.classList.remove('selected');
-            });
+<script src="/webjars/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 밈 선택 함수
+    function selectMeme(element) {
+        // 기존 선택 해제
+        document.querySelectorAll('.meme-option').forEach(option => {
+            option.classList.remove('selected');
+        });
 
-            // 새 선택 적용
-            element.classList.add('selected');
+        // 새 선택 적용
+        element.classList.add('selected');
 
-            // 히든 필드에 ID 설정
-            const memeId = element.getAttribute('data-meme-id');
-            document.getElementById('selectedMemeId').value = memeId;
-        }
+        // 히든 필드에 ID 설정
+        const memeId = element.getAttribute('data-meme-id');
+        document.getElementById('selectedMemeId').value = memeId;
+    }
 
-        // 폼 제출 처리
-        document.getElementById('imageEditForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    // 폼 제출 처리
+    document.getElementById('imageEditForm').addEventListener('submit', function (e) {
+        e.preventDefault();
 
-            const formData = new FormData(this);
-            const submitBtn = document.getElementById('submitBtn');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const resultContainer = document.getElementById('resultContainer');
-            const resultContent = document.getElementById('resultContent');
+        const formData = new FormData(this);
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultContent = document.getElementById('resultContent');
 
-            // UI 상태 변경
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ 편집 중...';
-            loadingSpinner.style.display = 'block';
-            resultContainer.style.display = 'none';
+        // UI 상태 변경
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ 편집 중...';
+        loadingSpinner.style.display = 'block';
+        resultContainer.style.display = 'none';
 
-            // API 호출
-            fetch('/admin/image-edit/test', {
-                method: 'POST',
-                body: formData
-            })
+        // API 호출
+        fetch('/admin/image-edit/test', {
+            method: 'POST',
+            body: formData
+        })
             .then(response => {
                 console.log('Response status:', response.status);
                 console.log('Response headers:', response.headers.get('content-type'));
@@ -324,7 +341,8 @@
                 if (data.resultType === "SUCCESS" && data.success && data.success.images) {
                     // 성공 - 결과 표시
                     console.log('Images count:', data.success.images.length);
-                    displayResults(data.success.images);
+                    console.log('Text responses:', data.success.text);
+                    displayResults(data.success.images, data.success.text);
                     resultContainer.style.display = 'block';
                 } else {
                     // 실패 - 서버 에러 메시지 확인
@@ -343,21 +361,37 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '🎨 이미지 편집 시작';
             });
-        });
+    });
 
-        // 결과 표시 함수
-        function displayResults(images) {
-            const resultContent = document.getElementById('resultContent');
+    // 결과 표시 함수
+    function displayResults(images, texts) {
+        const resultContent = document.getElementById('resultContent');
 
-            if (!images || images.length === 0) {
-                resultContent.innerHTML = '<p class="text-center text-muted">생성된 이미지가 없습니다.</p>';
-                return;
-            }
+        if (!images || images.length === 0) {
+            resultContent.innerHTML = '<p class="text-center text-muted">생성된 이미지가 없습니다.</p>';
+            return;
+        }
 
-            let html = '<div class="row">';
+        let html = '<div class="row">';
 
-            images.forEach((image, index) => {
+        // AI 텍스트 응답이 있으면 먼저 표시
+        if (texts && texts.length > 0) {
+            const validTexts = texts.filter(text => text && text.trim() !== '');
+            if (validTexts.length > 0) {
                 html += `
+                        <div class="col-12 mb-4">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">💬 AI 응답</h6>
+                                ${validTexts.map((text, idx) => `<p class="mb-${idx < validTexts.length - 1 ? '2' : '0'}">${text}</p>`).join('')}
+                            </div>
+                        </div>
+                    `;
+            }
+        }
+
+        // 이미지 표시
+        images.forEach((image, index) => {
+            html += `
                     <div class="col-12 mb-4">
                         <div class="text-center">
                             <h6 class="fw-bold">편집된 이미지 ${index + 1}</h6>
@@ -374,32 +408,32 @@
                         </div>
                     </div>
                 `;
-            });
+        });
 
-            html += '</div>';
-            html += `
+        html += '</div>';
+        html += `
                 <div class="alert alert-success">
                     <h6 class="alert-heading">✅ 편집 완료!</h6>
                     <p class="mb-0">총 ${images.length}개의 이미지가 생성되었습니다. 각 이미지를 클릭하거나 다운로드 버튼을 사용해 저장할 수 있습니다.</p>
                 </div>
             `;
 
-            resultContent.innerHTML = html;
-        }
+        resultContent.innerHTML = html;
+    }
 
-        // 파일 업로드 시 크기 체크
-        document.getElementById('additionalImage').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                // 파일 크기 체크 (10MB)
-                if (file.size > 10 * 1024 * 1024) {
-                    alert('파일 크기가 10MB를 초과합니다!');
-                    this.value = '';
-                    return;
-                }
-                console.log('✅ 추가 파일 선택됨:', file.name, '(' + (file.size / 1024 / 1024).toFixed(2) + 'MB)');
+    // 파일 업로드 시 크기 체크
+    document.getElementById('additionalImage').addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            // 파일 크기 체크 (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('파일 크기가 10MB를 초과합니다!');
+                this.value = '';
+                return;
             }
-        });
-    </script>
+            console.log('✅ 추가 파일 선택됨:', file.name, '(' + (file.size / 1024 / 1024).toFixed(2) + 'MB)');
+        }
+    });
+</script>
 </body>
 </html>
