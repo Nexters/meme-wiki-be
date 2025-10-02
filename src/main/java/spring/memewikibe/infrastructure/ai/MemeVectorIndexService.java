@@ -25,8 +25,8 @@ public class MemeVectorIndexService {
 
     private final KoreanEmbeddingService embeddingService;
     // Optional beans for hybrid search and heavy rerank
-    private final java.util.Optional<MemeVectorIndexService.KeywordSearchService> keywordSearchService;
-    private final java.util.Optional<MemeVectorIndexService.Reranker> heavyReranker;
+    private final Optional<MemeVectorIndexService.KeywordSearchService> keywordSearchService;
+    private final Optional<MemeVectorIndexService.Reranker> heavyReranker;
     private final Optional<QueryRewriter> queryRewriter; // [추가] QueryRewriter 주입
 
     // Simple in-memory cache (TTL) for query results
@@ -104,7 +104,7 @@ public class MemeVectorIndexService {
     public List<SearchHit> queryWithOptions(String query, SearchOptions options) {
         if (query == null || query.isBlank()) return List.of();
 
-        // [추가] 쿼리 확장 로직
+        // 쿼리 확장 로직
         String vectorQuery = query;
         String keywordQuery = query;
         if (queryRewriter.isPresent()) {

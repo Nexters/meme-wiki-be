@@ -1,6 +1,8 @@
 package spring.memewikibe.application;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.api.controller.recommendation.response.MemeRecommendationResponse;
@@ -18,6 +20,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.springframework.data.domain.Limit.*;
 
 @lombok.extern.slf4j.Slf4j
 @Service
@@ -38,27 +42,27 @@ public class RecommendationService {
         "것", "수", "등", "대한"
     );
 
-    @org.springframework.beans.factory.annotation.Value("${recommend.alpha:0.6}")
+    @Value("${recommend.alpha:0.6}")
     private double alpha;
-    @org.springframework.beans.factory.annotation.Value("${recommend.mmr.lambda:0.7}")
+    @Value("${recommend.mmr.lambda:0.7}")
     private double mmrLambda;
-    @org.springframework.beans.factory.annotation.Value("${recommend.vector.topK:200}")
+    @Value("${recommend.vector.topK:200}")
     private int vecTopK;
-    @org.springframework.beans.factory.annotation.Value("${recommend.keyword.topK:200}")
+    @Value("${recommend.keyword.topK:200}")
     private int kwTopK;
-    @org.springframework.beans.factory.annotation.Value("${recommend.reranker.topN:50}")
+    @Value("${recommend.reranker.topN:50}")
     private int rerankerTopN;
-    @org.springframework.beans.factory.annotation.Value("${recommend.reranker.enabled:false}")
+    @Value("${recommend.reranker.enabled:false}")
     private boolean rerankerEnabled;
-    @org.springframework.beans.factory.annotation.Value("${recommend.hybrid.adaptive:true}")
+    @Value("${recommend.hybrid.adaptive:true}")
     private boolean adaptiveHybrid;
-    @org.springframework.beans.factory.annotation.Value("${recommend.rewrite.enabled:true}")
+    @Value("${recommend.rewrite.enabled:true}")
     private boolean rewriteEnabled;
-    @org.springframework.beans.factory.annotation.Value("${recommend.cross.enabled:true}")
+    @Value("${recommend.cross.enabled:true}")
     private boolean crossEnabled;
-    @org.springframework.beans.factory.annotation.Value("${recommend.cross.topM:20}")
+    @Value("${recommend.cross.topM:20}")
     private int crossTopM;
-    @org.springframework.beans.factory.annotation.Value("${recommend.eval.log.enabled:true}")
+    @Value("${recommend.eval.log.enabled:true}")
     private boolean evalLogEnabled;
 
     private final Optional<QueryRewriter> queryRewriter;
@@ -94,16 +98,16 @@ public class RecommendationService {
         // 2) Keyword candidates - 확장된 키워드 기반
         int useKwTopK = Math.max(50, Math.min(400, kwTopK));
 
-        // [핵심 수정] Full-Text Search를 먼저 시도하고, 실패 시 새로운 OR 검색 메소드를 호출합니다.
+        // Full-Text Search를 먼저 시도하고, 실패 시 새로운 OR 검색 메소드를 호출
         List<Meme> kwCandidates = safeFts.tryFullText(normKeywordQuery, useKwTopK);
         if (kwCandidates.isEmpty()) {
             try {
-                // [핵심 수정] 확장된 키워드 토큰들로 OR 조건 검색을 수행합니다.
+                // 확장된 키워드 토큰들로 OR 조건 검색을 수행
                 log.info("Performing keyword search with OR conditions for tokens: {}", keywordTokens);
-                kwCandidates = memeRepository.findKeywordCandidatesAcrossFields(keywordTokens, org.springframework.data.domain.Limit.of(useKwTopK));
+                kwCandidates = memeRepository.findKeywordCandidatesAcrossFields(keywordTokens, of(useKwTopK));
             } catch (Throwable t2) {
                 log.error("Custom keyword search failed, falling back to simple containing search.", t2);
-                kwCandidates = memeRepository.findByTitleOrHashtagsContainingOrderByIdDesc(normKeywordQuery, org.springframework.data.domain.Limit.of(useKwTopK));
+                kwCandidates = memeRepository.findByTitleOrHashtagsContainingOrderByIdDesc(normKeywordQuery, of(useKwTopK));
             }
         }
 
@@ -171,7 +175,7 @@ public class RecommendationService {
                 ))
                 .toList();
 
-            // CrossEncoder 호출!
+            // CrossEncoder 호출
             List<Long> ceOrder = crossEncoder.get().rerank(vectorQuery, ceCands); // 쿼리는 문장형 원본 사용
 
             // 반환된 순서(ceOrder)에 따라 head 리스트를 재정렬
@@ -221,8 +225,6 @@ public class RecommendationService {
         }
         return responses;
     }
-
-    // --- Helper Methods ---
 
     private static long msBetween(long tStart, long tEnd) { return (tEnd - tStart) / 1_000_000L; }
 
