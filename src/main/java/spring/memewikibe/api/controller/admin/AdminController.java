@@ -43,6 +43,10 @@ public class AdminController {
     private final MemeCreateService memeCreateService;
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
+    private final MemeVectorIndexService vectorIndexService;
+    private final ImageEditService imageEditService;
+    private final AdminMemeStatsService adminMemeStatsService;
+    private final MemeNotificationService memeNotificationService;
 
     @Value("${admin.username}")
     private String adminUsername;

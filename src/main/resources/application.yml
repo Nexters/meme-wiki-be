@@ -27,7 +27,7 @@ logging:
 
 # Recommendation pipeline defaults (can be overridden in .env)
 recommend:
-  alpha: 0.6
+  alpha: 0.3
   mmr:
     lambda: 0.7
   vector:
