@@ -11,8 +11,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -24,6 +27,7 @@ public class MemeVectorIndexService {
     // Optional beans for hybrid search and heavy rerank
     private final java.util.Optional<MemeVectorIndexService.KeywordSearchService> keywordSearchService;
     private final java.util.Optional<MemeVectorIndexService.Reranker> heavyReranker;
+    private final Optional<QueryRewriter> queryRewriter; // [추가] QueryRewriter 주입
 
     // Simple in-memory cache (TTL) for query results
     private final SearchCache cache = new SearchCache(java.time.Duration.ofSeconds(60));
@@ -99,19 +103,30 @@ public class MemeVectorIndexService {
      */
     public List<SearchHit> queryWithOptions(String query, SearchOptions options) {
         if (query == null || query.isBlank()) return List.of();
-        String cacheKey = options.cacheEnabled() ? (query.strip().toLowerCase(java.util.Locale.ROOT) + "|" + options.cacheSignature()) : null;
+
+        // [추가] 쿼리 확장 로직
+        String vectorQuery = query;
+        String keywordQuery = query;
+        if (queryRewriter.isPresent()) {
+            vectorQuery = queryRewriter.get().rewrite(null, query); // userContext는 null로 전달
+            keywordQuery = queryRewriter.get().expandForKeywords(query);
+        }
+
+        String cacheKey = options.cacheEnabled() ? (vectorQuery.strip().toLowerCase(java.util.Locale.ROOT) + "|" + options.cacheSignature()) : null;
         if (options.cacheEnabled()) {
             List<SearchHit> cached = cache.get(cacheKey);
             if (cached != null) return cached;
         }
 
-        // 1) Dense search (vector)
-        List<SearchHit> denseHits = denseSearch(query, options);
+        // 1) Dense search (vector) - 벡터 검색은 문장형 쿼리 사용
+        List<SearchHit> denseHits = denseSearch(vectorQuery, options);
 
         // 2) Optional hybrid (sparse keyword)
         List<SearchHit> fused = denseHits;
-        if (options.enableHybrid() && keywordSearchService != null && keywordSearchService.isPresent()) {
-            List<SearchHit> sparseHits = keywordSearchService.get().searchWithScores(query, Math.max(options.topK(), options.lightRerankTopN()));
+        if (options.enableHybrid() && keywordSearchService.isPresent()) {
+            // [수정] 확장된 키워드 쿼리를 토큰화하여 List<String>으로 전달
+            List<String> keywordTokens = tokenize(keywordQuery);
+            List<SearchHit> sparseHits = keywordSearchService.get().searchWithScores(keywordTokens, Math.max(options.topK(), options.lightRerankTopN()));
             fused = fuseScores(denseHits, sparseHits, options);
         }
 
@@ -600,6 +615,10 @@ public class MemeVectorIndexService {
     }
 
     public interface KeywordSearchService {
+        // 신규: 지능화된 List<String> 버전
+        java.util.List<SearchHit> searchWithScores(List<String> keywords, int topK);
+
+        // 기존: 하위 호환성을 위한 String 버전
         java.util.List<SearchHit> searchWithScores(String query, int topK);
     }
 
@@ -625,5 +644,12 @@ public class MemeVectorIndexService {
             map.put(key, new Entry(value, java.time.Instant.now().plus(ttl)));
         }
         record Entry(java.util.List<SearchHit> value, java.time.Instant expireAt) {}
+    }
+
+    private static final Pattern TOKEN_SPLIT = Pattern.compile("[\\s,]+");
+    private List<String> tokenize(String s) {
+        if (s == null) return List.of();
+        return Arrays.stream(TOKEN_SPLIT.split(s.toLowerCase()))
+            .filter(tok -> !tok.isBlank()).toList();
     }
 }

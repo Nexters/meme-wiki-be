@@ -57,10 +57,23 @@ public class MemeRepositoryCustomImpl implements MemeRepositoryCustom {
     }
 
     @Override
-    public List<Meme> findKeywordCandidatesAcrossFields(String query, Limit limit) {
+    public List<Meme> findKeywordCandidatesAcrossFields(List<String> keywords, Limit limit) {
+        if (keywords == null || keywords.isEmpty()) {
+            return List.of();
+        }
+
+        BooleanExpression predicate = keywords.stream()
+            .map(this::acrossFieldsContains) // 기존 메소드 재활용
+            .reduce(BooleanExpression::or)
+            .orElse(null);
+
+        if (predicate == null) {
+            return List.of();
+        }
+
         return queryFactory
             .selectFrom(meme)
-            .where(acrossFieldsContains(query), meme.flag.eq(Meme.Flag.NORMAL))
+            .where(predicate, meme.flag.eq(Meme.Flag.NORMAL))
             .orderBy(meme.id.desc())
             .limit(limit.max())
             .fetch();
