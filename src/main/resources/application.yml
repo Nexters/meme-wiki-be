@@ -19,6 +19,33 @@ spring:
     properties:
       hibernate.default_batch_fetch_size: 100
 
+logging:
+  level:
+    # Suppress noisy Tomcat parser errors when TLS is sent to HTTP port
+    org.apache.coyote.http11: ERROR
+    org.apache.tomcat.util.net: ERROR
+
+# Recommendation pipeline defaults (can be overridden in .env)
+recommend:
+  alpha: 0.3
+  mmr:
+    lambda: 0.7
+  vector:
+    topK: 200
+  keyword:
+    topK: 200
+  reranker:
+    enabled: false
+    topN: 50
+  rewrite:
+    enabled: true
+  cross:
+    enabled: true
+    topM: 20
+  eval:
+    log:
+      enabled: true
+
 cloudflare:
   r2:
     access-key-id: ${CLOUDFLARE_R2_ACCESS_KEY_ID:}

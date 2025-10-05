@@ -12,6 +12,7 @@ import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
+import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
 
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ public class MemeCreateService {
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
     private final ImageUploadService imageUploadService;
+    private final MemeVectorIndexService vectorIndexService;
 
     public long createMeme(MemeCreateRequest request, MultipartFile imageFile) {
         String imageUrl = imageUploadService.uploadImage(imageFile);
@@ -53,6 +55,18 @@ public class MemeCreateService {
             .ifPresent(memeCategoryRepository::saveAll);
 
         log.info("밈 생성 완료: {}", savedMeme.getId());
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+            new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        vectorIndexService.index(savedMeme);
+                    } catch (Exception e) {
+                        log.warn("[afterCommit] Failed to index meme {} to Pinecone: {}", savedMeme.getId(), e.toString());
+                    }
+                }
+            }
+        );
         return savedMeme.getId();
     }
 } 
