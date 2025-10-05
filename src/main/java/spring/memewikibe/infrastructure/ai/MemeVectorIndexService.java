@@ -46,7 +46,7 @@ public class MemeVectorIndexService {
     @Value("${PINECONE_ENVIRONMENT:}")
     private String environment; // e.g., us-east-1-aws
 
-    @Value("${PINECONE_NAMESPACE:default}")
+    @Value("${PINECONE_NAMESPACE:}")
     private String namespace;
 
     // Optional: allow explicitly configuring index dimension via env
