@@ -51,10 +51,9 @@ services:
       GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY}
       FCM_SERVICE_ACCOUNT_KEY_PATH: file:/app/config/fcm-service-account.json
       NAVER_AI_API_KEY: ${NAVER_AI_API_KEY}
-      NAVER_AI_API_ENDPOINT: ${NAVER_AI_API_ENDPOINT}
-      NAVER_AI_RERANKER_ENDPOINT: ${NAVER_AI_RERANKER_ENDPOINT}
       PINECONE_API_KEY: ${PINECONE_API_KEY}
-      PINECONE_INDEX_HOST: ${PINECONE_INDEX_HOST}
+      PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT}
     volumes:
       - /root/logs:/app/logs
       - /root/config/fcm-service-account.json:/app/config/fcm-service-account.json:ro
