@@ -123,10 +123,9 @@ jobs:
           export GOOGLE_GENAI_API_KEY='${{ secrets.GOOGLE_GENAI_API_KEY }}'
           
           export NAVER_AI_API_KEY='${{ secrets.NAVER_AI_API_KEY }}'
-          export NAVER_AI_API_ENDPOINT='${{ secrets.NAVER_AI_API_ENDPOINT }}'
-          export NAVER_AI_RERANKER_ENDPOINT='${{ secrets.NAVER_AI_RERANKER_ENDPOINT }}'
           export PINECONE_API_KEY='${{ secrets.PINECONE_API_KEY }}'
-          export PINECONE_INDEX_HOST='${{ secrets.PINECONE_INDEX_HOST }}'
+          export PINECONE_INDEX_NAME='${{ secrets.PINECONE_INDEX_NAME }}'
+          export PINECONE_ENVIRONMENT='${{ secrets.PINECONE_ENVIRONMENT }}'
 
           # FCM 서비스 계정 키 파일 생성
           mkdir -p /root/config
