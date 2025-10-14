@@ -137,6 +137,11 @@ jobs:
           docker compose ps
           echo "✅ App service restarted"
 
+          # Cleanup old Docker images (7 days or older)
+          echo "🧹 Cleaning up old Docker resources..."
+          docker image prune -a -f --filter "until=168h"
+          echo "✅ Docker cleanup completed"
+
     - name: Deployment completed
       run: |
         echo "✅ 이미지 배포 완료: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
