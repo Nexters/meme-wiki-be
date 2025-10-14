@@ -1,6 +1,5 @@
 package spring.memewikibe.api.controller.admin;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,25 +9,29 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import spring.memewikibe.api.controller.admin.response.MemePopularityListResponse;
-import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
-import spring.memewikibe.api.controller.image.response.GeneratedImagesResponse;
-import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
-import spring.memewikibe.api.controller.meme.response.CategoryResponse;
-import spring.memewikibe.api.controller.notification.request.NotificationSendRequest;
-import spring.memewikibe.application.*;
-import spring.memewikibe.application.notification.MemeNotificationService;
+
+
 import spring.memewikibe.domain.meme.Meme;
+import spring.memewikibe.infrastructure.MemeRepository;
+import spring.memewikibe.application.ImageUploadService;
+import spring.memewikibe.application.MemeLookUpService;
+import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
+import spring.memewikibe.api.controller.meme.response.CategoryResponse;
+ 
+
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
 import spring.memewikibe.infrastructure.MemeCategoryRepository;
-import spring.memewikibe.infrastructure.MemeRepository;
-import spring.memewikibe.support.error.ErrorType;
-import spring.memewikibe.support.response.ApiResponse;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import jakarta.servlet.http.HttpSession;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,13 +43,9 @@ public class AdminController {
     private final MemeRepository memeRepository;
     private final ImageUploadService imageUploadService;
     private final MemeLookUpService memeLookUpService;
-    private final MemeCreateService memeCreateService;
     private final CategoryRepository categoryRepository;
     private final MemeCategoryRepository memeCategoryRepository;
     private final MemeVectorIndexService vectorIndexService;
-    private final ImageEditService imageEditService;
-    private final AdminMemeStatsService adminMemeStatsService;
-    private final MemeNotificationService memeNotificationService;
 
     @Value("${admin.username}")
     private String adminUsername;
@@ -70,12 +69,12 @@ public class AdminController {
      */
     @PostMapping("/login")
     public String login(@RequestParam String username,
-                        @RequestParam String password,
-                        HttpSession session,
-                        RedirectAttributes redirectAttributes) {
-
+                       @RequestParam String password,
+                       HttpSession session,
+                       RedirectAttributes redirectAttributes) {
+        
         log.info("Admin login attempt: username={}", username);
-
+        
         if (adminUsername.equals(username) && adminPassword.equals(password)) {
             session.setAttribute("admin_authenticated", true);
             log.info("Admin login successful");
@@ -101,14 +100,14 @@ public class AdminController {
      */
     @GetMapping("/memes")
     public String memesPage(@RequestParam(name = "showApprovedOnly", defaultValue = "true") boolean showApprovedOnly,
-                            Model model, HttpSession session) {
+                           Model model, HttpSession session) {
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
 
         List<Object[]> memeWithCategories;
         List<Meme> memes;
-
+        
         if (showApprovedOnly) {
             // 승인된 밈만 조회
             memeWithCategories = memeRepository.findByFlagWithCategoryNamesOrderByIdDesc(Meme.Flag.NORMAL);
@@ -118,9 +117,9 @@ public class AdminController {
             memeWithCategories = memeRepository.findAllWithCategoryNamesOrderByIdDesc();
             memes = memeRepository.findAllByOrderByIdDesc();
         }
-
+        
         List<CategoryResponse> categories = memeLookUpService.getAllCategories();
-
+        
         // 밈별 카테고리 정보 매핑
         Map<Long, List<String>> memeCategoryMap = memeWithCategories.stream()
             .filter(row -> row[1] != null) // 카테고리가 있는 경우만
@@ -128,15 +127,15 @@ public class AdminController {
                 row -> ((Meme) row[0]).getId(),
                 Collectors.mapping(row -> (String) row[1], Collectors.toList())
             ));
-
+        
         model.addAttribute("memes", memes);
         model.addAttribute("memeCategoryMap", memeCategoryMap);
         model.addAttribute("categories", categories);
         model.addAttribute("totalCount", memes.size());
         model.addAttribute("showApprovedOnly", showApprovedOnly);
-
-        log.info("Admin accessing memes page. Total memes: {}, Total categories: {}",
-            memes.size(), categories.size());
+        
+        log.info("Admin accessing memes page. Total memes: {}, Total categories: {}", 
+                 memes.size(), categories.size());
         return "admin/memes";
     }
 
@@ -145,16 +144,16 @@ public class AdminController {
      */
     @PostMapping("/memes")
     public String addMeme(@RequestParam String title,
-                          @RequestParam String origin,
-                          @RequestParam String usageContext,
-                          @RequestParam String hashtags,
-                          @RequestParam(required = false) String imgUrl,
-                          @RequestParam(required = false) MultipartFile imageFile,
-                          @RequestParam(required = false) String trendPeriod,
-                          @RequestParam(required = false) List<Long> categoryIds,
-                          HttpSession session,
-                          RedirectAttributes redirectAttributes) {
-
+                         @RequestParam String origin,
+                         @RequestParam String usageContext,
+                         @RequestParam String hashtags,
+                         @RequestParam(required = false) String imgUrl,
+                         @RequestParam(required = false) MultipartFile imageFile,
+                         @RequestParam(required = false) String trendPeriod,
+                         @RequestParam(required = false) List<Long> categoryIds,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes) {
+        
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
@@ -162,7 +161,7 @@ public class AdminController {
         try {
             // 이미지 URL 결정 (파일 업로드 우선, 없으면 URL 사용)
             String finalImgUrl = null;
-
+            
             if (imageFile != null && !imageFile.isEmpty()) {
                 log.info("📁 파일 업로드 시작: {}", imageFile.getOriginalFilename());
                 finalImgUrl = imageUploadService.uploadImage(imageFile);
@@ -173,54 +172,41 @@ public class AdminController {
             }
 
             // MemeCreateRequest 생성 (trendPeriod는 필수이므로 기본값 설정)
-            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty())
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
                 ? trendPeriod.trim() : "2024";
 
-            MemeCreateRequest createRequest = new MemeCreateRequest(
-                title.trim(),
-                origin.trim(),
-                usageContext.trim(),
-                validTrendPeriod,
-                hashtags.trim(),
-                categoryIds != null ? categoryIds : List.of()
-            );
-
-            // 밈 생성 (카테고리 포함)
+            // 밈 생성 (카테고리 포함) - Admin 경로에서는 벡터 인덱싱을 트리거하지 않도록 직접 저장
             Long memeId;
-            if (imageFile != null && !imageFile.isEmpty()) {
-                memeId = memeCreateService.createMeme(createRequest, imageFile);
-            } else {
-                // 이미지 파일이 없는 경우 기존 방식 사용
-                Meme meme = Meme.builder()
+            Meme meme = Meme.builder()
                     .title(title.trim())
                     .origin(origin.trim())
                     .usageContext(usageContext.trim())
                     .hashtags(hashtags.trim())
                     .imgUrl(finalImgUrl)
                     .trendPeriod(validTrendPeriod)
+                    .flag(Meme.Flag.NORMAL)
                     .build();
 
-                Meme savedMeme = memeRepository.save(meme);
-                memeId = savedMeme.getId();
+            Meme savedMeme = memeRepository.save(meme);
+            memeId = savedMeme.getId();
 
-                // 카테고리 연결
-                if (categoryIds != null && !categoryIds.isEmpty()) {
-                    categoryRepository.findAllById(categoryIds)
-                        .forEach(category -> {
-                            MemeCategory memeCategory = MemeCategory.builder()
-                                .meme(savedMeme)
-                                .category(category)
-                                .build();
-                            memeCategoryRepository.save(memeCategory);
-                        });
-                }
+            // 카테고리 연결
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                categoryRepository.findAllById(categoryIds)
+                    .forEach(category -> {
+                        MemeCategory memeCategory = MemeCategory.builder()
+                            .meme(savedMeme)
+                            .category(category)
+                            .build();
+                        memeCategoryRepository.save(memeCategory);
+                    });
             }
-
-            log.info("✨ New meme added by admin: id={}, title={}, categories={}",
-                memeId, title.trim(), categoryIds);
-            redirectAttributes.addFlashAttribute("success",
+            
+            log.info("✨ New meme added by admin: id={}, title={}, categories={}", 
+                     memeId, title.trim(), categoryIds);
+            redirectAttributes.addFlashAttribute("success", 
                 "밈이 성공적으로 추가되었습니다! (ID: " + memeId + ")");
-
+            
         } catch (Exception e) {
             log.error("❌ Failed to add new meme", e);
             redirectAttributes.addFlashAttribute("error", "밈 추가 중 오류가 발생했습니다: " + e.getMessage());
@@ -234,9 +220,9 @@ public class AdminController {
      */
     @PostMapping("/memes/{id}/delete")
     public String deleteMeme(@PathVariable Long id,
-                             HttpSession session,
-                             RedirectAttributes redirectAttributes) {
-
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes) {
+        
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
@@ -263,9 +249,9 @@ public class AdminController {
     @PostMapping("/memes/delete-multiple")
     @Transactional
     public String deleteMultipleMemes(@RequestParam("memeIds") String memeIdsString,
-                                      HttpSession session,
-                                      RedirectAttributes redirectAttributes) {
-
+                                     HttpSession session,
+                                     RedirectAttributes redirectAttributes) {
+        
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
@@ -280,10 +266,10 @@ public class AdminController {
             List<Long> memeIds;
             try {
                 memeIds = Arrays.stream(memeIdsString.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(Long::valueOf)
-                    .toList();
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(Long::valueOf)
+                        .toList();
             } catch (NumberFormatException e) {
                 redirectAttributes.addFlashAttribute("error", "잘못된 밈 ID 형식입니다.");
                 return "redirect:/admin/memes";
@@ -296,8 +282,8 @@ public class AdminController {
 
             memeRepository.deleteByIdIn(memeIds);
             log.info("Memes deleted by admin: ids={}", memeIds);
-            redirectAttributes.addFlashAttribute("success",
-                memeIds.size() + "개의 밈이 삭제되었습니다.");
+            redirectAttributes.addFlashAttribute("success", 
+                    memeIds.size() + "개의 밈이 삭제되었습니다.");
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "밈 일괄 삭제 중 오류가 발생했습니다.");
@@ -317,23 +303,23 @@ public class AdminController {
 
         try {
             Meme meme = memeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
-
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
             List<CategoryResponse> categories = memeLookUpService.getAllCategories();
-
+            
             // 현재 밈의 카테고리 ID 조회
             List<Long> currentCategoryIds = memeCategoryRepository.findByMemeId(id)
-                .stream()
-                .map(memeCategory -> memeCategory.getCategory().getId())
-                .toList();
-
+                    .stream()
+                    .map(memeCategory -> memeCategory.getCategory().getId())
+                    .toList();
+            
             model.addAttribute("meme", meme);
             model.addAttribute("categories", categories);
             model.addAttribute("currentCategoryIds", currentCategoryIds);
-
+            
             log.info("Admin accessing edit page for meme: id={}", id);
             return "admin/edit-meme";
-
+            
         } catch (Exception e) {
             log.error("Failed to load edit page for meme: id={}", id, e);
             return "redirect:/admin/memes";
@@ -345,28 +331,28 @@ public class AdminController {
      */
     @PostMapping("/memes/{id}/edit")
     public String updateMeme(@PathVariable Long id,
-                             @RequestParam String title,
-                             @RequestParam String origin,
-                             @RequestParam String usageContext,
-                             @RequestParam String hashtags,
-                             @RequestParam(required = false) String imgUrl,
-                             @RequestParam(required = false) MultipartFile imageFile,
-                             @RequestParam(required = false) String trendPeriod,
-                             @RequestParam(required = false) List<Long> categoryIds,
-                             HttpSession session,
-                             RedirectAttributes redirectAttributes) {
-
+                           @RequestParam String title,
+                           @RequestParam String origin,
+                           @RequestParam String usageContext,
+                           @RequestParam String hashtags,
+                           @RequestParam(required = false) String imgUrl,
+                           @RequestParam(required = false) MultipartFile imageFile,
+                           @RequestParam(required = false) String trendPeriod,
+                           @RequestParam(required = false) List<Long> categoryIds,
+                           HttpSession session,
+                           RedirectAttributes redirectAttributes) {
+        
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
 
         try {
             Meme meme = memeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
-
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
             // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
             String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
-
+            
             if (imageFile != null && !imageFile.isEmpty()) {
                 log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
                 finalImgUrl = imageUploadService.uploadImage(imageFile);
@@ -377,9 +363,9 @@ public class AdminController {
             }
 
             // 유행시기 기본값 설정
-            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty())
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
                 ? trendPeriod.trim() : meme.getTrendPeriod();
-
+            
             // 밈 정보 업데이트
             meme.updateMeme(
                 title.trim(),
@@ -389,17 +375,12 @@ public class AdminController {
                 finalImgUrl,
                 hashtags.trim()
             );
-
+            
             memeRepository.save(meme);
-
-            // Reindex in vector store
-            try {
-                vectorIndexService.reindex(meme);
-            } catch (Exception ignored) {}
-
+            
             // 기존 카테고리 연결 삭제
             memeCategoryRepository.deleteByMemeId(id);
-
+            
             // 새 카테고리 연결
             if (categoryIds != null && !categoryIds.isEmpty()) {
                 categoryRepository.findAllById(categoryIds)
@@ -411,12 +392,12 @@ public class AdminController {
                         memeCategoryRepository.save(memeCategory);
                     });
             }
-
-            log.info("✨ Meme updated by admin: id={}, title={}, categories={}",
-                id, title.trim(), categoryIds);
-            redirectAttributes.addFlashAttribute("success",
+            
+            log.info("✨ Meme updated by admin: id={}, title={}, categories={}", 
+                     id, title.trim(), categoryIds);
+            redirectAttributes.addFlashAttribute("success", 
                 "밈이 성공적으로 수정되었습니다! (ID: " + id + ")");
-
+            
         } catch (Exception e) {
             log.error("❌ Failed to update meme: id={}", id, e);
             redirectAttributes.addFlashAttribute("error", "밈 수정 중 오류가 발생했습니다: " + e.getMessage());
@@ -424,35 +405,35 @@ public class AdminController {
 
         return "redirect:/admin/memes";
     }
-
+    
     /**
      * 밈 수정 후 바로 승인 처리
      */
     @PostMapping("/memes/{id}/edit-and-approve")
     public String editAndApproveMeme(@PathVariable Long id,
-                                     @RequestParam String title,
-                                     @RequestParam String origin,
-                                     @RequestParam String usageContext,
-                                     @RequestParam String hashtags,
-                                     @RequestParam(required = false) String imgUrl,
-                                     @RequestParam(required = false) MultipartFile imageFile,
-                                     @RequestParam(required = false) String trendPeriod,
-                                     @RequestParam(required = false) List<Long> categoryIds,
-                                     HttpSession session,
-                                     RedirectAttributes redirectAttributes) {
+                                   @RequestParam String title,
+                                   @RequestParam String origin,
+                                   @RequestParam String usageContext,
+                                   @RequestParam String hashtags,
+                                   @RequestParam(required = false) String imgUrl,
+                                   @RequestParam(required = false) MultipartFile imageFile,
+                                   @RequestParam(required = false) String trendPeriod,
+                                   @RequestParam(required = false) List<Long> categoryIds,
+                                   HttpSession session,
+                                   RedirectAttributes redirectAttributes) {
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
 
         try {
             log.info("✏️ Editing and approving meme: id={}", id);
-
+            
             Meme meme = memeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
 
             // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
             String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
-
+            
             if (imageFile != null && !imageFile.isEmpty()) {
                 log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
                 finalImgUrl = imageUploadService.uploadImage(imageFile);
@@ -463,9 +444,9 @@ public class AdminController {
             }
 
             // 유행시기 기본값 설정
-            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty())
+            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty()) 
                 ? trendPeriod.trim() : meme.getTrendPeriod();
-
+            
             // 밈 정보 업데이트
             meme.updateMeme(
                 title.trim(),
@@ -475,7 +456,7 @@ public class AdminController {
                 finalImgUrl,
                 hashtags.trim()
             );
-
+            
             // 승인 처리
             meme.approve();
 
@@ -490,25 +471,20 @@ public class AdminController {
             }
 
             memeRepository.save(meme);
-
-            // Reindex after approve
-            try {
-                vectorIndexService.reindex(meme);
-            } catch (Exception ignored) {}
-
+            
             log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}", 
                      id, title.trim(), categoryIds);
             redirectAttributes.addFlashAttribute("success", "밈이 수정되고 승인되어 전체 사용자에게 공개되었습니다!");
-
+            
             return "redirect:/admin/memes/review";
-
+            
         } catch (Exception e) {
             log.error("❌ Failed to edit and approve meme: id={}", id, e);
             redirectAttributes.addFlashAttribute("error", "밈 수정 및 승인 중 오류가 발생했습니다: " + e.getMessage());
             return "redirect:/admin/memes/" + id + "/edit";
         }
     }
-
+    
     /**
      * 검토 대기 중인 밈 (ABNORMAL) 관리 페이지
      */
@@ -520,36 +496,36 @@ public class AdminController {
 
         // ABNORMAL 상태의 밈들만 조회
         List<Object[]> abnormalMemesWithCategories = memeRepository.findByFlagWithCategoryNamesOrderByIdDesc(Meme.Flag.ABNORMAL);
-
+        
         // 밈과 카테고리 정보 매핑
         Map<Long, List<String>> memeCategoryMap = new HashMap<>();
         List<Meme> abnormalMemes = new ArrayList<>();
-
+        
         for (Object[] result : abnormalMemesWithCategories) {
             Meme meme = (Meme) result[0];
             String categoryName = (String) result[1];
-
+            
             if (abnormalMemes.stream().noneMatch(m -> m.getId().equals(meme.getId()))) {
                 abnormalMemes.add(meme);
             }
-
+            
             if (categoryName != null) {
                 memeCategoryMap.computeIfAbsent(meme.getId(), k -> new ArrayList<>()).add(categoryName);
             }
         }
-
+        
         // 통계 정보
         long abnormalCount = memeRepository.countByFlag(Meme.Flag.ABNORMAL);
         long normalCount = memeRepository.countByFlag(Meme.Flag.NORMAL);
-
+        
         model.addAttribute("abnormalMemes", abnormalMemes);
         model.addAttribute("memeCategoryMap", memeCategoryMap);
         model.addAttribute("abnormalCount", abnormalCount);
         model.addAttribute("normalCount", normalCount);
-
+        
         return "admin/review-memes";
     }
-
+    
     /**
      * 밈 승인 (ABNORMAL → NORMAL)
      */
@@ -559,21 +535,21 @@ public class AdminController {
         if (!isAuthenticated(session)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
         }
-
+        
         try {
             Meme meme = memeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
-
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
             meme.approve();
             memeRepository.save(meme);
-
+            
             return ResponseEntity.ok("밈이 승인되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("승인 처리 중 오류가 발생했습니다: " + e.getMessage());
+                    .body("승인 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-
+    
     /**
      * 밈 반려 (NORMAL → ABNORMAL)
      */
@@ -583,145 +559,25 @@ public class AdminController {
         if (!isAuthenticated(session)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
         }
-
+        
         try {
             Meme meme = memeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
-
+                    .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
+            
             meme.reject();
             memeRepository.save(meme);
-
+            
             return ResponseEntity.ok("밈이 반려되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("반려 처리 중 오류가 발생했습니다: " + e.getMessage());
+                    .body("반려 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
     /**
-     * 어드민용 인기 밈 통계 조회 API
-     */
-    @GetMapping("/memes/stats/popular")
-    @ResponseBody
-    public ResponseEntity<MemePopularityListResponse> getPopularMemes(
-        @RequestParam(defaultValue = "7") int days,
-        @RequestParam(defaultValue = "20") int limit,
-        HttpSession session) {
-
-        if (!isAuthenticated(session)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            MemePopularityListResponse response;
-            switch (days) {
-                case 1 -> response = adminMemeStatsService.getDailyPopularMemes(limit);
-                case 7 -> response = adminMemeStatsService.getWeeklyPopularMemes(limit);
-                case 30 -> response = adminMemeStatsService.getMonthlyPopularMemes(limit);
-                default -> response = adminMemeStatsService.getPopularMemes(
-                    java.time.Duration.ofDays(days), limit);
-            }
-
-            log.info("Admin requested popular memes: period={}days, limit={}, count={}",
-                days, limit, response.totalCount());
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Failed to get popular memes stats", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * 어드민용 인기 밈 통계 페이지
-     */
-    @GetMapping("/memes/stats")
-    public String statsPage(HttpSession session) {
-        if (!isAuthenticated(session)) {
-            return "redirect:/admin/login";
-        }
-
-        return "admin/meme-stats";
-    }
-
-    /**
-     * 특정 밈으로 푸시 알림 전송
-     */
-    @PostMapping("/notifications/send-meme")
-    @ResponseBody
-    public ResponseEntity<String> sendMemeNotification(
-        @RequestParam Long memeId,
-        @RequestBody NotificationSendRequest request,
-        HttpSession session
-    ) {
-        if (!isAuthenticated(session)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증이 필요합니다.");
-        }
-
-        try {
-            if (!memeRepository.existsById(memeId)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("존재하지 않는 밈입니다.");
-            }
-
-            memeNotificationService.sendMemeNotification(memeId, request.title(), request.body());
-            log.info("Admin sent meme notification: memeId={}, title={}, body={}",
-                memeId, request.title(), request.body());
-
-            return ResponseEntity.ok("밈 알림이 전송되었습니다.");
-        } catch (Exception e) {
-            log.error("Failed to send meme notification: memeId={}", memeId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("밈 알림 전송 중 오류가 발생했습니다: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 이미지 편집 테스트 페이지
-     */
-    @GetMapping("/image-edit")
-    public String imageEditPage(HttpSession session, Model model) {
-        if (!isAuthenticated(session)) {
-            return "redirect:/admin/login";
-        }
-
-        // 승인된 밈 목록 가져오기
-        List<Meme> memes = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
-        model.addAttribute("memes", memes);
-
-        return "admin/image-edit";
-    }
-
-    /**
-     * 이미지 편집 API 엔드포인트
-     */
-    @PostMapping("/image-edit/test")
-    @ResponseBody
-    public ResponseEntity<ApiResponse<GeneratedImagesResponse>> testImageEdit(
-        @RequestParam Long memeId,
-        @RequestParam String prompt,
-        @RequestParam(required = false) MultipartFile image,
-        HttpSession session
-    ) {
-        if (!isAuthenticated(session)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        try {
-            GeneratedImagesResponse response = imageEditService.editMemeImg(prompt, memeId, image);
-            log.info("Admin tested image edit: memeId={}, prompt={}, hasImage={}",
-                memeId, prompt, image != null && !image.isEmpty());
-
-            return ResponseEntity.ok(ApiResponse.success(response));
-        } catch (Exception e) {
-            log.error("Failed to edit image in admin: memeId={}, prompt={}", memeId, prompt, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body((ApiResponse<GeneratedImagesResponse>) ApiResponse.error(ErrorType.DEFAULT_ERROR));
-        }
-    }
-
-
-    /**
-     * 모든 승인된(NORMAL) 밈을 벡터 스토어로 일괄 usert
+     * 모든 승인된(NORMAL) 밈을 벡터 스토어로 일괄 업서트합니다.
+     * - Pinecone 설정이 없으면 서비스 내부에서 경고를 남기고 스킵됩니다.
+     * - 대량 데이터 고려해 batchSize 단위로 업서트합니다.
      */
     @PostMapping("/memes/reindex-vectors")
     public String reindexAllApprovedMemes(HttpSession session, RedirectAttributes redirectAttributes,
@@ -729,27 +585,32 @@ public class AdminController {
         if (!isAuthenticated(session)) {
             return "redirect:/admin/login";
         }
-
-        List<Meme> approved = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
-        int total = approved.size();
-        if (total == 0) {
-            redirectAttributes.addFlashAttribute("info", "승인된 밈이 없습니다.");
-            return "redirect:/admin/memes";
-        }
-        if (batchSize <= 0) batchSize = 100;
-
-        int batches = 0;
-        for (int start = 0; start < total; start += batchSize) {
-            int end = Math.min(start + batchSize, total);
-            List<Meme> chunk = approved.subList(start, end);
-            try {
-                vectorIndexService.upsertVectors(chunk);
-            } catch (Exception e) {
-                log.warn("일부 배치 업서트 실패: {}-{}: {}", start, end, e.toString());
+        try {
+            List<Meme> approved = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
+            int total = approved.size();
+            if (total == 0) {
+                redirectAttributes.addFlashAttribute("info", "승인된 밈이 없습니다.");
+                return "redirect:/admin/memes";
             }
-            batches++;
-        }
+            if (batchSize <= 0) batchSize = 100;
 
+            int batches = 0;
+            for (int start = 0; start < total; start += batchSize) {
+                int end = Math.min(start + batchSize, total);
+                List<Meme> chunk = approved.subList(start, end);
+                try {
+                    vectorIndexService.upsertVectors(chunk);
+                } catch (Exception e) {
+                    log.warn("일부 배치 업서트 실패: {}-{}: {}", start, end, e.toString());
+                }
+                batches++;
+            }
+            log.info("✅ Reindex completed. total={}, batchSize={}, batches={}", total, batchSize, batches);
+            redirectAttributes.addFlashAttribute("success", "벡터 인덱스 재구성 완료: 총 " + total + "건, 배치 " + batches + "개");
+        } catch (Exception e) {
+            log.error("❌ Reindex failed", e);
+            redirectAttributes.addFlashAttribute("error", "벡터 인덱스 재구성 중 오류: " + e.getMessage());
+        }
         return "redirect:/admin/memes";
     }
 
