@@ -33,20 +33,35 @@ public class MemeAggregationLookUpCacheProxyService implements MemeAggregationLo
     @Override
     public List<MemeSimpleResponse> getMostPopularMemes() {
         if (mostPopularMemesCache == null) {
-            mostPopularMemesCache = memeAggregationLookUpService.getMostPopularMemes();
+            synchronized (this) {
+                if (mostPopularMemesCache == null) {
+                    mostPopularMemesCache = memeAggregationLookUpService.getMostPopularMemes();
+                }
+            }
         }
         return mostPopularMemesCache;
     }
 
     @PostConstruct
     public void warmUpCache() {
-        mostPopularMemesCache = memeAggregationLookUpService.getMostPopularMemes();
+        try {
+            log.info("Warming up most popular memes cache");
+            mostPopularMemesCache = memeAggregationLookUpService.getMostPopularMemes();
+            log.info("Cache warmed up successfully");
+        } catch (Exception e) {
+            log.error("Failed to warm up most popular memes cache", e);
+        }
     }
 
     @Scheduled(cron = "0 */30 * * * *")
     public void refreshCache() {
-        log.info("Refreshing most popular memes cache");
-        mostPopularMemesCache = memeAggregationLookUpService.getMostPopularMemes();
-        log.info("Cache refreshed successfully");
+        try {
+            log.info("Refreshing most popular memes cache");
+            List<MemeSimpleResponse> freshData = memeAggregationLookUpService.getMostPopularMemes();
+            mostPopularMemesCache = freshData;
+            log.info("Cache refreshed successfully");
+        } catch (Exception e) {
+            log.error("Failed to refresh most popular memes cache", e);
+        }
     }
 }
