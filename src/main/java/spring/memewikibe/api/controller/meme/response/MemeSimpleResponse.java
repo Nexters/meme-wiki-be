@@ -8,6 +8,6 @@ public record MemeSimpleResponse(
     String imgUrl
 ) {
     public MemeSimpleResponse {
-        Objects.requireNonNull(title, "제목은 필수 입니다.");
+        Objects.requireNonNull(title, "제목은 필수입니다.");
     }
 }
