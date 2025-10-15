@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.infrastructure.NotificationTokenRepository;
 
@@ -11,6 +12,12 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 @SpringBootTest
 @Transactional
+@TestPropertySource(properties = {
+    "cloudflare.r2.access-key-id=dummy",
+    "cloudflare.r2.secret-access-key=dummy",
+    "cloudflare.r2.endpoint=http://localhost",
+    "cloudflare.r2.bucket-name=test-bucket"
+})
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class NotificationServiceTest {
 
@@ -76,5 +83,29 @@ class NotificationServiceTest {
             .hasSize(1)
             .extracting("token")
             .containsExactly(token);
+    }
+
+    @Test
+    void 빈_토큰은_등록할_수_없다() {
+        // given
+        String emptyToken = "";
+
+        // when
+        sut.registerNotificationToken(emptyToken);
+
+        // then
+        then(tokenRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void 공백만_있는_토큰은_등록할_수_없다() {
+        // given
+        String blankToken = "   ";
+
+        // when
+        sut.registerNotificationToken(blankToken);
+
+        // then
+        then(tokenRepository.findAll()).isEmpty();
     }
 }
