@@ -4,6 +4,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -11,6 +13,7 @@ import org.springframework.core.io.ResourceLoader;
 import java.io.IOException;
 import java.io.InputStream;
 
+@Slf4j
 @Configuration
 public class FcmConfig {
 
@@ -25,9 +28,13 @@ public class FcmConfig {
     @PostConstruct
     public void init() {
         String keyPath = fcmProperties.serviceAccountKeyPath();
+
         if (keyPath == null || keyPath.isBlank()) {
-            throw new IllegalStateException("FCM service account key path is not configured (fcm.service-account-key-path)");
+            log.warn("FCM service account key path is not configured. FCM notifications will not be available.");
+            return;
         }
+
+        log.info("Initializing FCM with service account key: {}", keyPath);
 
         try {
             Resource resource = resourceLoader.getResource(keyPath);
