@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @Slf4j
+@ConditionalOnProperty(
+    prefix = "fcm",
+    name = "service-account-key-path"
+)
 @Configuration
 public class FcmConfig {
 
@@ -34,7 +38,8 @@ public class FcmConfig {
             return;
         }
 
-        log.info("Initializing FCM with service account key: {}", keyPath);
+        log.info("Initializing FCM with configured service account key");
+        log.debug("FCM service account key path: {}", keyPath);
 
         try {
             Resource resource = resourceLoader.getResource(keyPath);

@@ -1,5 +1,6 @@
 package spring.memewikibe.application.notification;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.domain.notification.NotificationToken;
@@ -14,10 +15,9 @@ public class NotificationTokenRegister {
     }
 
     @Transactional
-    public void registerToken(String token) {
-        if (token == null || token.isBlank()) {
-            return;
+    public void registerToken(@NonNull final String token) {
+        if (!notificationTokenRepository.existsById(token)) {
+            notificationTokenRepository.save(NotificationToken.create(token));
         }
-        notificationTokenRepository.save(NotificationToken.create(token));
     }
 }
