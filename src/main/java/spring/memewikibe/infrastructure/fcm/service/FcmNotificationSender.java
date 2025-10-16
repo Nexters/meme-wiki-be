@@ -3,6 +3,7 @@ package spring.memewikibe.infrastructure.fcm.service;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import spring.memewikibe.application.notification.NotificationSender;
 
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "fcm", name = "service-account-key-path", matchIfMissing = false)
 @RequiredArgsConstructor
 public class FcmNotificationSender implements NotificationSender {
 
