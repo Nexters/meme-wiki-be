@@ -6,10 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.domain.meme.Category;
@@ -26,11 +25,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@Transactional
 @SpringBootTest
 @TestPropertySource(properties = {
     "cloudflare.r2.access-key-id=dummy",
@@ -56,10 +55,10 @@ class MemeCreateServiceTest {
     @Autowired
     private MemeCategoryRepository memeCategoryRepository;
 
-    @MockBean
+    @MockitoBean
     private ImageUploadService imageUploadService;
 
-    @MockBean
+    @MockitoBean
     private MemeVectorIndexService vectorIndexService;
 
     @AfterEach
@@ -67,6 +66,7 @@ class MemeCreateServiceTest {
         memeCategoryRepository.deleteAllInBatch();
         categoryRepository.deleteAllInBatch();
         memeRepository.deleteAllInBatch();
+        reset(imageUploadService, vectorIndexService);
     }
 
     @Test
@@ -99,30 +99,27 @@ class MemeCreateServiceTest {
         then(links).extracting(mc -> mc.getCategory().getId())
             .containsExactlyInAnyOrder(cat1.getId(), cat2.getId());
 
-        // Note: vectorIndexService.index() is called in afterCommit() callback,
-        // which doesn't execute in @Transactional tests, so we cannot verify it here
+        // indexing should be attempted once after transaction commit
+        verify(vectorIndexService, times(1)).index(any(Meme.class));
     }
 
     @Test
-    @DisplayName("밈 생성은 성공하고 인덱싱은 트랜잭션 커밋 후 비동기로 실행된다")
-    void indexingHappensAfterCommit() {
+    @DisplayName("인덱싱 예외가 발생해도 밈 생성은 성공한다")
+    void indexingFailureDoesNotBreakCreate() {
         // given
         MemeCreateRequest req = new MemeCreateRequest(
             "테스트", "출처", "맥락", "2025", "[#태그]", List.of()
         );
         MultipartFile file = Mockito.mock(MultipartFile.class);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("url");
+        Mockito.doThrow(new RuntimeException("pinecone down")).when(vectorIndexService).index(any(Meme.class));
 
         // when
         long id = memeCreateService.createMeme(req, file);
 
         // then
         then(memeRepository.findById(id)).isPresent();
-
-        // Note: vectorIndexService.index() is called in afterCommit() callback.
-        // In @Transactional tests, the transaction doesn't commit, so afterCommit
-        // callbacks don't execute. This is expected behavior - indexing failures
-        // won't affect meme creation since it happens after the transaction commits.
+        verify(vectorIndexService, times(1)).index(any(Meme.class));
     }
 
     @Test
@@ -263,6 +260,6 @@ class MemeCreateServiceTest {
         // 존재하는 카테고리만 연결되어야 함
         List<MemeCategory> links = memeCategoryRepository.findAll();
         then(links).hasSize(1);
-        then(links.get(0).getCategory().getId()).isEqualTo(existingCategory.getId());
+        then(links.getFirst().getCategory().getId()).isEqualTo(existingCategory.getId());
     }
 }
