@@ -13,8 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import static java.util.Objects.*;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,8 +25,9 @@ public class ImageUploadService {
 
     public String uploadImage(MultipartFile file) {
         validateFile(file);
-        
-        String fileName = generateUniqueFileName(getFileExtension(requireNonNull(file.getOriginalFilename())));
+
+        // validateFile already ensures originalFilename is not null and has valid extension
+        String fileName = generateUniqueFileName(getFileExtension(file.getOriginalFilename()));
 
         Optional.ofNullable(bucketName)
                 .filter(name -> !name.isBlank())
