@@ -22,30 +22,40 @@ public class MemeSearchService {
     private final MemeRepository memeRepository;
 
     public MemeRerankerResponse getRerankerMeme(String query) {
+        if (query == null || query.isBlank()) {
+            log.warn("Search query is null or blank");
+            return MemeRerankerResponse.failure("", List.of(), List.of());
+        }
+
         List<Meme> candidateMemes = memeRepository.findByFlagOrderByIdDesc(Meme.Flag.NORMAL);
+        if (candidateMemes.isEmpty()) {
+            log.warn("No candidate memes available for search | query: '{}'", query);
+        }
+
         List<MemeDoc> memeDocs = candidateMemes.stream()
             .map(MemeDoc::from)
             .toList();
         ClovaRerankerResponse reranker = naverClovaClient.reranker(new ClovaRerankerRequest(memeDocs, query));
 
-        int prompt = reranker.result().usage().promptTokens();
-        int completion = reranker.result().usage().completionTokens();
-        int total = reranker.result().usage().totalTokens();
+        ClovaRerankerResponse.Result result = reranker.result();
+        int prompt = result.usage().promptTokens();
+        int completion = result.usage().completionTokens();
+        int total = result.usage().totalTokens();
 
         log.info("clova token usage | prompt: {}, completion: {}, total: {}", prompt, completion, total);
 
         if (reranker.isNotFound()) {
             log.warn("clova reranker is worked but failed to find relevant memes | query: '{}'", query);
             return MemeRerankerResponse.failure(
-                reranker.result().result(),
-                reranker.result().citedDocuments(),
-                reranker.result().suggestedQueries()
+                result.result(),
+                result.citedDocuments(),
+                result.suggestedQueries()
             );
         }
         return MemeRerankerResponse.success(
-            reranker.result().result(),
-            reranker.result().citedDocuments(),
-            reranker.result().suggestedQueries()
+            result.result(),
+            result.citedDocuments(),
+            result.suggestedQueries()
         );
     }
 }
