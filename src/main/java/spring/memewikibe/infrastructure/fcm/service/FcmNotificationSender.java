@@ -33,6 +33,8 @@ public class FcmNotificationSender implements NotificationSender {
 
 
         MulticastMessage.Builder messageBuilder = MulticastMessage.builder()
+            .putData("title", command.title())
+            .putData("body", command.body())
             .setNotification(notification)
             .addAllTokens(tokens);
 
@@ -59,11 +61,11 @@ public class FcmNotificationSender implements NotificationSender {
         for (int i = 0; i < responses.size(); i++) {
             SendResponse sendResponse = responses.get(i);
             if (!sendResponse.isSuccessful()) {
-                MessagingErrorCode code = sendResponse.getException().getMessagingErrorCode();
-                log.info("Token send failed: token={}, error={}", tokens.get(i), code);
-                if (code == MessagingErrorCode.INVALID_ARGUMENT ||
-                    code == MessagingErrorCode.UNREGISTERED ||
-                    code == MessagingErrorCode.SENDER_ID_MISMATCH) {
+                FirebaseMessagingException exception = sendResponse.getException();
+                log.info("Token send failed: token={}, error={}, message={}, ", tokens.get(i), exception.getMessagingErrorCode(),exception.getMessage());
+                if (exception.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT ||
+                    exception.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
+                    exception.getMessagingErrorCode() == MessagingErrorCode.SENDER_ID_MISMATCH) {
                     invalidTokens.add(tokens.get(i));
                 }
             }
