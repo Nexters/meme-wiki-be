@@ -54,7 +54,7 @@ services:
       PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME}
       PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT}
     volumes:
-      - /root/logs:/app/logs
+      - /root/prod/logs:/app/logs
       - /root/config/fcm-service-account.json:/app/config/fcm-service-account.json:ro
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
@@ -65,6 +65,49 @@ services:
       - app-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # 메인 애플리케이션
+  app-dev:
+    image: ${NCP_REGISTRY_URL}/meme-wiki-be:latest
+    container_name: meme-wiki-be-dev
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      <<: *default-timezone
+      SPRING_PROFILES_ACTIVE: dev
+      DATABASE_HOST: mysql
+      DATABASE_DEV_NAME: ${MYSQL_DEV_DATABASE}
+      DATABASE_USER: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
+      CLOUDFLARE_R2_BUCKET_NAME: ${CLOUDFLARE_R2_BUCKET_NAME}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      GOOGLE_GENAI_API_KEY: ${GOOGLE_GENAI_API_KEY}
+      FCM_SERVICE_ACCOUNT_KEY_PATH: file:/app/config/fcm-service-account.json
+      NAVER_AI_API_KEY: ${NAVER_AI_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT}
+    volumes:
+      - /root/dev/logs:/app/logs
+      - /root/config/fcm-service-account.json:/app/config/fcm-service-account.json:ro
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

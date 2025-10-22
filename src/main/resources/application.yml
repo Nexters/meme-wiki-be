@@ -103,7 +103,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      jdbc-url: jdbc:mysql://${DATABASE_HOST}/${DATABASE_NAME}
+      jdbc-url: jdbc:mysql://${DATABASE_HOST}/${DATABASE_DEV_NAME}
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
 
