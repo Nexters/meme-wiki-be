@@ -32,11 +32,18 @@ public class ImageEditService {
     }
 
     public GeneratedImagesResponse editMemeImg(String prompt, Long memeId, MultipartFile userImg) {
+        validatePrompt(prompt);
         Meme candidateMeme = getMemeBy(memeId);
         if (userImg != null && !userImg.isEmpty()) {
-            return editMemeImgWithWithUserRequestImg(prompt, candidateMeme.getImgUrl(), userImg);
+            return editMemeImgWithUserRequestImg(prompt, candidateMeme.getImgUrl(), userImg);
         }
         return editMemeImgWithOnlyText(prompt, candidateMeme.getImgUrl());
+    }
+
+    private void validatePrompt(String prompt) {
+        if (!StringUtils.hasText(prompt)) {
+            throw new IllegalArgumentException("Prompt cannot be null or empty");
+        }
     }
 
     private GeneratedImagesResponse editMemeImgWithOnlyText(String prompt, String memeImgUrl) {
@@ -53,7 +60,7 @@ public class ImageEditService {
             .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
     }
 
-    private GeneratedImagesResponse editMemeImgWithWithUserRequestImg(String prompt, String existingMemeImgUrl, MultipartFile file) {
+    private GeneratedImagesResponse editMemeImgWithUserRequestImg(String prompt, String existingMemeImgUrl, MultipartFile file) {
         try {
             Base64Image existingImage = convertUrlToBase64Image(existingMemeImgUrl);
             Base64Image userRequestImg = convertMultipartFileToBase64Image(file);
@@ -66,7 +73,8 @@ public class ImageEditService {
 
             return new GeneratedImagesResponse(images, texts);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read uploaded file", e);
+            log.error("Failed to read uploaded file", e);
+            throw new MemeWikiApplicationException(ErrorType.DEFAULT_ERROR);
         }
     }
 
@@ -77,7 +85,8 @@ public class ImageEditService {
             String base64Data = Base64.getEncoder().encodeToString(imageBytes);
             return new Base64Image(mimeType, base64Data);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to convert URL to Base64 image: " + imageUrl, e);
+            log.error("Failed to convert URL to Base64 image: {}", imageUrl, e);
+            throw new MemeWikiApplicationException(ErrorType.DEFAULT_ERROR);
         }
     }
 
@@ -107,10 +116,17 @@ public class ImageEditService {
     }
 
     private List<String> extractTextsFrom(GenerateContentResponse response) {
+        if (response.candidates() == null) {
+            return List.of();
+        }
         return response.candidates().stream()
+            .filter(candidate -> candidate != null && candidate.content() != null)
             .map(GenerateContentResponse.Candidate::content)
+            .filter(content -> content.parts() != null)
             .map(GenerateContentResponse.Content::parts)
-            .flatMap(it -> it.stream().map(GenerateContentResponse.Part::text))
+            .flatMap(parts -> parts.stream()
+                .filter(part -> part != null && part.text() != null)
+                .map(GenerateContentResponse.Part::text))
             .toList();
     }
 
