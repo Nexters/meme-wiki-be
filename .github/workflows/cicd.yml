@@ -119,7 +119,6 @@ jobs:
           export ADMIN_USERNAME='${{ secrets.ADMIN_USERNAME }}'
           export ADMIN_PASSWORD='${{ secrets.ADMIN_PASSWORD }}'
           
-          export CLOVA_API_KEY='${{ secrets.CLOVA_API_KEY }}'
           export GOOGLE_GENAI_API_KEY='${{ secrets.GOOGLE_GENAI_API_KEY }}'
           
           export NAVER_AI_API_KEY='${{ secrets.NAVER_AI_API_KEY }}'
