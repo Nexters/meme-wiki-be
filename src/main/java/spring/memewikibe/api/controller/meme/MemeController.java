@@ -18,14 +18,12 @@ public class MemeController {
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
     private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
-    private final MemeSearchService memeSearchService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService, MemeSearchService memeSearchService) {
+    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
-        this.memeSearchService = memeSearchService;
     }
 
     @GetMapping
@@ -89,10 +87,4 @@ public class MemeController {
         return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
     }
 
-    @GetMapping("/search/reranker")
-    public ApiResponse<MemeRerankerResponse> getRerankerMemes(
-        @RequestParam String query
-    ) {
-        return ApiResponse.success(memeSearchService.getRerankerMeme(query));
-    }
 }

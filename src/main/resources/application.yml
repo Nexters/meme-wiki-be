@@ -57,12 +57,6 @@ admin:
   username: ${ADMIN_USERNAME:admin}
   password: ${ADMIN_PASSWORD:admin123}
 
-clova:
-  api-key: ${CLOVA_API_KEY:}
-  base-url: ${CLOVA_BASE_URL:https://clovastudio.stream.ntruss.com}
-  connect-timeout: ${CLOVA_CONNECT_TIMEOUT:5000}
-  read-timeout: ${CLOVA_READ_TIMEOUT:30000}
-
 fcm:
   service-account-key-path: ${FCM_SERVICE_ACCOUNT_KEY_PATH:}
 
