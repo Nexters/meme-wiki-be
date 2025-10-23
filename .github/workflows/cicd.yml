@@ -106,6 +106,7 @@ jobs:
           # Export runtime env vars from GitHub Secrets (no .env file needed)
           export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
           export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
+          export MYSQL_DEV_DATABASE='${{ secrets.MYSQL_DEV_DATABASE }}'
           export MYSQL_USER='${{ secrets.MYSQL_USER }}'
           export MYSQL_PASSWORD='${{ secrets.MYSQL_PASSWORD }}'
 
