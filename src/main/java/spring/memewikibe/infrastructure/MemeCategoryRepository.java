@@ -12,32 +12,27 @@ import spring.memewikibe.domain.meme.MemeCategory;
 import java.util.List;
 
 public interface MemeCategoryRepository extends JpaRepository<MemeCategory, Long> {
-    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.id < :lastMemeId ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryAndMemeIdLessThanOrderByMemeIdDesc(
-        @Param("category") Category category, 
-        @Param("lastMemeId") Long lastMemeId, 
+    /**
+     * 특정 카테고리의 NORMAL 플래그 밈만 조회 (내림차순)
+     */
+    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL ORDER BY mc.meme.id DESC")
+    List<MemeCategory> findByCategoryAndMemeNormalFlagOrderByMemeIdDesc(@Param("category") Category category, Limit limit);
+
+    /**
+     * 특정 카테고리의 NORMAL 플래그 밈만 커서 페이지네이션으로 조회 (내림차순)
+     */
+    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.id < :lastMemeId AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL ORDER BY mc.meme.id DESC")
+    List<MemeCategory> findByCategoryAndMemeIdLessThanAndMemeNormalFlagOrderByMemeIdDesc(
+        @Param("category") Category category,
+        @Param("lastMemeId") Long lastMemeId,
         Limit limit
     );
 
-    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryOrderByMemeIdDesc(@Param("category") Category category, Limit limit);
-    
-    // Flag 기반 조회 메서드 (NORMAL 밈만 조회)
-    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryAndMemeNormalFlagOrderByMemeIdDesc(@Param("category") Category category, Limit limit);
-    
-    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.id < :lastMemeId AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryAndMemeIdLessThanAndMemeNormalFlagOrderByMemeIdDesc(
-        @Param("category") Category category, 
-        @Param("lastMemeId") Long lastMemeId, 
-        Limit limit
-    );
-    
     /**
      * 특정 밈의 카테고리 연결 정보를 조회합니다.
      */
     List<MemeCategory> findByMemeId(Long memeId);
-    
+
     /**
      * 특정 밈의 모든 카테고리 연결을 삭제합니다.
      */
