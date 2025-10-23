@@ -57,10 +57,10 @@ public record GenerateContentResponse(
     }
 
     public record PromptFeedback(
-        List<SafetyRating> safetyRatings,
+        List<PromptSafetyRating> safetyRatings,
         String blockReason
     ) {
-        public record SafetyRating(
+        public record PromptSafetyRating(
             String category,
             String probability
         ) {

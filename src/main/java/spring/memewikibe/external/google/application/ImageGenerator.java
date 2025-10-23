@@ -80,10 +80,12 @@ public class ImageGenerator {
     }
 
     private void logTokenUsage(GenerateContentResponse response) {
-        log.info("====token usage====  promptTokenCount: {}, candidatesTokenCount: {}, cachedContentTokenCount: {}",
-            response.usageMetadata().promptTokenCount(),
-            response.usageMetadata().candidatesTokenCount(),
-            response.usageMetadata().cachedContentTokenCount());
+        if (response.usageMetadata() != null) {
+            log.info("====token usage====  promptTokenCount: {}, candidatesTokenCount: {}, cachedContentTokenCount: {}",
+                response.usageMetadata().promptTokenCount(),
+                response.usageMetadata().candidatesTokenCount(),
+                response.usageMetadata().cachedContentTokenCount());
+        }
     }
 
 }

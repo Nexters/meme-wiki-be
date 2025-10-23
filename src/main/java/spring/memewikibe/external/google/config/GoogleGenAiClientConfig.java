@@ -24,9 +24,8 @@ public class GoogleGenAiClientConfig {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(5));
         factory.setReadTimeout(Duration.ofSeconds(60));
-        String urlBuilder = properties.baseUrl();
         RestClient restClient = RestClient.builder()
-            .baseUrl(urlBuilder)
+            .baseUrl(properties.baseUrl())
             .defaultHeader("x-goog-api-key", properties.apiKey())
             .requestFactory(factory)
             .build();
