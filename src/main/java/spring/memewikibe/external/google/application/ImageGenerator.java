@@ -7,7 +7,10 @@ import spring.memewikibe.common.util.ImageUtils;
 import spring.memewikibe.external.google.client.GoogleGenAiClient;
 import spring.memewikibe.external.google.client.request.GenerateContentRequest;
 import spring.memewikibe.external.google.client.response.GenerateContentResponse;
+import spring.memewikibe.support.error.ErrorType;
+import spring.memewikibe.support.error.MemeWikiApplicationException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,15 +41,8 @@ public class ImageGenerator {
     }
 
     public GenerateContentResponse generateImageWithExistingImage(String naturalLanguage, String imageUrl) {
-        try {
-            byte[] imageBytes = ImageUtils.downloadBytes(imageUrl);
-            String mimeType = ImageUtils.detectMimeType(imageUrl, imageBytes);
-            Base64Image base64Image = new Base64Image(mimeType, getEncoder().encodeToString(imageBytes));
-
-            return generateImageCombine(naturalLanguage, List.of(base64Image));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate image with existing image", e);
-        }
+        Base64Image base64Image = convertUrlToBase64Image(imageUrl);
+        return generateImageCombine(naturalLanguage, List.of(base64Image));
     }
 
     public GenerateContentResponse generateImageCombine(String naturalLanguage, List<Base64Image> images) {
@@ -84,6 +80,18 @@ public class ImageGenerator {
             response.usageMetadata().promptTokenCount(),
             response.usageMetadata().candidatesTokenCount(),
             response.usageMetadata().cachedContentTokenCount());
+    }
+
+    private Base64Image convertUrlToBase64Image(String imageUrl) {
+        try {
+            byte[] imageBytes = ImageUtils.downloadBytes(imageUrl);
+            String mimeType = ImageUtils.detectMimeType(imageUrl, imageBytes);
+            String base64Data = getEncoder().encodeToString(imageBytes);
+            return new Base64Image(mimeType, base64Data);
+        } catch (IOException e) {
+            log.error("Failed to convert URL to Base64 image: {}", imageUrl, e);
+            throw new MemeWikiApplicationException(ErrorType.DEFAULT_ERROR);
+        }
     }
 
 }
