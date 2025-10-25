@@ -26,11 +26,11 @@ class PageResponseTest {
         );
 
         // then
-        Cursor paging = pageResponse.getPaging();
+        Cursor paging = pageResponse.paging();
         then(paging).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
             .containsExactly(2L, true, 2);
 
-        List<String> result = pageResponse.getResults();
+        List<String> result = pageResponse.results();
         then(result).hasSize(2);
         then(result).containsExactly("a", "b");
     }
