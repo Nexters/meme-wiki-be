@@ -13,16 +13,16 @@ import java.util.List;
 
 public interface MemeCategoryRepository extends JpaRepository<MemeCategory, Long> {
     /**
-     * 특정 카테고리의 NORMAL 플래그 밈만 조회 (내림차순)
+     * NORMAL 플래그 밈 커서 페이지네이션 조회 (내림차순)
+     * category가 null이면 전체 카테고리에서 조회
+     * lastMemeId가 null이면 첫 페이지를 조회
      */
-    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryAndMemeNormalFlagOrderByMemeIdDesc(@Param("category") Category category, Limit limit);
-
-    /**
-     * 특정 카테고리의 NORMAL 플래그 밈만 커서 페이지네이션으로 조회 (내림차순)
-     */
-    @Query("SELECT mc FROM MemeCategory mc WHERE mc.category = :category AND mc.meme.id < :lastMemeId AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL ORDER BY mc.meme.id DESC")
-    List<MemeCategory> findByCategoryAndMemeIdLessThanAndMemeNormalFlagOrderByMemeIdDesc(
+    @Query("SELECT mc FROM MemeCategory mc " +
+        "WHERE (:category IS NULL OR mc.category = :category) " +
+        "  AND (:lastMemeId IS NULL OR mc.meme.id < :lastMemeId) " +
+        "  AND mc.meme.flag = spring.memewikibe.domain.meme.Meme$Flag.NORMAL " +
+        "ORDER BY mc.meme.id DESC")
+    List<MemeCategory> findNormalMemesWithCursor(
         @Param("category") Category category,
         @Param("lastMemeId") Long lastMemeId,
         Limit limit

@@ -19,6 +19,7 @@ import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MemeLookUpServiceImpl implements MemeLookUpService {
@@ -90,20 +91,16 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     }
 
     private Category getCategoryBy(Long id) {
-        return categoryRepository.findById(id)
-            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.CATEGORY_NOT_FOUND));
+        return Optional.ofNullable(id)
+            .filter(categoryId -> categoryId > 0L)
+            .map(validId -> categoryRepository.findById(validId)
+                .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.CATEGORY_NOT_FOUND)))
+            .orElse(null);
     }
 
     private List<Meme> fetchMemesByCategory(Category category, Long next, int limit) {
         // NORMAL 상태의 밈만 조회 (보안: ABNORMAL 밈은 일반 사용자에게 노출되지 않음)
-        if (next == null) {
-            return memeCategoryRepository.findByCategoryAndMemeNormalFlagOrderByMemeIdDesc(category, Limit.of(limit + 1))
-                .stream()
-                .map(MemeCategory::getMeme)
-                .toList();
-        }
-
-        return memeCategoryRepository.findByCategoryAndMemeIdLessThanAndMemeNormalFlagOrderByMemeIdDesc(category, next, Limit.of(limit + 1))
+        return memeCategoryRepository.findNormalMemesWithCursor(category, next, Limit.of(limit + 1))
             .stream()
             .map(MemeCategory::getMeme)
             .toList();
