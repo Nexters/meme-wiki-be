@@ -1,6 +1,5 @@
 package spring.memewikibe.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,11 +16,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${admin.username}")
-    private String adminUsername;
+    private final AdminProperties adminProperties;
 
-    @Value("${admin.password}")
-    private String adminPassword;
+    public SecurityConfig(AdminProperties adminProperties) {
+        this.adminProperties = adminProperties;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -44,8 +43,8 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails admin = User.builder()
-            .username(adminUsername)
-            .password(passwordEncoder().encode(adminPassword))
+            .username(adminProperties.username())
+            .password(passwordEncoder().encode(adminProperties.password()))
             .roles("ADMIN")
             .build();
 

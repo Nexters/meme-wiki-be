@@ -1,9 +1,7 @@
 package spring.memewikibe.api.controller.admin;
 
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -19,6 +17,7 @@ import spring.memewikibe.api.controller.meme.response.CategoryResponse;
 import spring.memewikibe.api.controller.notification.request.NotificationSendRequest;
 import spring.memewikibe.application.*;
 import spring.memewikibe.application.notification.MemeNotificationService;
+import spring.memewikibe.config.AdminProperties;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCategory;
 import spring.memewikibe.infrastructure.CategoryRepository;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("/admin")
-@RequiredArgsConstructor
 public class AdminController {
 
     private final MemeRepository memeRepository;
@@ -47,12 +45,31 @@ public class AdminController {
     private final ImageEditService imageEditService;
     private final AdminMemeStatsService adminMemeStatsService;
     private final MemeNotificationService memeNotificationService;
+    private final AdminProperties adminProperties;
 
-    @Value("${admin.username}")
-    private String adminUsername;
-
-    @Value("${admin.password}")
-    private String adminPassword;
+    public AdminController(MemeRepository memeRepository,
+                          ImageUploadService imageUploadService,
+                          MemeLookUpService memeLookUpService,
+                          MemeCreateService memeCreateService,
+                          CategoryRepository categoryRepository,
+                          MemeCategoryRepository memeCategoryRepository,
+                          MemeVectorIndexService vectorIndexService,
+                          ImageEditService imageEditService,
+                          AdminMemeStatsService adminMemeStatsService,
+                          MemeNotificationService memeNotificationService,
+                          AdminProperties adminProperties) {
+        this.memeRepository = memeRepository;
+        this.imageUploadService = imageUploadService;
+        this.memeLookUpService = memeLookUpService;
+        this.memeCreateService = memeCreateService;
+        this.categoryRepository = categoryRepository;
+        this.memeCategoryRepository = memeCategoryRepository;
+        this.vectorIndexService = vectorIndexService;
+        this.imageEditService = imageEditService;
+        this.adminMemeStatsService = adminMemeStatsService;
+        this.memeNotificationService = memeNotificationService;
+        this.adminProperties = adminProperties;
+    }
 
     /**
      * 관리자 로그인 페이지
@@ -76,7 +93,7 @@ public class AdminController {
 
         log.info("Admin login attempt: username={}", username);
 
-        if (adminUsername.equals(username) && adminPassword.equals(password)) {
+        if (adminProperties.username().equals(username) && adminProperties.password().equals(password)) {
             session.setAttribute("admin_authenticated", true);
             log.info("Admin login successful");
             return "redirect:/admin/memes";

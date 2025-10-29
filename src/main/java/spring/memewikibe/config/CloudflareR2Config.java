@@ -2,7 +2,6 @@ package spring.memewikibe.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,22 +17,21 @@ import java.util.Optional;
 @Configuration
 public class CloudflareR2Config {
 
-    @Value("${cloudflare.r2.access-key-id:}")
-    private String accessKeyId;
-    
-    @Value("${cloudflare.r2.secret-access-key:}")
-    private String secretAccessKey;
-    
-    @Value("${cloudflare.r2.endpoint:}")
-    private String endpoint;
-    
-    @Value("${cloudflare.r2.bucket-name:}")
-    private String bucketName;
+    private final CloudflareR2Properties properties;
+
+    public CloudflareR2Config(CloudflareR2Properties properties) {
+        this.properties = properties;
+    }
 
     @Bean("s3Client")
     @ConditionalOnProperty(prefix = "cloudflare.r2", name = {"endpoint", "access-key-id", "secret-access-key", "bucket-name"})
     public S3Client r2Client() {
         logConfiguration();
+
+        String endpoint = properties.endpoint();
+        String accessKeyId = properties.accessKeyId();
+        String secretAccessKey = properties.secretAccessKey();
+        String bucketName = properties.bucketName();
 
         if (endpoint == null || endpoint.isBlank()) {
             throw new IllegalStateException("Cloudflare R2 endpoint is missing");
@@ -48,18 +46,18 @@ public class CloudflareR2Config {
             throw new IllegalStateException("Cloudflare R2 bucketName is missing");
         }
 
-        return createR2Client(endpoint);
+        return createR2Client(endpoint, accessKeyId, secretAccessKey);
     }
     
     private void logConfiguration() {
         log.info("Cloudflare R2 설정 로드:");
-        log.info("Access Key ID: {}", Optional.ofNullable(accessKeyId).map(this::maskSensitiveData).orElse("미설정"));
-        log.info("Secret Access Key: {}", Optional.ofNullable(secretAccessKey).map(key -> "***설정됨***").orElse("미설정"));
-        log.info("Endpoint: {}", Optional.ofNullable(endpoint).orElse("미설정"));
-        log.info("Bucket Name: {}", Optional.ofNullable(bucketName).orElse("미설정"));
+        log.info("Access Key ID: {}", Optional.ofNullable(properties.accessKeyId()).map(this::maskSensitiveData).orElse("미설정"));
+        log.info("Secret Access Key: {}", Optional.ofNullable(properties.secretAccessKey()).map(key -> "***설정됨***").orElse("미설정"));
+        log.info("Endpoint: {}", Optional.ofNullable(properties.endpoint()).orElse("미설정"));
+        log.info("Bucket Name: {}", Optional.ofNullable(properties.bucketName()).orElse("미설정"));
     }
     
-    private S3Client createR2Client(String endpoint) {
+    private S3Client createR2Client(String endpoint, String accessKeyId, String secretAccessKey) {
         return S3Client.builder()
                 .endpointOverride(URI.create(endpoint))
                 .credentialsProvider(StaticCredentialsProvider.create(
@@ -73,7 +71,7 @@ public class CloudflareR2Config {
     @Qualifier("r2BucketName")
     @ConditionalOnProperty(prefix = "cloudflare.r2", name = {"bucket-name"})
     public String bucketName() {
-        return bucketName;
+        return properties.bucketName();
     }
 
     private String maskSensitiveData(String sensitiveData) {
