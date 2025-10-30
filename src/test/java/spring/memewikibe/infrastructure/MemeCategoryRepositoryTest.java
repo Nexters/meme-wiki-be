@@ -249,20 +249,20 @@ class MemeCategoryRepositoryTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByCategory(0L, null, 1);
 
         // then
-        then(response.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+        then(response.paging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
             .containsExactly(무야호.getId(), true, 1);
 
-        then(response.getResults()).hasSize(1)
+        then(response.results()).hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactly("무야호");
 
-        Long lastMemeId = response.getPaging().getNext();
+        Long lastMemeId = response.paging().getNext();
         PageResponse<Cursor, MemeDetailResponse> nextPageResponse = memeLookUpService.getMemesByCategory(null, lastMemeId, 1);
 
-        then(nextPageResponse.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+        then(nextPageResponse.paging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
             .containsExactly(원영적_사고.getId(), true, 1);
 
-        then(nextPageResponse.getResults()).hasSize(1)
+        then(nextPageResponse.results()).hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactly("원영적 사고");
     }

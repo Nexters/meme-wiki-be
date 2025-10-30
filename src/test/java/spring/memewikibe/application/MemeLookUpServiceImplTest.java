@@ -123,10 +123,10 @@ class MemeLookUpServiceImplTest {
         // when
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByCategory(예능.getId(), null, 1);
         // then
-        then(response.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+        then(response.paging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
             .containsExactlyInAnyOrder(무야호.getId(), true, 1);
-        then(response.getPaging().getNext()).isNotNull();
-        then(response.getResults()).hasSize(1)
+        then(response.paging().getNext()).isNotNull();
+        then(response.results()).hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactlyInAnyOrder("무야호");
     }
@@ -145,20 +145,20 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> firstPage = memeLookUpService.getMemesByQuery("테스트", null, 2);
 
         // then: 첫 페이지 검증 (최신순: 밈3, 밈2)
-        then(firstPage.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+        then(firstPage.paging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
             .containsExactlyInAnyOrder(밈2.getId(), true, 2);
-        then(firstPage.getResults())
+        then(firstPage.results())
             .hasSize(2)
             .extracting(MemeDetailResponse::title)
             .containsExactlyInAnyOrder("이것도 테스트 밈", "테스트 밈입니다");
 
         // when: 두 번째 페이지 요청
-        PageResponse<Cursor, MemeDetailResponse> secondPage = memeLookUpService.getMemesByQuery("테스트", firstPage.getPaging().getNext(), 2);
+        PageResponse<Cursor, MemeDetailResponse> secondPage = memeLookUpService.getMemesByQuery("테스트", firstPage.paging().getNext(), 2);
 
         // then: 두 번째 페이지 검증 (나머지: 밈1)
-        then(secondPage.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
+        then(secondPage.paging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
             .containsExactlyInAnyOrder(null, false, 1);
-        then(secondPage.getResults())
+        then(secondPage.results())
             .hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactlyInAnyOrder("테스트 밈");
@@ -197,7 +197,7 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery(null, null, 10);
 
         // then
-        then(response.getResults()).hasSize(3)
+        then(response.results()).hasSize(3)
             .extracting(MemeDetailResponse::title)
             .containsExactlyInAnyOrder("나만 아니면 돼", "원영적 사고", "무야호");
     }
@@ -212,9 +212,9 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery("없는검색어", null, 10);
 
         // then
-        then(response.getResults()).isEmpty();
-        then(response.getPaging().isHasMore()).isFalse();
-        then(response.getPaging().getNext()).isNull();
+        then(response.results()).isEmpty();
+        then(response.paging().isHasMore()).isFalse();
+        then(response.paging().getNext()).isNull();
     }
 
     @Test
@@ -331,7 +331,7 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByCategory(테스트카테고리.getId(), null, 10);
 
         // then: NORMAL 밈만 조회됨
-        then(response.getResults()).hasSize(1)
+        then(response.results()).hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactly("정상 밈");
     }
@@ -361,7 +361,7 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery("무한도전", null, 10);
 
         // then: hashtag에서 매칭되는 밈이 검색됨
-        then(response.getResults()).hasSize(1)
+        then(response.results()).hasSize(1)
             .extracting(MemeDetailResponse::title)
             .containsExactly("무야호 밈");
     }
@@ -396,7 +396,7 @@ class MemeLookUpServiceImplTest {
         PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByQuery("테스트", null, 10);
 
         // then: title 또는 hashtags에 "테스트"가 포함된 3개 밈이 검색됨
-        then(response.getResults()).hasSize(3)
+        then(response.results()).hasSize(3)
             .extracting(MemeDetailResponse::title)
             .containsExactlyInAnyOrder("테스트 밈입니다", "원영적 사고", "테스트용 밈");
     }

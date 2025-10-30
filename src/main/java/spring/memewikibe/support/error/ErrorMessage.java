@@ -1,34 +1,19 @@
 package spring.memewikibe.support.error;
 
-public class ErrorMessage {
-
-    private final String code;
-
-    private final String message;
-
-    private final Object data;
-
+/**
+ * Error message structure for API error responses.
+ * Contains error code, human-readable message, and optional additional data.
+ */
+public record ErrorMessage(
+    String code,
+    String message,
+    Object data
+) {
     public ErrorMessage(ErrorType errorType) {
-        this.code = errorType.getCode().name();
-        this.message = errorType.getMessage();
-        this.data = null;
+        this(errorType.getCode().name(), errorType.getMessage(), null);
     }
 
     public ErrorMessage(ErrorType errorType, Object data) {
-        this.code = errorType.getCode().name();
-        this.message = errorType.getMessage();
-        this.data = data;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public Object getData() {
-        return data;
+        this(errorType.getCode().name(), errorType.getMessage(), data);
     }
 }
