@@ -163,47 +163,31 @@ public class MemeVectorIndexService {
     }
 
     private List<SearchHit> queryDenseHits(String text, int topK) {
-        ensureIndexHost();
-        if (!isConfigured()) {
-            log.warn("Pinecone not fully configured ({}). Returning empty query result.", missingConfig());
-            return List.of();
-        }
-        try {
-            float[] v = embeddingService.embed(text);
-            v = ensureVectorDimension(v);
-            String vec = arrayToJson(v);
-            String body = "{" +
-                "\"vector\":" + vec + "," +
-                "\"topK\":" + topK + "," +
-                "\"namespace\":\"" + namespace + "\"" +
-                "}";
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(indexHost + "/query"))
-                .header("Content-Type", "application/json")
-                .header("Api-Key", apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-                .build();
-            HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
-            if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
-                var matches = JsonLightParser.extractMatches(resp.body());
-                java.util.List<SearchHit> out = new java.util.ArrayList<>(matches.size());
-                for (var m : matches) out.add(new SearchHit(m.id, m.score, "dense"));
-                return out;
-            } else {
-                log.error("Pinecone query failed: {} - {}", resp.statusCode(), resp.body());
-                return List.of();
-            }
-        } catch (Exception e) {
-            log.error("Failed to query Pinecone", e);
-            return List.of();
-        }
+        HttpResponse<String> resp = queryPinecone(text, topK);
+        if (resp == null) return List.of();
+
+        var matches = JsonLightParser.extractMatches(resp.body());
+        java.util.List<SearchHit> out = new java.util.ArrayList<>(matches.size());
+        for (var m : matches) out.add(new SearchHit(m.id, m.score, "dense"));
+        return out;
     }
 
     private List<Long> queryDenseIds(String text, int topK) {
+        HttpResponse<String> resp = queryPinecone(text, topK);
+        if (resp == null) return List.of();
+
+        return JsonLightParser.extractIds(resp.body());
+    }
+
+    /**
+     * Common method to query Pinecone vector database.
+     * Returns null if query fails or service is not configured.
+     */
+    private HttpResponse<String> queryPinecone(String text, int topK) {
         ensureIndexHost();
         if (!isConfigured()) {
             log.warn("Pinecone not fully configured ({}). Returning empty query result.", missingConfig());
-            return List.of();
+            return null;
         }
         try {
             float[] v = embeddingService.embed(text);
@@ -222,14 +206,14 @@ public class MemeVectorIndexService {
                 .build();
             HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
-                return JsonLightParser.extractIds(resp.body());
+                return resp;
             } else {
                 log.error("Pinecone query failed: {} - {}", resp.statusCode(), resp.body());
-                return List.of();
+                return null;
             }
         } catch (Exception e) {
             log.error("Failed to query Pinecone", e);
-            return List.of();
+            return null;
         }
     }
 
@@ -272,12 +256,11 @@ public class MemeVectorIndexService {
 
     private java.util.List<SearchHit> lightRerank(java.util.List<SearchHit> hits, SearchOptions options) {
         int n = Math.min(options.lightRerankTopN(), hits.size());
+        java.util.List<SearchHit> out = new java.util.ArrayList<>(hits.size());
         java.util.List<SearchHit> head = new java.util.ArrayList<>(hits.subList(0, n));
         head.sort(java.util.Comparator.comparingDouble(SearchHit::score).reversed());
-        java.util.List<SearchHit> tail = hits.subList(n, hits.size());
-        java.util.List<SearchHit> out = new java.util.ArrayList<>(hits.size());
         out.addAll(head);
-        out.addAll(tail);
+        out.addAll(hits.subList(n, hits.size()));
         return out;
     }
 
@@ -511,7 +494,6 @@ public class MemeVectorIndexService {
     static class JsonLightParser {
         static List<Long> extractIds(String json) {
             // very naive: find occurrences of "id":"..." and parse long
-            new Object();
             java.util.ArrayList<Long> ids = new java.util.ArrayList<>();
             int idx = 0;
             while (true) {
