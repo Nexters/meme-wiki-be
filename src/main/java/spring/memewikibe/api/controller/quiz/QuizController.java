@@ -1,8 +1,9 @@
-package spring.memewikibe.api.controller.meme.response;
+package spring.memewikibe.api.controller.quiz;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import spring.memewikibe.api.controller.meme.request.QuizAnswerRequest;
+import spring.memewikibe.api.controller.meme.response.QuizProblemResponse;
+import spring.memewikibe.api.controller.meme.response.QuizResultResponse;
 import spring.memewikibe.application.QuizService;
 import spring.memewikibe.support.response.ApiResponse;
 

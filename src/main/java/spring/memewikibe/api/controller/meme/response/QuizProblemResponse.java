@@ -5,7 +5,7 @@ import java.util.List;
 public record QuizProblemResponse(
     String question,
     String image,
-    List<QuizOption> questions
+    List<QuizOption> options
 ) {
 
     public record QuizOption(
