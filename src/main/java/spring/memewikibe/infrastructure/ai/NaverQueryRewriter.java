@@ -3,8 +3,7 @@ package spring.memewikibe.infrastructure.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary; // [추가] @Primary 어노테이션 import
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,23 +13,19 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Naver AI-powered query rewriter for semantic search enhancement.
+ * This implementation uses Naver Clova Studio API to expand and rewrite user queries.
+ */
 @Slf4j
 @Service
-@Primary // [추가] 여러 QueryRewriter 구현체 중 이 클래스를 우선적으로 사용하도록 설정
+@Primary
 @RequiredArgsConstructor
 public class NaverQueryRewriter implements QueryRewriter {
 
-    // ... (이하 모든 코드는 이전과 동일)
-
-    @Value("${NAVER_AI_API_KEY:}")
-    private String naverApiKey;
-    @Value("${NAVER_AI_REQUEST_ID:meme-wiki-qrewrite}")
-    private String naverRequestId;
-    @Value("${NAVER_AI_API_ENDPOINT:https://clovastudio.stream.ntruss.com/v1/chat-completions/HCX-003}")
-    private String naverApiEndpoint;
-
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final NaverAiProperties naverAiProperties;
 
     private static final String KEYWORD_EXTRACTION_PROMPT =
         "사용자의 검색어에서 검색에 사용할 핵심 키워드를 1~3개 추출하고, 관련된 동의어나 유의어를 1~2개 추가하여 공백으로 구분된 목록으로 반환하라. " +
@@ -52,15 +47,21 @@ public class NaverQueryRewriter implements QueryRewriter {
 
     @Override
     public String expandForKeywords(String query) {
-        if (query == null || query.isBlank() || naverApiKey == null || naverApiKey.isBlank()) {
+        if (query == null || query.isBlank()) {
+            return query != null ? query : "";
+        }
+
+        String apiKey = naverAiProperties.getApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            log.debug("Naver AI API key not configured, returning original query");
             return query;
         }
 
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + naverApiKey);
-            headers.set("X-NCP-CLOVASTUDIO-REQUEST-ID", naverRequestId);
+            headers.set("Authorization", "Bearer " + apiKey);
+            headers.set("X-NCP-CLOVASTUDIO-REQUEST-ID", naverAiProperties.getRequestId());
 
             Map<String, Object> requestBody = Map.of(
                 "messages", List.of(
@@ -74,19 +75,74 @@ public class NaverQueryRewriter implements QueryRewriter {
             );
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-            String responseStr = restTemplate.postForObject(naverApiEndpoint, requestEntity, String.class);
+            String responseStr = restTemplate.postForObject(
+                naverAiProperties.getApiEndpoint(),
+                requestEntity,
+                String.class
+            );
 
-            Map<String, Object> responseJson = objectMapper.readValue(responseStr, Map.class);
-            Map<String, Object> resultObject = (Map<String, Object>) responseJson.get("result");
-            Map<String, Object> messageObject = (Map<String, Object>) resultObject.get("message");
-            String expandedKeywords = (String) messageObject.get("content");
+            if (responseStr == null || responseStr.isBlank()) {
+                log.warn("Received empty response from Naver AI API");
+                return query;
+            }
 
+            String expandedKeywords = extractKeywordsFromResponse(responseStr);
+            if (expandedKeywords == null || expandedKeywords.isEmpty()) {
+                log.warn("Failed to extract keywords from response, returning original query");
+                return query;
+            }
             log.info("Query '{}' expanded to keywords: '{}'", query, expandedKeywords);
-            return expandedKeywords.trim();
+            return expandedKeywords;
 
         } catch (Exception e) {
             log.error("Failed to expand keywords for query: '{}'. Falling back to original query.", query, e);
             return query;
+        }
+    }
+
+    /**
+     * Extracts keywords from the Naver AI API response with proper null safety checks.
+     *
+     * @param responseStr JSON response from Naver AI API
+     * @return extracted keywords, or empty string if extraction fails
+     */
+    private String extractKeywordsFromResponse(String responseStr) {
+        try {
+            Map<String, Object> responseJson = objectMapper.readValue(responseStr, Map.class);
+
+            if (responseJson == null) {
+                return "";
+            }
+
+            Object resultObj = responseJson.get("result");
+            if (!(resultObj instanceof Map)) {
+                log.warn("Unexpected response structure: 'result' is not a Map");
+                return "";
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resultObject = (Map<String, Object>) resultObj;
+
+            Object messageObj = resultObject.get("message");
+            if (!(messageObj instanceof Map)) {
+                log.warn("Unexpected response structure: 'message' is not a Map");
+                return "";
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> messageObject = (Map<String, Object>) messageObj;
+
+            Object contentObj = messageObject.get("content");
+            if (contentObj == null) {
+                log.warn("Unexpected response structure: 'content' is null");
+                return "";
+            }
+
+            return contentObj.toString().trim();
+
+        } catch (Exception e) {
+            log.error("Failed to parse Naver AI API response", e);
+            return "";
         }
     }
 }
