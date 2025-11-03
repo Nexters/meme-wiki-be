@@ -2,7 +2,10 @@ package spring.memewikibe.api.controller.meme;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import spring.memewikibe.api.controller.meme.response.*;
+import spring.memewikibe.api.controller.meme.response.CategoryResponse;
+import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
+import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
+import spring.memewikibe.api.controller.meme.response.MostSharedMemes;
 import spring.memewikibe.application.*;
 import spring.memewikibe.support.response.ApiResponse;
 import spring.memewikibe.support.response.Cursor;
@@ -18,12 +21,20 @@ public class MemeController {
     private final MemeLookUpService memeLookUpService;
     private final MemeAggregationLookUpService memeAggregationLookUpService;
     private final SharedMemeScheduleCacheService sharedMemeScheduleCacheService;
+    private final PopularMemeService popularMemeService;
 
-    public MemeController(MemeAggregationService aggregationService, MemeLookUpService memeLookUpService, MemeAggregationLookUpCacheProxyService memeAggregationLookUpService, SharedMemeScheduleCacheService sharedMemeScheduleCacheService) {
+    public MemeController(
+        MemeAggregationService aggregationService,
+        MemeLookUpService memeLookUpService,
+        MemeAggregationLookUpService memeAggregationLookUpService,
+        SharedMemeScheduleCacheService sharedMemeScheduleCacheService,
+        PopularMemeService popularMemeService
+    ) {
         this.aggregationService = aggregationService;
         this.memeLookUpService = memeLookUpService;
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.sharedMemeScheduleCacheService = sharedMemeScheduleCacheService;
+        this.popularMemeService = popularMemeService;
     }
 
     @GetMapping
@@ -84,7 +95,7 @@ public class MemeController {
 
     @GetMapping("/rankings/top-rated")
     public ApiResponse<List<MemeSimpleResponse>> getTopRatedMemes() {
-        return ApiResponse.success(memeAggregationLookUpService.getMostPopularMemes());
+        return ApiResponse.success(popularMemeService.getTopPopularMemes());
     }
 
 }
