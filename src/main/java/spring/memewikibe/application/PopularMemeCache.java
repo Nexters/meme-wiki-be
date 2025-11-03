@@ -62,7 +62,7 @@ public class PopularMemeCache {
         log.debug("Initialized cache with {} memes", memes.size());
     }
 
-    @Scheduled(fixedRate = 3600_000)
+    @Scheduled(fixedRateString = "PT1H")
     public void evictExpiredMemes() {
         int evicted = cache.evictExpired();
         if (evicted > 0) {
@@ -70,7 +70,7 @@ public class PopularMemeCache {
         }
     }
 
-    @Scheduled(fixedRate = 21600_000)
+    @Scheduled(fixedRateString = "PT6H")
     public void cleanupStaleIndex() {
         int cleaned = cache.cleanupStaleScoreIndex();
         if (cleaned > 0) {
