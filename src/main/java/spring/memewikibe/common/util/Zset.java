@@ -61,6 +61,29 @@ public class Zset<K> {
         return result;
     }
 
+    public List<K> zrevrange(int start, int end) {
+        int size = skip.size();
+
+        if (start < 0) start = size + start;
+        if (end < 0) end = size + end;
+
+        if (start < 0) start = 0;
+        if (end >= size) end = size - 1;
+
+        if (start > end) return List.of();
+
+        ArrayList<K> result = new ArrayList<>();
+        int idx = 0;
+        for (ScoreKey<K> key : skip.descendingSet()) {
+            if (idx > end) break;
+            if (idx >= start) {
+                result.add(key.key);
+            }
+            idx++;
+        }
+        return result;
+    }
+
     private record ScoreKey<K>(double score, K key) implements Comparable<ScoreKey<K>> {
 
         @Override
