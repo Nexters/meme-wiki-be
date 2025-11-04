@@ -41,4 +41,6 @@ public interface MemeRepository extends JpaRepository<Meme, Long>, MemeRepositor
 
     @Query(value = "SELECT * FROM meme m WHERE m.flag = 'NORMAL' AND MATCH (title, usage_context, hashtags) AGAINST (:q IN NATURAL LANGUAGE MODE) LIMIT :limit", nativeQuery = true)
     List<Meme> findCandidatesByFullTextSearch(@Param("q") String query, @Param("limit") int limit);
+
+    List<Meme> findByIdIn(List<Long> id);
 }

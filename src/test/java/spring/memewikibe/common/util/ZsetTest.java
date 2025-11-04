@@ -279,4 +279,57 @@ class ZsetTest {
         // then
         assertThat(zset.zscore("key1")).isEqualTo(7.0);
     }
+
+    @Test
+    @DisplayName("zrevrange로 score 내림차순으로 조회할 수 있다")
+    void zrevrange_descending_order() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 30.0);
+        zset.zadd("key2", 10.0);
+        zset.zadd("key3", 20.0);
+        zset.zadd("key4", 40.0);
+        zset.zadd("key5", 5.0);
+
+        // when
+        List<String> result = zset.zrevrange(0, 4);
+
+        // then - 높은 점수부터
+        assertThat(result).containsExactly("key4", "key1", "key3", "key2", "key5");
+    }
+
+    @Test
+    @DisplayName("zrevrange로 부분 범위를 역순 조회할 수 있다")
+    void zrevrange_partial() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 10.0);
+        zset.zadd("key2", 20.0);
+        zset.zadd("key3", 30.0);
+        zset.zadd("key4", 40.0);
+        zset.zadd("key5", 50.0);
+
+        // when - Top 3
+        List<String> result = zset.zrevrange(0, 2);
+
+        // then
+        assertThat(result).containsExactly("key5", "key4", "key3");
+    }
+
+    @Test
+    @DisplayName("zrevrange는 음수 인덱스를 지원한다")
+    void zrevrange_negative_index() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 10.0);
+        zset.zadd("key2", 20.0);
+        zset.zadd("key3", 30.0);
+
+        // when & then
+        // 전체 역순 조회
+        assertThat(zset.zrevrange(0, -1)).containsExactly("key3", "key2", "key1");
+
+        // 상위 2개
+        assertThat(zset.zrevrange(0, 1)).containsExactly("key3", "key2");
+    }
 }

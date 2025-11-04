@@ -39,6 +39,11 @@ public class TtlZset<K> {
         return zset.zrange(start, end);
     }
 
+    public List<K> zrevrange(int start, int end) {
+        evictExpired();
+        return zset.zrevrange(start, end);
+    }
+
     public int size() {
         evictExpired();
         return ttl.size();
