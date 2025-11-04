@@ -84,9 +84,7 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Transactional(readOnly = true)
     @Override
     public List<Meme> getMemesByIds(List<Long> id) {
-        return memeRepository.findByIdIn(id)
-            .stream()
-            .toList();
+        return memeRepository.findByIdIn(id);
     }
 
     private PageResponse<Cursor, MemeDetailResponse> createPageResponseBy(List<Meme> memes, int limit) {
