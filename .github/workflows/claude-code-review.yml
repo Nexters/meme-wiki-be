@@ -25,14 +25,16 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            Please review this pull request and provide feedback on:
+            Review PR #${{ github.event.pull_request.number }} and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
             - Test coverage
             
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
+            Provide detailed feedback using inline comments for specific issues.
+
+            Use `gh pr comment ${{ github.event.pull_request.number }}` with your Bash tool to leave your review as a comment on THIS PR.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options
