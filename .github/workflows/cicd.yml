@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - feature/**
+      - dev
   workflow_dispatch:
     inputs:
       force_infra_deploy:
@@ -44,11 +44,21 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew clean build -x test
 
-    - name: Get commit SHA
+    - name: Get commit SHA and determine environment
       id: vars
       run: |
         echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          echo "ENV_TAG=prod" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE=Dockerfile" >> $GITHUB_OUTPUT
+        elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+          echo "ENV_TAG=dev" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE=dev.Dockerfile" >> $GITHUB_OUTPUT
+        else
+          echo "ENV_TAG=dev" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE=dev.Dockerfile" >> $GITHUB_OUTPUT
+        fi
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -64,10 +74,10 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
+        file: ./${{ steps.vars.outputs.DOCKERFILE }}
         push: true
         tags: |
-          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.ENV_TAG }}
           ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.SHORT_SHA }}
           ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TIMESTAMP }}
         cache-from: type=gha
@@ -144,7 +154,8 @@ jobs:
 
     - name: Deployment completed
       run: |
-        echo "✅ 이미지 배포 완료: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
+        echo "✅ 이미지 배포 완료: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.ENV_TAG }}"
+        echo "📦 Dockerfile: ${{ steps.vars.outputs.DOCKERFILE }}"
         echo "event=${{ github.event_name }} infra_changed=${{ steps.changes.outputs.infra }} force=${{ inputs.force_infra_deploy }}"
         if [ "${{ steps.changes.outputs.infra }}" == "true" ] || { [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.force_infra_deploy }}" == "true" ]; }; then
           echo "🔧 Infrastructure changes deployed via SSH"

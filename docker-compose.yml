@@ -29,7 +29,7 @@ services:
 
   # 메인 애플리케이션
   app:
-    image: ${NCP_REGISTRY_URL}/meme-wiki-be:latest
+    image: ${NCP_REGISTRY_URL}/meme-wiki-be:prod
     container_name: meme-wiki-be
     restart: always
     ports:
@@ -72,7 +72,7 @@ services:
 
   # 메인 애플리케이션
   app-dev:
-    image: ${NCP_REGISTRY_URL}/meme-wiki-be:latest
+    image: ${NCP_REGISTRY_URL}/meme-wiki-be:dev
     container_name: meme-wiki-be-dev
     restart: always
     ports:
