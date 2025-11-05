@@ -133,8 +133,8 @@ jobs:
           echo '${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}' > /root/config/fcm-service-account.json
           chmod 600 /root/config/fcm-service-account.json
 
-          docker compose pull app
-          docker compose up -d app
+          docker compose pull app app-dev
+          docker compose up -d app app-dev
           docker compose ps
           echo "✅ App service restarted"
 
