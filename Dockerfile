@@ -1,6 +1,12 @@
-FROM eclipse-temurin:21-jdk-alpine
+# 1단계: 빌드 이미지 설정
+FROM gradle:8-jdk21-alpine AS build
+WORKDIR /workspace
+COPY . .
+RUN gradle bootJar --no-daemon
 
+# 2단계: 런타임 이미지 설정
 # 작업 디렉토리 설정
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # 애플리케이션 JAR 파일 복사
@@ -8,6 +14,9 @@ COPY build/libs/*.jar app.jar
 
 # 로그 디렉토리 생성
 RUN mkdir -p /app/logs
+
+# 빌드 단계에서 JAR 파일 복사
+COPY --from=build /workspace/build/libs/*.jar app.jar
 
 # JVM 최적화 설정
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseStringDeduplication"
