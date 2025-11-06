@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import spring.memewikibe.domain.BaseEntity;
 
+import java.util.Objects;
+
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
@@ -25,6 +27,7 @@ public class MemeViewLog extends BaseEntity {
     }
 
     public static MemeViewLog of(Meme meme) {
+        Objects.requireNonNull(meme, "meme must not be null");
         return MemeViewLog.builder()
             .meme(meme)
             .build();
