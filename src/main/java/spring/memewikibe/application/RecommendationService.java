@@ -16,7 +16,16 @@ import spring.memewikibe.infrastructure.ai.QueryRewriter;
 import spring.memewikibe.infrastructure.ai.CrossEncoderReranker;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -41,6 +50,14 @@ public class RecommendationService {
         "이다", "있다", "없다", "싶다", "지", "요", "고", "다", "음", "면",
         "것", "수", "등", "대한"
     );
+
+    private static final int MIN_VEC_TOP_K = 50;
+    private static final int MAX_VEC_TOP_K = 400;
+    private static final int MIN_KW_TOP_K = 50;
+    private static final int MAX_KW_TOP_K = 400;
+    private static final int MIN_CROSS_ENCODER_TOP_M = 5;
+    private static final int MIN_OUTPUT_LIMIT = 1;
+    private static final int MAX_OUTPUT_LIMIT = 50;
 
     @Value("${recommend.alpha:0.6}")
     private double alpha;
@@ -89,14 +106,12 @@ public class RecommendationService {
         List<String> keywordTokens = tokenize(normKeywordQuery);
         if (keywordTokens.isEmpty()) return List.of();
 
-        long tRewrite = System.nanoTime();
-
         // 1) Vector candidates - 의미적 유사도 기반
-        int useVecTopK = Math.max(50, Math.min(400, vecTopK));
+        int useVecTopK = Math.max(MIN_VEC_TOP_K, Math.min(MAX_VEC_TOP_K, vecTopK));
         List<Long> vecIds = vectorIndexService.query(normVectorQuery, useVecTopK);
 
         // 2) Keyword candidates - 확장된 키워드 기반
-        int useKwTopK = Math.max(50, Math.min(400, kwTopK));
+        int useKwTopK = Math.max(MIN_KW_TOP_K, Math.min(MAX_KW_TOP_K, kwTopK));
 
         // Full-Text Search를 먼저 시도하고, 실패 시 새로운 OR 검색 메소드를 호출
         List<Meme> kwCandidates = safeFts.tryFullText(normKeywordQuery, useKwTopK);
@@ -155,7 +170,7 @@ public class RecommendationService {
             double vs = vecScore.getOrDefault(id, 0.0);
             double ks = kwScore.getOrDefault(id, 0.0);
             double combined = alphaEff * vs + (1 - alphaEff) * ks;
-            ScoreResult sr = scoreAndExplain(normKeywordQuery, keywordTokens, m, vecRank.getOrDefault(id, Integer.MAX_VALUE));
+            ScoreResult sr = scoreAndExplain(normKeywordQuery, keywordTokens, m);
             blended.add(new Scored(m, combined, sr.reason));
         }
 
@@ -165,7 +180,7 @@ public class RecommendationService {
         List<Scored> afterCE = mmred;
         if (crossEnabled && crossEncoder.isPresent() && !mmred.isEmpty()) {
             log.info("Applying CrossEncoder reranking to top {} candidates.", Math.min(crossTopM, mmred.size()));
-            int m = Math.min(Math.max(5, crossTopM), mmred.size());
+            int m = Math.min(Math.max(MIN_CROSS_ENCODER_TOP_M, crossTopM), mmred.size());
             List<Scored> head = new ArrayList<>(mmred.subList(0, m));
 
             // Reranker에 전달할 후보 목록 생성
@@ -191,7 +206,7 @@ public class RecommendationService {
         List<Scored> finalList = rerankerEnabled ? heuristicRerank(normKeywordQuery, afterCE) : afterCE;
 
         // 6) Final RAG-based Reason Generation for top result
-        int outLimit = Math.max(1, Math.min(50, limit));
+        int outLimit = Math.max(MIN_OUTPUT_LIMIT, Math.min(MAX_OUTPUT_LIMIT, limit));
         if (finalList.isEmpty()) {
             return List.of();
         }
@@ -321,7 +336,7 @@ public class RecommendationService {
 
     private record ScoreResult(double score, String reason) {}
 
-    private ScoreResult scoreAndExplain(String qLower, List<String> qTokens, Meme m, int rankIndex) {
+    private ScoreResult scoreAndExplain(String qLower, List<String> qTokens, Meme m) {
         String usage = safeLower(m.getUsageContext());
         String title = safeLower(m.getTitle());
         List<String> tags = HashtagParser.parseHashtags(m.getHashtags()).stream()
