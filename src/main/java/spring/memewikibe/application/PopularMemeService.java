@@ -32,7 +32,7 @@ public class PopularMemeService {
             return popularMemes;
         }
 
-        return memeLookUpService.getMemesByIds(cachedMemeIds)
+        return memeLookUpService.getOrderedMemesByIds(cachedMemeIds)
             .stream()
             .map(it -> new MemeSimpleResponse(it.getId(), it.getTitle(), it.getImgUrl()))
             .toList();

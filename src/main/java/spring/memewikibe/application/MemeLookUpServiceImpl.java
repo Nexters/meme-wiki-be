@@ -19,6 +19,7 @@ import spring.memewikibe.support.response.Cursor;
 import spring.memewikibe.support.response.PageResponse;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -83,8 +84,16 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<Meme> getMemesByIds(List<Long> id) {
-        return memeRepository.findByIdIn(id);
+    public List<Meme> getOrderedMemesByIds(List<Long> ids) {
+        List<Meme> memes = memeRepository.findByIdIn(ids);
+
+        var memeMap = memes.stream()
+            .collect(java.util.stream.Collectors.toMap(Meme::getId, meme -> meme));
+
+        return ids.stream()
+            .map(memeMap::get)
+            .filter(Objects::nonNull)
+            .toList();
     }
 
     private PageResponse<Cursor, MemeDetailResponse> createPageResponseBy(List<Meme> memes, int limit) {
