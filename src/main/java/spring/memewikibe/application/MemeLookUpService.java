@@ -17,5 +17,5 @@ public interface MemeLookUpService {
 
     MemeDetailResponse getMemeById(Long id);
 
-    List<Meme> getMemesByIds(List<Long> id);
+    List<Meme> getOrderedMemesByIds(List<Long> id);
 }
