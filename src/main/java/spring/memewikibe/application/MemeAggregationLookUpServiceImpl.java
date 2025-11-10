@@ -37,8 +37,9 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     @Override
     public List<MemeSimpleResponse> getMostFrequentSharedMemes() {
         List<MemeSimpleResponse> response = shareLogRepository.findTopMemesByShareCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
-        if (response.size() < AGGREGATION_ITEM_COUNT) {
-            return fillWithLatestMemes(response, AGGREGATION_ITEM_COUNT);
+        int responseSize = response.size();
+        if (responseSize < AGGREGATION_ITEM_COUNT) {
+            return fillWithLatestMemes(response, responseSize, AGGREGATION_ITEM_COUNT);
         }
         return response;
     }
@@ -47,8 +48,9 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     @Override
     public List<MemeSimpleResponse> getMostFrequentCustomMemes() {
         List<MemeSimpleResponse> response = customLogRepository.findTopMemesByCustomCountWithin(AGGREGATION_DURATION_PERIOD, AGGREGATION_ITEM_COUNT);
-        if (response.size() < AGGREGATION_ITEM_COUNT) {
-            return fillWithLatestMemes(response, AGGREGATION_ITEM_COUNT);
+        int responseSize = response.size();
+        if (responseSize < AGGREGATION_ITEM_COUNT) {
+            return fillWithLatestMemes(response, responseSize, AGGREGATION_ITEM_COUNT);
         }
         return response;
     }
@@ -60,14 +62,15 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
         List<MemeSimpleResponse> response = aggregationResult.stream()
             .map(it -> new MemeSimpleResponse(it.id(), it.title(), it.imgUrl()))
             .toList();
-        if (response.size() < MOST_POPULAR_MEMES_COUNT) {
-            return fillWithLatestMemes(response, MOST_POPULAR_MEMES_COUNT);
+        int responseSize = response.size();
+        if (responseSize < MOST_POPULAR_MEMES_COUNT) {
+            return fillWithLatestMemes(response, responseSize, MOST_POPULAR_MEMES_COUNT);
         }
         return response;
     }
 
-    private List<MemeSimpleResponse> fillWithLatestMemes(List<MemeSimpleResponse> originalList, int targetCount) {
-        int remainingCount = targetCount - originalList.size();
+    private List<MemeSimpleResponse> fillWithLatestMemes(List<MemeSimpleResponse> originalList, int originalListSize, int targetCount) {
+        int remainingCount = targetCount - originalListSize;
         List<Long> existingIds = originalList.stream().map(MemeSimpleResponse::id).toList();
         List<MemeSimpleResponse> latestMemes = memeRepository.findLatestMemesExcludingIds(existingIds, remainingCount);
 
