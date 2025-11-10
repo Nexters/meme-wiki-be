@@ -1,52 +1,96 @@
 package spring.memewikibe.common.util;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * TTL(Time To Live)을 지원하는 Sorted Set
+ *
+ * 내부적으로 {@link Zset}을 사용하며, ReentrantReadWriteLock을 통해
+ * thread-safe한 동작을 보장합니다.
+ */
 public class TtlZset<K> {
     private final Zset<K> zset = new Zset<>();
-    private final ConcurrentHashMap<K, Long> ttl = new ConcurrentHashMap<>();
+    private final Map<K, Long> ttl = new HashMap<>();
     private final Duration defaultTtl;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TtlZset(Duration defaultTtl) {
         this.defaultTtl = defaultTtl;
     }
 
-    // TODO: 동시성 이슈 - zincrby와 ttl.put 사이에 원자성이 보장되지 않음
     public void zincrby(K key, double increment) {
-        zset.zincrby(key, increment);
-        ttl.put(key, System.currentTimeMillis() + defaultTtl.toMillis());
+        lock.writeLock().lock();
+        try {
+            zset.zincrby(key, increment);
+            ttl.put(key, System.currentTimeMillis() + defaultTtl.toMillis());
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public void zadd(K key, double score) {
-        zset.zadd(key, score);
-        ttl.put(key, System.currentTimeMillis() + defaultTtl.toMillis());
+        lock.writeLock().lock();
+        try {
+            zset.zadd(key, score);
+            ttl.put(key, System.currentTimeMillis() + defaultTtl.toMillis());
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public void zrem(K key) {
-        zset.zrem(key);
-        ttl.remove(key);
+        lock.writeLock().lock();
+        try {
+            zset.zrem(key);
+            ttl.remove(key);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public Double zscore(K key) {
-        evictIfExpired(key);
-        return zset.zscore(key);
+        lock.writeLock().lock();
+        try {
+            evictIfExpired(key);
+            return zset.zscore(key);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<K> zrange(int start, int end) {
-        evictExpired();
-        return zset.zrange(start, end);
+        lock.writeLock().lock();
+        try {
+            evictExpired();
+            return zset.zrange(start, end);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<K> zrevrange(int start, int end) {
-        evictExpired();
-        return zset.zrevrange(start, end);
+        lock.writeLock().lock();
+        try {
+            evictExpired();
+            return zset.zrevrange(start, end);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public int size() {
-        evictExpired();
-        return ttl.size();
+        lock.writeLock().lock();
+        try {
+            evictExpired();
+            return ttl.size();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     private void evictIfExpired(K key) {
