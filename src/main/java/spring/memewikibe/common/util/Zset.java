@@ -1,16 +1,22 @@
 package spring.memewikibe.common.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.TreeSet;
 
+/**
+ * Redis의 Sorted Set(ZSET)을 모방한 자료구조
+ *
+ * 주의: 이 클래스는 thread-safe하지 않습니다.
+ * 멀티스레드 환경에서 사용할 경우 외부에서 동기화가 필요합니다.
+ * {@link TtlZset}은 이 클래스를 내부적으로 사용하며 동기화를 제공합니다.
+ */
 public class Zset<K> {
-    private final Map<K, Double> dict = new ConcurrentHashMap<>();
-    private final ConcurrentSkipListSet<ScoreKey<K>> skip = new ConcurrentSkipListSet<>();
+    private final Map<K, Double> dict = new HashMap<>();
+    private final TreeSet<ScoreKey<K>> skip = new TreeSet<>();
 
-    // TODO: 동시성 이슈 - dict.put과 skip.remove/add 사이에 원자성이 보장되지 않음
     public void zadd(K key, double score) {
         Double old = dict.put(key, score);
         if (old != null) {
@@ -19,14 +25,16 @@ public class Zset<K> {
         skip.add(new ScoreKey<>(score, key));
     }
 
-    // TODO: 동시성 이슈 - read-modify-write race condition 발생 가능
     public void zincrby(K key, double increment) {
         Double current = dict.get(key);
         double newScore = (current != null ? current : 0.0) + increment;
-        zadd(key, newScore);
+        Double old = dict.put(key, newScore);
+        if (old != null) {
+            skip.remove(new ScoreKey<>(old, key));
+        }
+        skip.add(new ScoreKey<>(newScore, key));
     }
 
-    // TODO: 동시성 이슈 - dict.remove와 skip.remove 사이에 원자성이 보장되지 않음
     public void zrem(K key) {
         Double score = dict.remove(key);
         if (score != null) {
