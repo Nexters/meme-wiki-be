@@ -20,6 +20,16 @@ public class AdminMemeStatsService {
     }
 
     public MemePopularityListResponse getPopularMemes(Duration duration, int limit) {
+        if (duration == null) {
+            throw new IllegalArgumentException("Duration cannot be null");
+        }
+        if (duration.isNegative() || duration.isZero()) {
+            throw new IllegalArgumentException("Duration must be positive");
+        }
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be positive");
+        }
+
         List<MemeAggregationResult> aggregationResults = memeAggregationRepository.findTopRatedMemesBy(duration, limit);
 
         AtomicInteger rank = new AtomicInteger(1);
