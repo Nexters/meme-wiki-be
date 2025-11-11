@@ -71,6 +71,31 @@ find src -type d -not -path "*/build/*" -not -path "*/.gradle/*" | shuf -n 1
 - **Test naming**: Clear, descriptive test names
 - **Test isolation**: Proper use of mocking, test fixtures
 
+### Testing Strategies
+
+To ensure comprehensive and efficient testing, the project utilizes distinct testing annotations with specific purposes:
+
+-   **`@RepositoryTest`**:
+    -   **Purpose**: Designed for testing JPA repositories and related data access logic in isolation.
+    -   **Mechanism**: Meta-annotated with `@DataJpaTest`, which provides a minimal Spring context focused on JPA components. It uses an in-memory H2 database and automatically rolls back transactions after each test for isolation.
+    -   **Tag**: Annotated with `@Tag("repository")`.
+    -   **Usage**: Ideal for verifying database interactions, custom queries (e.g., QueryDSL), and entity mappings without loading the entire application context.
+
+-   **`@IntegrationTest`**:
+    -   **Purpose**: Intended for broader integration tests that involve multiple layers of the application (e.g., controllers, services, repositories, external integrations).
+    -   **Mechanism**: Meta-annotated with `@SpringBootTest`, which loads the full Spring application context.
+    -   **Tag**: Annotated with `@Tag("integration")`.
+    -   **Cleanup Policy**: Follows an explicit teardown policy using `@AfterEach` methods to clean up test data. By default, `@SpringBootTest` does not automatically roll back transactions, requiring manual cleanup.
+    -   **Note on Transactional**: For specific integration tests where data leakage between test methods is problematic (e.g., due to asynchronous event processing), `@Transactional` may be applied at the test class level to ensure automatic rollback and test isolation. This is a pragmatic choice to manage complex test scenarios while adhering to the explicit teardown principle where feasible.
+
+### Running Specific Test Types
+
+-   **Run all tests**: `./gradlew test`
+-   **Run unit tests**: `./gradlew unitTest`
+-   **Run integration tests**: `./gradlew integrationTest`
+-   **Run repository tests**: `./gradlew repositoryTest`
+
+
 ## 3. Investigation Strategy
 
 Don't just look at surface-level issues. Dig deeper:
