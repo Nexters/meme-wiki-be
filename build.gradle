@@ -68,6 +68,15 @@ tasks.register('integrationTest', Test) {
     }
 }
 
+tasks.register('repositoryTest', Test) {
+    description = 'Runs repository tests.'
+    group = 'verification'
+
+    useJUnitPlatform {
+        includeTags 'repository'
+    }
+}
+
 def generatedDir = "src/main/generated"
 
 sourceSets {

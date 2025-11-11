@@ -3,7 +3,6 @@ package spring.memewikibe.application.notification;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
@@ -17,7 +16,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @IntegrationTest
-@Transactional
 class MemeNotificationServiceTest {
 
     private final MemeNotificationService sut;

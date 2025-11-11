@@ -2,14 +2,12 @@ package spring.memewikibe.application.notification;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.infrastructure.NotificationTokenRepository;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
 @IntegrationTest
-@Transactional
 class NotificationTokenRegisterTest {
 
     private final NotificationTokenRegister sut;

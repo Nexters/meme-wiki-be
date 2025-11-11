@@ -1,7 +1,7 @@
 package spring.memewikibe.application;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.meme.response.QuizProblemResponse;
 import spring.memewikibe.domain.meme.quiz.MemeQuiz;
@@ -13,7 +13,6 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @IntegrationTest
-@Transactional
 class QuizServiceTest {
 
     private final QuizService quizService;
@@ -22,6 +21,11 @@ class QuizServiceTest {
     QuizServiceTest(QuizService quizService, MemeQuizRepository quizRepository) {
         this.quizService = quizService;
         this.quizRepository = quizRepository;
+    }
+
+    @AfterEach
+    void tearDown() {
+        quizRepository.deleteAllInBatch();
     }
 
     @Test

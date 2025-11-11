@@ -3,7 +3,6 @@ package spring.memewikibe.application;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCustomLog;
@@ -21,7 +20,6 @@ import java.util.List;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
-@Transactional
 @IntegrationTest
 class MemeAggregationServiceImplTest {
 
