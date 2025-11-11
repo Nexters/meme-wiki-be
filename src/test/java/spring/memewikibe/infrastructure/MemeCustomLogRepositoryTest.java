@@ -1,9 +1,7 @@
 package spring.memewikibe.infrastructure;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
-import spring.memewikibe.annotation.IntegrationTest;
+import spring.memewikibe.annotation.RepositoryTest;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCustomLog;
@@ -13,8 +11,7 @@ import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@IntegrationTest
-@Transactional
+@RepositoryTest
 class MemeCustomLogRepositoryTest {
 
     private final MemeCustomLogRepository sut;
@@ -23,12 +20,6 @@ class MemeCustomLogRepositoryTest {
     MemeCustomLogRepositoryTest(MemeCustomLogRepository sut, MemeRepository memeRepository) {
         this.sut = sut;
         this.memeRepository = memeRepository;
-    }
-
-    @AfterEach
-    void tearDown() {
-        sut.deleteAllInBatch();
-        memeRepository.deleteAllInBatch();
     }
 
     @Test

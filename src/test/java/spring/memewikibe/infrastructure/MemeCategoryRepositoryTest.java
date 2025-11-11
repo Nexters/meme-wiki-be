@@ -4,34 +4,26 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Limit;
-import org.springframework.transaction.annotation.Transactional;
-import spring.memewikibe.annotation.IntegrationTest;
-import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
-import spring.memewikibe.application.MemeLookUpService;
+import spring.memewikibe.annotation.RepositoryTest;
 import spring.memewikibe.domain.meme.Category;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCategory;
-import spring.memewikibe.support.response.Cursor;
-import spring.memewikibe.support.response.PageResponse;
 
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@IntegrationTest
-@Transactional
+@RepositoryTest
 class MemeCategoryRepositoryTest {
 
     private final MemeCategoryRepository sut;
     private final MemeRepository memeRepository;
     private final CategoryRepository categoryRepository;
-    private final MemeLookUpService memeLookUpService;
 
-    MemeCategoryRepositoryTest(MemeCategoryRepository sut, MemeRepository memeRepository, CategoryRepository categoryRepository, MemeLookUpService memeLookUpService) {
+    MemeCategoryRepositoryTest(MemeCategoryRepository sut, MemeRepository memeRepository, CategoryRepository categoryRepository) {
         this.sut = sut;
         this.memeRepository = memeRepository;
         this.categoryRepository = categoryRepository;
-        this.memeLookUpService = memeLookUpService;
     }
 
     /**
@@ -242,26 +234,21 @@ class MemeCategoryRepositoryTest {
                 .category(예능)
                 .meme(무야호)
                 .build()));
-        // when
-        PageResponse<Cursor, MemeDetailResponse> response = memeLookUpService.getMemesByCategory(0L, null, 1);
 
-        // then
-        then(response.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
-            .containsExactly(무야호.getId(), true, 1);
+        // when: 첫 페이지 조회 (예능 카테고리, 최신순)
+        List<MemeCategory> firstPage = sut.findNormalMemesWithCursor(예능, null, Limit.of(1));
 
-        then(response.getResults()).hasSize(1)
-            .extracting(MemeDetailResponse::title)
-            .containsExactly("무야호");
+        // then: 무야호가 첫 번째 (ID가 가장 큼)
+        then(firstPage).hasSize(1);
+        then(firstPage.get(0).getMeme().getTitle()).isEqualTo("무야호");
 
-        Long lastMemeId = response.getPaging().getNext();
-        PageResponse<Cursor, MemeDetailResponse> nextPageResponse = memeLookUpService.getMemesByCategory(null, lastMemeId, 1);
+        // when: 다음 페이지 조회
+        Long lastMemeId = firstPage.get(0).getMeme().getId();
+        List<MemeCategory> secondPage = sut.findNormalMemesWithCursor(예능, lastMemeId, Limit.of(1));
 
-        then(nextPageResponse.getPaging()).extracting(Cursor::getNext, Cursor::isHasMore, Cursor::getPageSize)
-            .containsExactly(원영적_사고.getId(), true, 1);
-
-        then(nextPageResponse.getResults()).hasSize(1)
-            .extracting(MemeDetailResponse::title)
-            .containsExactly("원영적 사고");
+        // then: 나만_아니면_돼가 두 번째
+        then(secondPage).hasSize(1);
+        then(secondPage.get(0).getMeme().getTitle()).isEqualTo("나만 아니면 돼");
     }
 
 }

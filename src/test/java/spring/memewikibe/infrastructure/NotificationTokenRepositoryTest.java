@@ -1,26 +1,18 @@
 package spring.memewikibe.infrastructure;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
-import spring.memewikibe.annotation.IntegrationTest;
+import spring.memewikibe.annotation.RepositoryTest;
 import spring.memewikibe.domain.notification.NotificationToken;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@IntegrationTest
-@Transactional
+@RepositoryTest
 class NotificationTokenRepositoryTest {
 
     private final NotificationTokenRepository sut;
 
     NotificationTokenRepositoryTest(NotificationTokenRepository sut) {
         this.sut = sut;
-    }
-
-    @AfterEach
-    void tearDown() {
-        sut.deleteAllInBatch();
     }
 
     @Test

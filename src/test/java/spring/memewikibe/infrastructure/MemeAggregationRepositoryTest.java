@@ -1,9 +1,7 @@
 package spring.memewikibe.infrastructure;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.transaction.annotation.Transactional;
-import spring.memewikibe.annotation.IntegrationTest;
+import spring.memewikibe.annotation.RepositoryTest;
 import spring.memewikibe.domain.meme.*;
 
 import java.time.Duration;
@@ -11,8 +9,7 @@ import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@IntegrationTest
-@Transactional
+@RepositoryTest
 class MemeAggregationRepositoryTest {
 
     private final MemeAggregationRepository sut;
@@ -21,7 +18,7 @@ class MemeAggregationRepositoryTest {
     private final MemeShareLogRepository shareLogRepository;
     private final MemeViewLogRepository viewLogRepository;
 
-    MemeAggregationRepositoryTest(MemeAggregationRepository memeAggregationRepository, MemeAggregationRepository sut, MemeRepository memeRepository,
+    MemeAggregationRepositoryTest(MemeAggregationRepository sut, MemeRepository memeRepository,
                                   MemeCustomLogRepository customLogRepository,
                                   MemeShareLogRepository shareLogRepository,
                                   MemeViewLogRepository viewLogRepository) {
@@ -30,14 +27,6 @@ class MemeAggregationRepositoryTest {
         this.customLogRepository = customLogRepository;
         this.shareLogRepository = shareLogRepository;
         this.viewLogRepository = viewLogRepository;
-    }
-
-    @AfterEach
-    void tearDown() {
-        customLogRepository.deleteAllInBatch();
-        shareLogRepository.deleteAllInBatch();
-        viewLogRepository.deleteAllInBatch();
-        memeRepository.deleteAllInBatch();
     }
 
     @Test
