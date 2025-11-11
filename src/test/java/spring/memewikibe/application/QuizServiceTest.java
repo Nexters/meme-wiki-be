@@ -1,10 +1,8 @@
 package spring.memewikibe.application;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.meme.response.QuizProblemResponse;
 import spring.memewikibe.domain.meme.quiz.MemeQuiz;
 import spring.memewikibe.infrastructure.MemeQuizRepository;
@@ -14,9 +12,8 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest
+@IntegrationTest
 @Transactional
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class QuizServiceTest {
 
     private final QuizService quizService;

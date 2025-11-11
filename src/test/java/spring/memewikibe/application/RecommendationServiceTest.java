@@ -8,6 +8,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import spring.memewikibe.annotation.UnitTest;
 import spring.memewikibe.api.controller.recommendation.response.MemeRecommendationResponse;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@UnitTest
 @ExtendWith(MockitoExtension.class)
 class RecommendationServiceTest {
 
@@ -40,6 +42,18 @@ class RecommendationServiceTest {
 
     @Captor
     ArgumentCaptor<List<NaverRagService.Candidate>> candidatesCaptor;
+
+    // helper to assign id in tests
+    private static Meme setId(Meme m, Long id) {
+        try {
+            var f = m.getClass().getSuperclass().getDeclaredField("id");
+            f.setAccessible(true);
+            f.set(m, id);
+            return m;
+        } catch (Exception e) {
+            return m;
+        }
+    }
 
     @Disabled("RAG 통합 이후 테스트 수정 필요")
     @Test
@@ -78,17 +92,5 @@ class RecommendationServiceTest {
         assertThat(sent).isNotEmpty();
         verify(vectorIndexService, times(1)).query(anyString(), anyInt());
         verify(naverRagService, times(1)).recommendWithContextDetailed(anyString(), anyString(), anyList());
-    }
-
-    // helper to assign id in tests
-    private static Meme setId(Meme m, Long id) {
-        try {
-            var f = m.getClass().getSuperclass().getDeclaredField("id");
-            f.setAccessible(true);
-            f.set(m, id);
-            return m;
-        } catch (Exception e) {
-            return m;
-        }
     }
 }

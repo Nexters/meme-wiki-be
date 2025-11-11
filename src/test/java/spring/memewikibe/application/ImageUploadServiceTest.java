@@ -11,6 +11,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import spring.memewikibe.annotation.UnitTest;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,21 +20,17 @@ import java.io.InputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+@UnitTest
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ImageUploadService 단위 테스트")
 class ImageUploadServiceTest {
 
+    private static final String TEST_BUCKET = "test-bucket";
     @Mock
     private S3Client s3Client;
-
     private ImageUploadService imageUploadService;
-
-    private static final String TEST_BUCKET = "test-bucket";
 
     @BeforeEach
     void setUp() {
@@ -46,7 +43,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile("test.jpg", "image/jpeg", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -63,7 +60,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile("test.png", "image/png", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -78,7 +75,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile("test.webp", "image/webp", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -93,7 +90,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile("test.gif", "image/gif", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -108,7 +105,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile("test.JPEG", "image/jpeg", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -126,8 +123,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("파일이 비어있습니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("파일이 비어있습니다.");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -142,8 +139,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("지원하지 않는 이미지 형식입니다");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("지원하지 않는 이미지 형식입니다");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -158,8 +155,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("지원하지 않는 이미지 형식입니다");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("지원하지 않는 이미지 형식입니다");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -174,8 +171,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("파일 확장자가 없습니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("파일 확장자가 없습니다.");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -190,10 +187,10 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("지원하지 않는 이미지 형식입니다")
-                .hasMessageContaining("jpg")
-                .hasMessageContaining("png");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("지원하지 않는 이미지 형식입니다")
+            .hasMessageContaining("jpg")
+            .hasMessageContaining("png");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -208,8 +205,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("지원하지 않는 이미지 형식입니다");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("지원하지 않는 이미지 형식입니다");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -220,7 +217,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile(".jpg", "image/jpeg", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -240,8 +237,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> serviceWithNullBucket.uploadImage(file))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Cloudflare R2 is not configured (bucket name missing)");
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Cloudflare R2 is not configured (bucket name missing)");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -257,8 +254,8 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> serviceWithBlankBucket.uploadImage(file))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("Cloudflare R2 is not configured (bucket name missing)");
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Cloudflare R2 is not configured (bucket name missing)");
 
         verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -275,9 +272,9 @@ class ImageUploadServiceTest {
 
         // when & then
         assertThatThrownBy(() -> imageUploadService.uploadImage(file))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("R2 업로드 실패")
-                .hasCauseInstanceOf(IOException.class);
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("R2 업로드 실패")
+            .hasCauseInstanceOf(IOException.class);
     }
 
     @Test
@@ -286,7 +283,7 @@ class ImageUploadServiceTest {
         // given
         MultipartFile file = createMockFile("my.test.image.png", "image/png", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url = imageUploadService.uploadImage(file);
@@ -302,7 +299,7 @@ class ImageUploadServiceTest {
         MultipartFile file1 = createMockFile("test.jpg", "image/jpeg", false);
         MultipartFile file2 = createMockFile("test.jpg", "image/jpeg", false);
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().build());
+            .thenReturn(PutObjectResponse.builder().build());
 
         // when
         String url1 = imageUploadService.uploadImage(file1);

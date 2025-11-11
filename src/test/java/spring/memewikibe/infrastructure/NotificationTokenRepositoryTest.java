@@ -2,16 +2,14 @@ package spring.memewikibe.infrastructure;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.domain.notification.NotificationToken;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest
+@IntegrationTest
 @Transactional
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class NotificationTokenRepositoryTest {
 
     private final NotificationTokenRepository sut;

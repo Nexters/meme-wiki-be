@@ -4,13 +4,11 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.external.google.application.ImageGenerator;
 import spring.memewikibe.external.google.client.response.GenerateContentResponse;
 
-@SpringBootTest
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@IntegrationTest
 class ImageGeneratorTest {
     private final ImageGenerator imageGenerator;
 
