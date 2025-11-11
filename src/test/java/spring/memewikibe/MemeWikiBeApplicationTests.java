@@ -1,9 +1,9 @@
 package spring.memewikibe;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import spring.memewikibe.annotation.IntegrationTest;
 
-@SpringBootTest
+@IntegrationTest
 class MemeWikiBeApplicationTests {
 
     @Test

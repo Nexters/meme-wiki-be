@@ -5,12 +5,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.TestConstructor;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.image.response.Base64Image;
 import spring.memewikibe.api.controller.image.response.GeneratedImagesResponse;
 import spring.memewikibe.common.util.ImageUtils;
@@ -25,25 +23,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@TestPropertySource(properties = {
-    "cloudflare.r2.access-key-id=dummy",
-    "cloudflare.r2.secret-access-key=dummy",
-    "cloudflare.r2.endpoint=http://localhost",
-    "cloudflare.r2.bucket-name=test-bucket",
-    "PINECONE_API_KEY=dummy",
-    "PINECONE_INDEX_HOST=http://localhost",
-    "PINECONE_NAMESPACE=test"
-})
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@IntegrationTest
 class ImageEditServiceTest {
 
     @Autowired

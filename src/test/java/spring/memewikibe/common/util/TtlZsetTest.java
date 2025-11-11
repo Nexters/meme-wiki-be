@@ -2,6 +2,7 @@ package spring.memewikibe.common.util;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import spring.memewikibe.annotation.UnitTest;
 
 import java.time.Duration;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+@UnitTest
 class TtlZsetTest {
 
     @Test
@@ -107,10 +109,10 @@ class TtlZsetTest {
 
         // when
         await().atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> {
-                    assertThat(zset.zrange(0, -1)).isEmpty();
-                    assertThat(zset.size()).isEqualTo(0);
-                });
+            .untilAsserted(() -> {
+                assertThat(zset.zrange(0, -1)).isEmpty();
+                assertThat(zset.size()).isEqualTo(0);
+            });
     }
 
     @Test
@@ -122,9 +124,9 @@ class TtlZsetTest {
 
         // when
         await().atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> {
-                    assertThat(zset.zscore("key1")).isNull();
-                });
+            .untilAsserted(() -> {
+                assertThat(zset.zscore("key1")).isNull();
+            });
     }
 
     @Test
@@ -136,15 +138,15 @@ class TtlZsetTest {
 
         // when - 150ms 후 다시 zincrby (TTL 갱신)
         await().pollDelay(Duration.ofMillis(150))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> zset.zincrby("key1", 5.0));
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> zset.zincrby("key1", 5.0));
 
         // then - 100ms 더 기다려도 아직 만료되지 않음 (총 250ms, TTL은 200ms 갱신됨)
         await().pollDelay(Duration.ofMillis(100))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> {
-                    assertThat(zset.zscore("key1")).isEqualTo(15.0);
-                });
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> {
+                assertThat(zset.zscore("key1")).isEqualTo(15.0);
+            });
     }
 
     @Test
@@ -156,15 +158,15 @@ class TtlZsetTest {
 
         // when - 150ms 후 다시 zadd (TTL 갱신)
         await().pollDelay(Duration.ofMillis(150))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> zset.zadd("key1", 20.0));
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> zset.zadd("key1", 20.0));
 
         // then - 100ms 더 기다려도 아직 만료되지 않음
         await().pollDelay(Duration.ofMillis(100))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> {
-                    assertThat(zset.zscore("key1")).isEqualTo(20.0);
-                });
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> {
+                assertThat(zset.zscore("key1")).isEqualTo(20.0);
+            });
     }
 
     @Test
@@ -176,16 +178,16 @@ class TtlZsetTest {
 
         // when - 100ms 후 key2 추가
         await().pollDelay(Duration.ofMillis(100))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> zset.zincrby("key2", 20.0));
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> zset.zincrby("key2", 20.0));
 
         // then - 150ms 후 key1은 만료, key2는 유지
         await().pollDelay(Duration.ofMillis(150))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> {
-                    assertThat(zset.zrange(0, -1)).containsExactly("key2");
-                    assertThat(zset.size()).isEqualTo(1);
-                });
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> {
+                assertThat(zset.zrange(0, -1)).containsExactly("key2");
+                assertThat(zset.size()).isEqualTo(1);
+            });
     }
 
     @Test
@@ -225,9 +227,9 @@ class TtlZsetTest {
 
         // key2는 여전히 존재
         await().pollDelay(Duration.ofMillis(200))
-                .atMost(Duration.ofSeconds(1))
-                .untilAsserted(() -> {
-                    assertThat(zset.zscore("key2")).isEqualTo(20.0);
-                });
+            .atMost(Duration.ofSeconds(1))
+            .untilAsserted(() -> {
+                assertThat(zset.zscore("key2")).isEqualTo(20.0);
+            });
     }
 }

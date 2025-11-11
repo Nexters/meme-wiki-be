@@ -2,12 +2,14 @@ package spring.memewikibe.support.response;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import spring.memewikibe.annotation.UnitTest;
 import spring.memewikibe.domain.BaseEntity;
 
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
+@UnitTest
 class PageResponseTest {
 
     private static FixtureEntity createFixtureEntity(Long id) {

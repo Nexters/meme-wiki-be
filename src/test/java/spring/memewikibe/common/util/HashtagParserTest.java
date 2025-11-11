@@ -1,11 +1,13 @@
 package spring.memewikibe.common.util;
 
 import org.junit.jupiter.api.Test;
+import spring.memewikibe.annotation.UnitTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@UnitTest
 class HashtagParserTest {
 
     @Test

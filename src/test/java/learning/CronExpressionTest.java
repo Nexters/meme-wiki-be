@@ -3,9 +3,11 @@ package learning;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.scheduling.support.CronExpression;
+import spring.memewikibe.annotation.UnitTest;
 
 import java.time.LocalDateTime;
 
+@UnitTest
 public class CronExpressionTest {
     @Test
     void CronExpression_next_메서드를_확인한다() {

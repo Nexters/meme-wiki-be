@@ -5,11 +5,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.meme.request.MemeCreateRequest;
 import spring.memewikibe.domain.meme.Category;
 import spring.memewikibe.domain.meme.Meme;
@@ -25,22 +23,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@TestPropertySource(properties = {
-    "cloudflare.r2.access-key-id=dummy",
-    "cloudflare.r2.secret-access-key=dummy",
-    "cloudflare.r2.endpoint=http://localhost",
-    "cloudflare.r2.bucket-name=test-bucket",
-    "PINECONE_API_KEY=dummy",
-    "PINECONE_INDEX_HOST=http://localhost",
-    "PINECONE_NAMESPACE=test"
-})
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@IntegrationTest
 class MemeCreateServiceTest {
 
     @Autowired

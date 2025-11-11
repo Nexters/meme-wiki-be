@@ -3,6 +3,7 @@ package spring.memewikibe.common.util;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
+import spring.memewikibe.annotation.UnitTest;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.BDDAssertions.then;
  * @Disabled 처리된 테스트들은 Zset의 thread-unsafe 특성을 증명하기 위한 것으로,
  * 활성화하면 대부분 실패합니다 (race condition 발생).
  */
+@UnitTest
 class ZsetConcurrencyTest {
 
     @Disabled("Zset의 thread-unsafe 특성을 증명하는 테스트 - 활성화하면 race condition으로 대부분 실패함")

@@ -2,12 +2,10 @@ package spring.memewikibe.infrastructure;
 
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Limit;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
-
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.meme.response.MemeDetailResponse;
 import spring.memewikibe.application.MemeLookUpService;
 import spring.memewikibe.domain.meme.Category;
@@ -20,9 +18,8 @@ import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest
+@IntegrationTest
 @Transactional
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MemeCategoryRepositoryTest {
 
     private final MemeCategoryRepository sut;
@@ -141,7 +138,7 @@ class MemeCategoryRepositoryTest {
         // then
         BDDAssertions.then(memeCategories).hasSize(1);
     }
-    
+
     @Test
     void NORMAL_Flag_밈만_조회한다() {
         // given
@@ -165,7 +162,7 @@ class MemeCategoryRepositoryTest {
         BDDAssertions.then(normalMemeCategories.get(0).getMeme().getTitle()).isEqualTo("정상 밈");
         BDDAssertions.then(normalMemeCategories.get(0).getMeme().getFlag()).isEqualTo(Meme.Flag.NORMAL);
     }
-    
+
     @Test
     void NORMAL_Flag_밈만_페이지네이션으로_조회한다() {
         // given

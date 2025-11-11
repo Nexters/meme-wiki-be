@@ -2,9 +2,8 @@ package spring.memewikibe.application;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.domain.meme.MemeCustomLog;
@@ -19,9 +18,8 @@ import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@SpringBootTest
+@IntegrationTest
 @Transactional
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MemeAggregationLookUpServiceImplTest {
 
     private final MemeAggregationLookUpServiceImpl sut;

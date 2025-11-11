@@ -2,11 +2,9 @@ package spring.memewikibe.application.notification;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
+import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.infrastructure.NotificationTokenRepository;
@@ -18,15 +16,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-@SpringBootTest
+@IntegrationTest
 @Transactional
-@TestPropertySource(properties = {
-    "cloudflare.r2.access-key-id=dummy",
-    "cloudflare.r2.secret-access-key=dummy",
-    "cloudflare.r2.endpoint=http://localhost",
-    "cloudflare.r2.bucket-name=test-bucket"
-})
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class MemeNotificationServiceTest {
 
     private final MemeNotificationService sut;

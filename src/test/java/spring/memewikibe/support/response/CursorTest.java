@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Description;
 import org.springframework.test.util.ReflectionTestUtils;
+import spring.memewikibe.annotation.UnitTest;
 import spring.memewikibe.domain.BaseEntity;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
+@UnitTest
 class CursorTest {
 
     private static FixtureEntity createFixtureEntity(Long id) {

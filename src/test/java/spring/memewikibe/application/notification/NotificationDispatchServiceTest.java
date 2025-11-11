@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import spring.memewikibe.annotation.UnitTest;
 import spring.memewikibe.application.notification.NotificationSender.NotificationSendCommand;
 import spring.memewikibe.application.notification.NotificationSender.SendResult;
 import spring.memewikibe.infrastructure.NotificationTokenRepository;
@@ -13,12 +14,11 @@ import spring.memewikibe.infrastructure.NotificationTokenRepository;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
+@UnitTest
 @ExtendWith(MockitoExtension.class)
 class NotificationDispatchServiceTest {
 

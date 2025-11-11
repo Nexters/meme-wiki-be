@@ -2,11 +2,13 @@ package spring.memewikibe.application;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import spring.memewikibe.annotation.UnitTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
+@UnitTest
 class InMemoryPopularMemeCacheTest {
 
     private InMemoryPopularMemeCache cache;
