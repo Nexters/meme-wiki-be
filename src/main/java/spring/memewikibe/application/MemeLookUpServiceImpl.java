@@ -21,6 +21,7 @@ import spring.memewikibe.support.response.PageResponse;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MemeLookUpServiceImpl implements MemeLookUpService {
@@ -49,7 +50,7 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Transactional(readOnly = true)
     @Override
     public PageResponse<Cursor, MemeDetailResponse> getMemesByCategory(Long id, Long next, int limit) {
-        int validatedLimit = Math.min(Math.max(limit, 1), 30);
+        int validatedLimit = validateLimit(limit);
 
         Category category = getCategoryBy(id);
         List<Meme> foundMemes = fetchMemesByCategory(category, next, validatedLimit);
@@ -60,7 +61,7 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     @Transactional(readOnly = true)
     @Override
     public PageResponse<Cursor, MemeDetailResponse> getMemesByQuery(String query, Long next, int limit) {
-        int validatedLimit = Math.min(Math.max(limit, 1), 30);
+        int validatedLimit = validateLimit(limit);
 
         if (next == null) {
             List<Meme> foundMemes = memeRepository.findByTitleOrHashtagsContainingOrderByIdDesc(query, Limit.of(validatedLimit + 1));
@@ -88,7 +89,7 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
         List<Meme> memes = memeRepository.findByIdIn(ids);
 
         var memeMap = memes.stream()
-            .collect(java.util.stream.Collectors.toMap(Meme::getId, meme -> meme));
+            .collect(Collectors.toMap(Meme::getId, meme -> meme));
 
         return ids.stream()
             .map(memeMap::get)
@@ -106,11 +107,11 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     }
 
     private Category getCategoryBy(Long id) {
-        return Optional.ofNullable(id)
-            .filter(categoryId -> categoryId > 0L)
-            .map(validId -> categoryRepository.findById(validId)
-                .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.CATEGORY_NOT_FOUND)))
-            .orElse(null);
+        if (id == null || id <= 0L) {
+            return null;
+        }
+        return categoryRepository.findById(id)
+            .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.CATEGORY_NOT_FOUND));
     }
 
     private List<Meme> fetchMemesByCategory(Category category, Long next, int limit) {
@@ -119,5 +120,9 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
             .stream()
             .map(MemeCategory::getMeme)
             .toList();
+    }
+
+    private int validateLimit(int limit) {
+        return Math.min(Math.max(limit, 1), 30);
     }
 }
