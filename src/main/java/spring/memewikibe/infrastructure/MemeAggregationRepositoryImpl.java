@@ -57,6 +57,14 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
         NumberTemplate<Long> shareCountExpression = Expressions.numberTemplate(Long.class, "COALESCE(({0}), 0)", shareCount);
         NumberTemplate<Long> viewCountExpression = Expressions.numberTemplate(Long.class, "COALESCE(({0}), 0)", viewCount);
 
+        // Calculate total score: (custom * 3) + (share * 2) + (view * 1)
+        NumberTemplate<Long> totalScoreExpression = Expressions.numberTemplate(Long.class,
+            "({0} * {1}) + ({2} * {3}) + ({4} * {5})",
+            customCountExpression, CUSTOM_WEIGHT,
+            shareCountExpression, SHARE_WEIGHT,
+            viewCountExpression, VIEW_WEIGHT
+        );
+
         return queryFactory
             .select(Projections.constructor(MemeAggregationResult.class,
                 meme.id,
@@ -65,16 +73,11 @@ public class MemeAggregationRepositoryImpl implements MemeAggregationRepository 
                 viewCountExpression,
                 shareCountExpression,
                 customCountExpression,
-                customCountExpression.multiply(CUSTOM_WEIGHT)
-                    .add(shareCountExpression.multiply(SHARE_WEIGHT))
-                    .add(viewCountExpression.multiply(VIEW_WEIGHT))
+                totalScoreExpression
             ))
             .from(meme)
             .where(meme.flag.eq(Meme.Flag.NORMAL))
-            .orderBy(customCountExpression.multiply(CUSTOM_WEIGHT)
-                    .add(shareCountExpression.multiply(SHARE_WEIGHT))
-                    .add(viewCountExpression.multiply(VIEW_WEIGHT)).desc(),
-                meme.id.desc())
+            .orderBy(totalScoreExpression.desc(), meme.id.desc())
             .limit(limit)
             .fetch();
     }
