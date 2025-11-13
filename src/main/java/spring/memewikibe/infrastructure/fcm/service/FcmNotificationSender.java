@@ -62,11 +62,15 @@ public class FcmNotificationSender implements NotificationSender {
             SendResponse sendResponse = responses.get(i);
             if (!sendResponse.isSuccessful()) {
                 FirebaseMessagingException exception = sendResponse.getException();
-                log.info("Token send failed: token={}, error={}, message={}, ", tokens.get(i), exception.getMessagingErrorCode(),exception.getMessage());
-                if (exception.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT ||
-                    exception.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
-                    exception.getMessagingErrorCode() == MessagingErrorCode.SENDER_ID_MISMATCH) {
-                    invalidTokens.add(tokens.get(i));
+                if (exception != null) {
+                    log.info("Token send failed: token={}, error={}, message={}", tokens.get(i), exception.getMessagingErrorCode(), exception.getMessage());
+                    if (exception.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT ||
+                        exception.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
+                        exception.getMessagingErrorCode() == MessagingErrorCode.SENDER_ID_MISMATCH) {
+                        invalidTokens.add(tokens.get(i));
+                    }
+                } else {
+                    log.warn("Token send failed without exception details: token={}", tokens.get(i));
                 }
             }
         }
