@@ -1,11 +1,11 @@
 package spring.memewikibe.support.error;
 
-public class ErrorMessage {
+import lombok.Getter;
 
+@Getter
+public final class ErrorMessage {
     private final String code;
-
     private final String message;
-
     private final Object data;
 
     public ErrorMessage(ErrorType errorType) {
@@ -18,17 +18,5 @@ public class ErrorMessage {
         this.code = errorType.getCode().name();
         this.message = errorType.getMessage();
         this.data = data;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public Object getData() {
-        return data;
     }
 }
