@@ -18,8 +18,7 @@ public enum ErrorType {
     EXTERNAL_SERVICE_TOO_MANY_REQUESTS(
         HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E429, "외부 서비스 요청 한도가 초과되었습니다.", LogLevel.WARN),
     EXTERNAL_SERVICE_BAD_REQUEST(
-        HttpStatus.BAD_REQUEST, ErrorCode.E400, "외부 서비스 요청이 올바르지 않습니다.", LogLevel.WARN),
-    ;
+        HttpStatus.BAD_REQUEST, ErrorCode.E400, "외부 서비스 요청이 올바르지 않습니다.", LogLevel.WARN);
 
     private final HttpStatus status;
 
