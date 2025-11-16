@@ -55,18 +55,22 @@ public class MemeCreateService {
             .ifPresent(memeCategoryRepository::saveAll);
 
         log.info("밈 생성 완료: {}", savedMeme.getId());
+        registerPostCommitIndexing(savedMeme);
+        return savedMeme.getId();
+    }
+
+    private void registerPostCommitIndexing(Meme meme) {
         org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
             new org.springframework.transaction.support.TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
                     try {
-                        vectorIndexService.index(savedMeme);
+                        vectorIndexService.index(meme);
                     } catch (Exception e) {
-                        log.warn("[afterCommit] Failed to index meme {} to Pinecone: {}", savedMeme.getId(), e.toString());
+                        log.warn("[afterCommit] Failed to index meme {} to Pinecone: {}", meme.getId(), e.toString());
                     }
                 }
             }
         );
-        return savedMeme.getId();
     }
 } 
