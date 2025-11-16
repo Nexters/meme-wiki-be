@@ -17,9 +17,9 @@ import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
 
-import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
@@ -204,7 +204,7 @@ class MemeCreateServiceTest {
     void createMeme_succeeds_whenCategoryIdsIsEmpty() {
         // given
         MemeCreateRequest req = new MemeCreateRequest(
-            "밈제목", "출처", "맥락", "2025", "[#태그]", Collections.emptyList()
+            "밈제목", "출처", "맥락", "2025", "[#태그]", emptyList()
         );
 
         MultipartFile file = Mockito.mock(MultipartFile.class);
