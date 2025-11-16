@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import spring.memewikibe.annotation.UnitTest;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDAssertions.assertThatThrownBy;
 
 @UnitTest
 class ImageUtilsTest {
@@ -12,7 +12,7 @@ class ImageUtilsTest {
     @Test
     void downloadBytes_빈_URL로_예외_발생() {
         // When & Then
-        thenThrownBy(() -> ImageUtils.downloadBytes(""))
+        assertThatThrownBy(() -> ImageUtils.downloadBytes(""))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("URL cannot be null or empty");
     }
@@ -20,7 +20,7 @@ class ImageUtilsTest {
     @Test
     void downloadBytes_null_URL로_예외_발생() {
         // When & Then
-        thenThrownBy(() -> ImageUtils.downloadBytes(null))
+        assertThatThrownBy(() -> ImageUtils.downloadBytes(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("URL cannot be null or empty");
     }
@@ -28,7 +28,7 @@ class ImageUtilsTest {
     @Test
     void downloadBytes_잘못된_URL_형식으로_예외_발생() {
         // When & Then
-        thenThrownBy(() -> ImageUtils.downloadBytes("invalid-url"))
+        assertThatThrownBy(() -> ImageUtils.downloadBytes("invalid-url"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("URI");
     }

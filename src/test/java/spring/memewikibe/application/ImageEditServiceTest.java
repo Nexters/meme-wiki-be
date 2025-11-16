@@ -22,7 +22,7 @@ import spring.memewikibe.support.error.MemeWikiApplicationException;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.BDDAssertions.thenThrownBy;
+import static org.assertj.core.api.BDDAssertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -118,7 +118,7 @@ class ImageEditServiceTest {
         Long nonExistentId = 99999L;
 
         // when & then
-        thenThrownBy(() -> imageEditService.editMemeImg("prompt", nonExistentId, null))
+        assertThatThrownBy(() -> imageEditService.editMemeImg("prompt", nonExistentId, null))
             .isInstanceOf(MemeWikiApplicationException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.MEME_NOT_FOUND);
     }
@@ -134,7 +134,7 @@ class ImageEditServiceTest {
             .build());
 
         // when & then
-        thenThrownBy(() -> imageEditService.editMemeImg("prompt", abnormalMeme.getId(), null))
+        assertThatThrownBy(() -> imageEditService.editMemeImg("prompt", abnormalMeme.getId(), null))
             .isInstanceOf(MemeWikiApplicationException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.MEME_NOT_FOUND);
     }
@@ -150,7 +150,7 @@ class ImageEditServiceTest {
             .build());
 
         // when & then
-        thenThrownBy(() -> imageEditService.editMemeImg(null, meme.getId(), null))
+        assertThatThrownBy(() -> imageEditService.editMemeImg(null, meme.getId(), null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Prompt cannot be null or empty");
     }
@@ -166,7 +166,7 @@ class ImageEditServiceTest {
             .build());
 
         // when & then
-        thenThrownBy(() -> imageEditService.editMemeImg("   ", meme.getId(), null))
+        assertThatThrownBy(() -> imageEditService.editMemeImg("   ", meme.getId(), null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Prompt cannot be null or empty");
     }
