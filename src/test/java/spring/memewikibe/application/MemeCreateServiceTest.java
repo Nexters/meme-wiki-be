@@ -17,9 +17,9 @@ import spring.memewikibe.infrastructure.MemeCategoryRepository;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.infrastructure.ai.MemeVectorIndexService;
 
-import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
@@ -66,7 +66,7 @@ class MemeCreateServiceTest {
             "[#무한도전,#무야호]", List.of(cat1.getId(), cat2.getId())
         );
 
-        MultipartFile fakeFile = Mockito.mock(MultipartFile.class);
+        MultipartFile fakeFile = mock(MultipartFile.class);
         when(fakeFile.isEmpty()).thenReturn(false);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("https://cdn/img.png");
 
@@ -95,9 +95,9 @@ class MemeCreateServiceTest {
         MemeCreateRequest req = new MemeCreateRequest(
             "테스트", "출처", "맥락", "2025", "[#태그]", List.of()
         );
-        MultipartFile file = Mockito.mock(MultipartFile.class);
+        MultipartFile file = mock(MultipartFile.class);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("url");
-        Mockito.doThrow(new RuntimeException("pinecone down")).when(vectorIndexService).index(any(Meme.class));
+        doThrow(new RuntimeException("pinecone down")).when(vectorIndexService).index(any(Meme.class));
 
         // when
         long id = memeCreateService.createMeme(req, file);
@@ -116,7 +116,7 @@ class MemeCreateServiceTest {
             "밈제목", "출처", "맥락", "2025", "[#태그]", List.of(category.getId())
         );
 
-        MultipartFile emptyFile = Mockito.mock(MultipartFile.class);
+        MultipartFile emptyFile = mock(MultipartFile.class);
         when(emptyFile.isEmpty()).thenReturn(true);
         when(imageUploadService.uploadImage(any(MultipartFile.class)))
             .thenThrow(new IllegalArgumentException("파일이 비어있습니다."));
@@ -139,7 +139,7 @@ class MemeCreateServiceTest {
             "밈제목", "출처", "맥락", "2025", "[#태그]", List.of(category.getId())
         );
 
-        MultipartFile file = Mockito.mock(MultipartFile.class);
+        MultipartFile file = mock(MultipartFile.class);
         when(imageUploadService.uploadImage(any(MultipartFile.class)))
             .thenThrow(new RuntimeException("R2 업로드 실패"));
 
@@ -160,7 +160,7 @@ class MemeCreateServiceTest {
             "밈제목", "출처", "맥락", "2025", "[#태그]", List.of(999L, 1000L)
         );
 
-        MultipartFile file = Mockito.mock(MultipartFile.class);
+        MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("https://cdn/img.png");
 
@@ -184,7 +184,7 @@ class MemeCreateServiceTest {
             "밈제목", "출처", "맥락", "2025", "[#태그]", null
         );
 
-        MultipartFile file = Mockito.mock(MultipartFile.class);
+        MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("https://cdn/img.png");
 
@@ -204,10 +204,10 @@ class MemeCreateServiceTest {
     void createMeme_succeeds_whenCategoryIdsIsEmpty() {
         // given
         MemeCreateRequest req = new MemeCreateRequest(
-            "밈제목", "출처", "맥락", "2025", "[#태그]", Collections.emptyList()
+            "밈제목", "출처", "맥락", "2025", "[#태그]", emptyList()
         );
 
-        MultipartFile file = Mockito.mock(MultipartFile.class);
+        MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("https://cdn/img.png");
 
@@ -231,7 +231,7 @@ class MemeCreateServiceTest {
             "밈제목", "출처", "맥락", "2025", "[#태그]", List.of(existingCategory.getId(), 999L)
         );
 
-        MultipartFile file = Mockito.mock(MultipartFile.class);
+        MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(imageUploadService.uploadImage(any(MultipartFile.class))).thenReturn("https://cdn/img.png");
 

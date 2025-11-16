@@ -7,8 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.infrastructure.MemeRepository;
 
-import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Executes MySQL Full-Text Search outside of any active transaction so that
@@ -26,7 +27,7 @@ public class SafeFullTextSearchExecutor {
         try {
             return memeRepository.findCandidatesByFullTextSearch(query, limit);
         } catch (Throwable ignored) {
-            return Collections.emptyList();
+            return emptyList();
         }
     }
 }

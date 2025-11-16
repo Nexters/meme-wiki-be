@@ -10,9 +10,9 @@ import spring.memewikibe.annotation.UnitTest;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
 
-import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.Mockito.*;
 
@@ -104,7 +104,7 @@ class PopularMemeServiceTest {
     @Test
     void getTopPopularMemes는_캐시가_비어있으면_DB에서_조회한다() {
         // given
-        when(mockInMemoryPopularMemeCache.getTopPopularMemeIds()).thenReturn(Collections.emptyList());
+        when(mockInMemoryPopularMemeCache.getTopPopularMemeIds()).thenReturn(emptyList());
         when(mockInMemoryPopularMemeCache.getTargetSize()).thenReturn(6);
         when(mockMemeAggregationLookUpService.getMostPopularMemes()).thenReturn(testMemes);
 

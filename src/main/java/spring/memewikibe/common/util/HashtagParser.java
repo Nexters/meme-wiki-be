@@ -5,23 +5,24 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
 
 public class HashtagParser {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static List<String> parseHashtags(String hashtagsJson) {
         if (hashtagsJson == null || hashtagsJson.trim().isEmpty()) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         try {
             return objectMapper.readValue(hashtagsJson, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
-            return Collections.emptyList();
+            return emptyList();
         }
     }
 

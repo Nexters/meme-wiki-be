@@ -12,6 +12,7 @@ import spring.memewikibe.support.error.MemeWikiApplicationException;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -57,7 +58,7 @@ class MemeNotificationServiceTest {
         sut.sendMemeNotification(memeId, "title", "body");
 
         // then: 발송 어댑터는 호출되지 않음
-        verify(notificationSender, never()).send(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        verify(notificationSender, never()).send(any(), any());
     }
 
     @Test
