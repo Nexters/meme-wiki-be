@@ -21,8 +21,8 @@ import spring.memewikibe.support.error.MemeWikiApplicationException;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -65,9 +65,9 @@ class ImageEditServiceTest {
         GeneratedImagesResponse response = imageEditService.editMemeImg("Add funny text", meme.getId(), null);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.images()).hasSize(1);
-        assertThat(response.text()).hasSize(1);
+        then(response).isNotNull();
+        then(response.images()).hasSize(1);
+        then(response.text()).hasSize(1);
         verify(imageGenerator).generateImageWithExistingImage("Add funny text", meme.getImgUrl());
     }
 
@@ -104,9 +104,9 @@ class ImageEditServiceTest {
 
             GeneratedImagesResponse response = imageEditService.editMemeImg("Combine images", meme.getId(), userImage);
 
-            assertThat(response).isNotNull();
-            assertThat(response.images()).hasSize(1);
-            assertThat(response.text()).hasSize(1);
+            then(response).isNotNull();
+            then(response.images()).hasSize(1);
+            then(response.text()).hasSize(1);
             verify(imageGenerator).generateImageCombine(anyString(), anyList());
         }
     }
@@ -118,7 +118,7 @@ class ImageEditServiceTest {
         Long nonExistentId = 99999L;
 
         // when & then
-        assertThatThrownBy(() -> imageEditService.editMemeImg("prompt", nonExistentId, null))
+        thenThrownBy(() -> imageEditService.editMemeImg("prompt", nonExistentId, null))
             .isInstanceOf(MemeWikiApplicationException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.MEME_NOT_FOUND);
     }
@@ -134,7 +134,7 @@ class ImageEditServiceTest {
             .build());
 
         // when & then
-        assertThatThrownBy(() -> imageEditService.editMemeImg("prompt", abnormalMeme.getId(), null))
+        thenThrownBy(() -> imageEditService.editMemeImg("prompt", abnormalMeme.getId(), null))
             .isInstanceOf(MemeWikiApplicationException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.MEME_NOT_FOUND);
     }
@@ -150,7 +150,7 @@ class ImageEditServiceTest {
             .build());
 
         // when & then
-        assertThatThrownBy(() -> imageEditService.editMemeImg(null, meme.getId(), null))
+        thenThrownBy(() -> imageEditService.editMemeImg(null, meme.getId(), null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Prompt cannot be null or empty");
     }
@@ -166,7 +166,7 @@ class ImageEditServiceTest {
             .build());
 
         // when & then
-        assertThatThrownBy(() -> imageEditService.editMemeImg("   ", meme.getId(), null))
+        thenThrownBy(() -> imageEditService.editMemeImg("   ", meme.getId(), null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Prompt cannot be null or empty");
     }
@@ -199,7 +199,7 @@ class ImageEditServiceTest {
         GeneratedImagesResponse response = imageEditService.editMemeImg("prompt", meme.getId(), emptyFile);
 
         // then
-        assertThat(response).isNotNull();
+        then(response).isNotNull();
         verify(imageGenerator).generateImageWithExistingImage(anyString(), anyString());
     }
 
@@ -224,9 +224,9 @@ class ImageEditServiceTest {
         GeneratedImagesResponse response = imageEditService.editMemeImg("prompt", meme.getId(), null);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.images()).isEmpty();
-        assertThat(response.text()).hasSize(1);
+        then(response).isNotNull();
+        then(response.images()).isEmpty();
+        then(response.text()).hasSize(1);
     }
 
     @Test
@@ -253,9 +253,9 @@ class ImageEditServiceTest {
         GeneratedImagesResponse response = imageEditService.editMemeImg("prompt", meme.getId(), null);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.images()).isEmpty();
-        assertThat(response.text()).isEmpty();
+        then(response).isNotNull();
+        then(response.images()).isEmpty();
+        then(response.text()).isEmpty();
     }
 
     @Test
@@ -297,9 +297,9 @@ class ImageEditServiceTest {
         GeneratedImagesResponse response = imageEditService.editMemeImg("prompt", meme.getId(), null);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.text()).hasSize(1);
-        assertThat(response.text()).containsExactly("Valid text");
+        then(response).isNotNull();
+        then(response.text()).hasSize(1);
+        then(response.text()).containsExactly("Valid text");
     }
 
     @Test
@@ -327,12 +327,12 @@ class ImageEditServiceTest {
         GeneratedImagesResponse response = imageEditService.editMemeImg("prompt", meme.getId(), null);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.images()).hasSize(3);
-        assertThat(response.text()).hasSize(3);
-        assertThat(response.images()).extracting(Base64Image::mimeType)
+        then(response).isNotNull();
+        then(response.images()).hasSize(3);
+        then(response.text()).hasSize(3);
+        then(response.images()).extracting(Base64Image::mimeType)
             .containsExactly("image/png", "image/jpeg", "image/webp");
-        assertThat(response.text()).containsExactly("Text 1", "Text 2", "Text 3");
+        then(response.text()).containsExactly("Text 1", "Text 2", "Text 3");
     }
 
     private GenerateContentResponse createMockResponse(List<Base64Image> images, List<String> texts) {

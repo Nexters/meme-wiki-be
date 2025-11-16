@@ -7,7 +7,7 @@ import spring.memewikibe.annotation.UnitTest;
 import java.time.Duration;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
 @UnitTest
@@ -25,7 +25,7 @@ class TtlZsetTest {
         zset.zincrby("key1", 3.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(18.0);
+        then(zset.zscore("key1")).isEqualTo(18.0);
     }
 
     @Test
@@ -38,7 +38,7 @@ class TtlZsetTest {
         zset.zincrby("key1", 5.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(5.0);
+        then(zset.zscore("key1")).isEqualTo(5.0);
     }
 
     @Test
@@ -51,7 +51,7 @@ class TtlZsetTest {
         zset.zadd("key1", 100.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(100.0);
+        then(zset.zscore("key1")).isEqualTo(100.0);
     }
 
     @Test
@@ -67,7 +67,7 @@ class TtlZsetTest {
         List<String> result = zset.zrange(0, -1);
 
         // then
-        assertThat(result).containsExactly("key2", "key3", "key1");
+        then(result).containsExactly("key2", "key3", "key1");
     }
 
     @Test
@@ -82,8 +82,8 @@ class TtlZsetTest {
         zset.zrem("key1");
 
         // then
-        assertThat(zset.zscore("key1")).isNull();
-        assertThat(zset.size()).isEqualTo(1);
+        then(zset.zscore("key1")).isNull();
+        then(zset.size()).isEqualTo(1);
     }
 
     @Test
@@ -96,7 +96,7 @@ class TtlZsetTest {
         zset.zincrby("key3", 30.0);
 
         // when & then
-        assertThat(zset.size()).isEqualTo(3);
+        then(zset.size()).isEqualTo(3);
     }
 
     @Test
@@ -110,8 +110,8 @@ class TtlZsetTest {
         // when
         await().atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(zset.zrange(0, -1)).isEmpty();
-                assertThat(zset.size()).isEqualTo(0);
+                then(zset.zrange(0, -1)).isEmpty();
+                then(zset.size()).isEqualTo(0);
             });
     }
 
@@ -125,7 +125,7 @@ class TtlZsetTest {
         // when
         await().atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(zset.zscore("key1")).isNull();
+                then(zset.zscore("key1")).isNull();
             });
     }
 
@@ -145,7 +145,7 @@ class TtlZsetTest {
         await().pollDelay(Duration.ofMillis(100))
             .atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(zset.zscore("key1")).isEqualTo(15.0);
+                then(zset.zscore("key1")).isEqualTo(15.0);
             });
     }
 
@@ -165,7 +165,7 @@ class TtlZsetTest {
         await().pollDelay(Duration.ofMillis(100))
             .atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(zset.zscore("key1")).isEqualTo(20.0);
+                then(zset.zscore("key1")).isEqualTo(20.0);
             });
     }
 
@@ -185,8 +185,8 @@ class TtlZsetTest {
         await().pollDelay(Duration.ofMillis(150))
             .atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(zset.zrange(0, -1)).containsExactly("key2");
-                assertThat(zset.size()).isEqualTo(1);
+                then(zset.zrange(0, -1)).containsExactly("key2");
+                then(zset.size()).isEqualTo(1);
             });
     }
 
@@ -204,10 +204,10 @@ class TtlZsetTest {
         zset.zincrby(2L, 10.0);
 
         // then
-        assertThat(zset.zscore(1L)).isEqualTo(13.0);
-        assertThat(zset.zscore(2L)).isEqualTo(15.0);
-        assertThat(zset.zscore(3L)).isEqualTo(20.0);
-        assertThat(zset.zrange(0, -1)).containsExactly(1L, 2L, 3L);
+        then(zset.zscore(1L)).isEqualTo(13.0);
+        then(zset.zscore(2L)).isEqualTo(15.0);
+        then(zset.zscore(3L)).isEqualTo(20.0);
+        then(zset.zrange(0, -1)).containsExactly(1L, 2L, 3L);
     }
 
     @Test
@@ -222,14 +222,14 @@ class TtlZsetTest {
         zset.zrem("key1");
 
         // then
-        assertThat(zset.size()).isEqualTo(1);
-        assertThat(zset.zscore("key1")).isNull();
+        then(zset.size()).isEqualTo(1);
+        then(zset.zscore("key1")).isNull();
 
         // key2는 여전히 존재
         await().pollDelay(Duration.ofMillis(200))
             .atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(zset.zscore("key2")).isEqualTo(20.0);
+                then(zset.zscore("key2")).isEqualTo(20.0);
             });
     }
 }

@@ -7,7 +7,7 @@ import spring.memewikibe.annotation.UnitTest;
 import java.time.Duration;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.awaitility.Awaitility.await;
 
 @UnitTest
@@ -29,7 +29,7 @@ class PopularMemeRankingTest {
 
         // then
         List<Long> topMemes = cache.getTopMemes(10);
-        assertThat(topMemes).containsExactly(1L);
+        then(topMemes).containsExactly(1L);
     }
 
     @Test
@@ -49,12 +49,12 @@ class PopularMemeRankingTest {
 
         // then
         List<Long> topMemes = cache.getTopMemes(10);
-        assertThat(topMemes).containsExactly(2L, 1L);  // 같은 점수면 역순
+        then(topMemes).containsExactly(2L, 1L);  // 같은 점수면 역순
 
         // 한 번 더 shared하면 2L이 더 높아짐
         cache.shared(2L);   // 3점 추가
         topMemes = cache.getTopMemes(10);
-        assertThat(topMemes).containsExactly(2L, 1L);  // 2L=6점 (1위), 1L=3점 (2위)
+        then(topMemes).containsExactly(2L, 1L);  // 2L=6점 (1위), 1L=3점 (2위)
     }
 
     @Test
@@ -73,7 +73,7 @@ class PopularMemeRankingTest {
 
         // then
         List<Long> topMemes = cache.getTopMemes(10);
-        assertThat(topMemes).containsExactly(3L, 2L, 1L);
+        then(topMemes).containsExactly(3L, 2L, 1L);
     }
 
     @Test
@@ -105,11 +105,11 @@ class PopularMemeRankingTest {
 
         // then - 높은 점수부터 (내림차순)
         List<Long> top3 = cache.getTopMemes(3);
-        assertThat(top3).hasSize(3);
-        assertThat(top3.get(0)).isEqualTo(4L);  // 7점 (1위)
-        assertThat(top3.get(1)).isEqualTo(5L);  // 6점 (2위)
+        then(top3).hasSize(3);
+        then(top3.get(0)).isEqualTo(4L);  // 7점 (1위)
+        then(top3.get(1)).isEqualTo(5L);  // 6점 (2위)
         // 3위는 1L, 2L, 3L 중 하나 (모두 3점)
-        assertThat(top3.get(2)).isIn(1L, 2L, 3L);
+        then(top3.get(2)).isIn(1L, 2L, 3L);
     }
 
     @Test
@@ -129,7 +129,7 @@ class PopularMemeRankingTest {
         List<Long> top5 = cache.getTopMemes(5);
 
         // then
-        assertThat(top5).hasSize(5);
+        then(top5).hasSize(5);
     }
 
     @Test
@@ -147,7 +147,7 @@ class PopularMemeRankingTest {
         cache.viewed(3L);
 
         // then
-        assertThat(cache.size()).isEqualTo(3);
+        then(cache.size()).isEqualTo(3);
     }
 
     @Test
@@ -165,8 +165,8 @@ class PopularMemeRankingTest {
         // when & then
         await().atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(cache.getTopMemes(10)).isEmpty();
-                assertThat(cache.size()).isEqualTo(0);
+                then(cache.getTopMemes(10)).isEmpty();
+                then(cache.size()).isEqualTo(0);
             });
     }
 
@@ -190,7 +190,7 @@ class PopularMemeRankingTest {
         await().pollDelay(Duration.ofMillis(100))
             .atMost(Duration.ofSeconds(1))
             .untilAsserted(() -> {
-                assertThat(cache.getTopMemes(10)).containsExactly(1L);
+                then(cache.getTopMemes(10)).containsExactly(1L);
             });
     }
 
@@ -213,7 +213,7 @@ class PopularMemeRankingTest {
 
         // then
         List<Long> topMemes = cache.getTopMemes(10);
-        assertThat(topMemes).containsExactly(1L, 2L);  // 1L=6점, 2L=2점 (내림차순)
+        then(topMemes).containsExactly(1L, 2L);  // 1L=6점, 2L=2점 (내림차순)
     }
 
     @Test
@@ -229,7 +229,7 @@ class PopularMemeRankingTest {
         List<Long> topMemes = cache.getTopMemes(10);
 
         // then
-        assertThat(topMemes).isEmpty();
+        then(topMemes).isEmpty();
     }
 
     @Test
@@ -250,8 +250,8 @@ class PopularMemeRankingTest {
 
         // then
         List<Long> topMemes = cache.getTopMemes(10);
-        assertThat(topMemes.get(0)).isEqualTo(3L);   // 100점
-        assertThat(topMemes.get(1)).isEqualTo(1L);   // 50점
-        assertThat(topMemes.get(2)).isEqualTo(2L);   // 10점
+        then(topMemes.get(0)).isEqualTo(3L);   // 100점
+        then(topMemes.get(1)).isEqualTo(1L);   // 50점
+        then(topMemes.get(2)).isEqualTo(2L);   // 10점
     }
 }

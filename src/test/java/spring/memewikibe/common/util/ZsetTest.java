@@ -6,7 +6,7 @@ import spring.memewikibe.annotation.UnitTest;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 
 @UnitTest
 class ZsetTest {
@@ -23,9 +23,9 @@ class ZsetTest {
         zset.zadd("key3", 15.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(10.0);
-        assertThat(zset.zscore("key2")).isEqualTo(20.0);
-        assertThat(zset.zscore("key3")).isEqualTo(15.0);
+        then(zset.zscore("key1")).isEqualTo(10.0);
+        then(zset.zscore("key2")).isEqualTo(20.0);
+        then(zset.zscore("key3")).isEqualTo(15.0);
     }
 
     @Test
@@ -39,7 +39,7 @@ class ZsetTest {
         zset.zadd("key1", 30.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(30.0);
+        then(zset.zscore("key1")).isEqualTo(30.0);
     }
 
     @Test
@@ -57,7 +57,7 @@ class ZsetTest {
         List<String> result = zset.zrange(0, 4);
 
         // then
-        assertThat(result).containsExactly("key5", "key2", "key3", "key1", "key4");
+        then(result).containsExactly("key5", "key2", "key3", "key1", "key4");
     }
 
     @Test
@@ -75,7 +75,7 @@ class ZsetTest {
         List<String> result = zset.zrange(1, 3);
 
         // then
-        assertThat(result).containsExactly("key2", "key3", "key4");
+        then(result).containsExactly("key2", "key3", "key4");
     }
 
     @Test
@@ -91,16 +91,16 @@ class ZsetTest {
 
         // when & then
         // 전체 조회
-        assertThat(zset.zrange(0, -1)).containsExactly("key1", "key2", "key3", "key4", "key5");
+        then(zset.zrange(0, -1)).containsExactly("key1", "key2", "key3", "key4", "key5");
 
         // 마지막 3개
-        assertThat(zset.zrange(-3, -1)).containsExactly("key3", "key4", "key5");
+        then(zset.zrange(-3, -1)).containsExactly("key3", "key4", "key5");
 
         // 마지막 2개
-        assertThat(zset.zrange(-2, -1)).containsExactly("key4", "key5");
+        then(zset.zrange(-2, -1)).containsExactly("key4", "key5");
 
         // 처음부터 마지막 직전까지
-        assertThat(zset.zrange(0, -2)).containsExactly("key1", "key2", "key3", "key4");
+        then(zset.zrange(0, -2)).containsExactly("key1", "key2", "key3", "key4");
     }
 
     @Test
@@ -115,7 +115,7 @@ class ZsetTest {
         List<String> result = zset.zrange(5, 3);
 
         // then
-        assertThat(result).isEmpty();
+        then(result).isEmpty();
     }
 
     @Test
@@ -130,7 +130,7 @@ class ZsetTest {
         List<String> result = zset.zrange(0, 100);
 
         // then
-        assertThat(result).containsExactly("key1", "key2");
+        then(result).containsExactly("key1", "key2");
     }
 
     @Test
@@ -146,8 +146,8 @@ class ZsetTest {
         zset.zrem("key2");
 
         // then
-        assertThat(zset.zscore("key2")).isNull();
-        assertThat(zset.zrange(0, -1)).containsExactly("key1", "key3");
+        then(zset.zscore("key2")).isNull();
+        then(zset.zrange(0, -1)).containsExactly("key1", "key3");
     }
 
     @Test
@@ -159,7 +159,7 @@ class ZsetTest {
 
         // when & then
         zset.zrem("non_existent");
-        assertThat(zset.zrange(0, -1)).containsExactly("key1");
+        then(zset.zrange(0, -1)).containsExactly("key1");
     }
 
     @Test
@@ -175,7 +175,7 @@ class ZsetTest {
         List<Long> result = zset.zrange(0, -1);
 
         // then
-        assertThat(result).containsExactly(1L, 2L, 3L);
+        then(result).containsExactly(1L, 2L, 3L);
     }
 
     @Test
@@ -191,7 +191,7 @@ class ZsetTest {
         List<String> result = zset.zrange(0, -1);
 
         // then
-        assertThat(result).containsExactly("alice", "bob", "charlie");
+        then(result).containsExactly("alice", "bob", "charlie");
     }
 
     @Test
@@ -207,7 +207,7 @@ class ZsetTest {
         List<String> result = zset.zrange(0, -1);
 
         // then
-        assertThat(result).containsExactly("key1", "key2", "key3");
+        then(result).containsExactly("key1", "key2", "key3");
     }
 
     @Test
@@ -220,7 +220,7 @@ class ZsetTest {
         List<String> result = zset.zrange(0, -1);
 
         // then
-        assertThat(result).isEmpty();
+        then(result).isEmpty();
     }
 
     @Test
@@ -237,7 +237,7 @@ class ZsetTest {
 
         // then
         List<String> result = zset.zrange(0, -1);
-        assertThat(result).containsExactly("key2", "key3", "key1");
+        then(result).containsExactly("key2", "key3", "key1");
     }
 
     @Test
@@ -252,7 +252,7 @@ class ZsetTest {
         zset.zincrby("key1", 3.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(18.0);
+        then(zset.zscore("key1")).isEqualTo(18.0);
     }
 
     @Test
@@ -265,7 +265,7 @@ class ZsetTest {
         zset.zincrby("key1", 5.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(5.0);
+        then(zset.zscore("key1")).isEqualTo(5.0);
     }
 
     @Test
@@ -279,7 +279,7 @@ class ZsetTest {
         zset.zincrby("key1", -3.0);
 
         // then
-        assertThat(zset.zscore("key1")).isEqualTo(7.0);
+        then(zset.zscore("key1")).isEqualTo(7.0);
     }
 
     @Test
@@ -297,7 +297,7 @@ class ZsetTest {
         List<String> result = zset.zrevrange(0, 4);
 
         // then - 높은 점수부터
-        assertThat(result).containsExactly("key4", "key1", "key3", "key2", "key5");
+        then(result).containsExactly("key4", "key1", "key3", "key2", "key5");
     }
 
     @Test
@@ -315,7 +315,7 @@ class ZsetTest {
         List<String> result = zset.zrevrange(0, 2);
 
         // then
-        assertThat(result).containsExactly("key5", "key4", "key3");
+        then(result).containsExactly("key5", "key4", "key3");
     }
 
     @Test
@@ -329,9 +329,9 @@ class ZsetTest {
 
         // when & then
         // 전체 역순 조회
-        assertThat(zset.zrevrange(0, -1)).containsExactly("key3", "key2", "key1");
+        then(zset.zrevrange(0, -1)).containsExactly("key3", "key2", "key1");
 
         // 상위 2개
-        assertThat(zset.zrevrange(0, 1)).containsExactly("key3", "key2");
+        then(zset.zrevrange(0, 1)).containsExactly("key3", "key2");
     }
 }

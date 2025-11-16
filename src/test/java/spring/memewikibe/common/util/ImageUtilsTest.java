@@ -3,8 +3,8 @@ package spring.memewikibe.common.util;
 import org.junit.jupiter.api.Test;
 import spring.memewikibe.annotation.UnitTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
 @UnitTest
 class ImageUtilsTest {
@@ -12,7 +12,7 @@ class ImageUtilsTest {
     @Test
     void downloadBytes_빈_URL로_예외_발생() {
         // When & Then
-        assertThatThrownBy(() -> ImageUtils.downloadBytes(""))
+        thenThrownBy(() -> ImageUtils.downloadBytes(""))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("URL cannot be null or empty");
     }
@@ -20,7 +20,7 @@ class ImageUtilsTest {
     @Test
     void downloadBytes_null_URL로_예외_발생() {
         // When & Then
-        assertThatThrownBy(() -> ImageUtils.downloadBytes(null))
+        thenThrownBy(() -> ImageUtils.downloadBytes(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("URL cannot be null or empty");
     }
@@ -28,7 +28,7 @@ class ImageUtilsTest {
     @Test
     void downloadBytes_잘못된_URL_형식으로_예외_발생() {
         // When & Then
-        assertThatThrownBy(() -> ImageUtils.downloadBytes("invalid-url"))
+        thenThrownBy(() -> ImageUtils.downloadBytes("invalid-url"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("URI");
     }
@@ -44,7 +44,7 @@ class ImageUtilsTest {
         String result = ImageUtils.detectMimeType("file:///invalid/path.png", pngData);
 
         // Then
-        assertThat(result).isEqualTo("image/png");
+        then(result).isEqualTo("image/png");
     }
 
     @Test
@@ -56,7 +56,7 @@ class ImageUtilsTest {
         String result = ImageUtils.detectMimeType("file:///invalid/path.jpg", jpegData);
 
         // Then
-        assertThat(result).isEqualTo("image/jpeg");
+        then(result).isEqualTo("image/jpeg");
     }
 
     @Test
@@ -68,7 +68,7 @@ class ImageUtilsTest {
         String result = ImageUtils.detectMimeType("file:///invalid/path.gif", gifData);
 
         // Then
-        assertThat(result).isEqualTo("image/gif");
+        then(result).isEqualTo("image/gif");
     }
 
     @Test
@@ -80,7 +80,7 @@ class ImageUtilsTest {
         String result = ImageUtils.detectMimeType("file:///invalid/path.webp", webpData);
 
         // Then
-        assertThat(result).isEqualTo("image/webp");
+        then(result).isEqualTo("image/webp");
     }
 
     @Test
@@ -92,7 +92,7 @@ class ImageUtilsTest {
         String result = ImageUtils.detectMimeType("file:///invalid/path.bmp", bmpData);
 
         // Then
-        assertThat(result).isEqualTo("image/bmp");
+        then(result).isEqualTo("image/bmp");
     }
 
     @Test
@@ -101,17 +101,17 @@ class ImageUtilsTest {
         byte[] unknownData = {1, 2, 3, 4}; // 알 수 없는 시그니처
 
         // When & Then - 확장자로 감지해야 함
-        assertThat(ImageUtils.detectMimeType("file:///test.png", unknownData)).isEqualTo("image/png");
-        assertThat(ImageUtils.detectMimeType("file:///test.jpg", unknownData)).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.detectMimeType("file:///test.jpeg", unknownData)).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.detectMimeType("file:///test.gif", unknownData)).isEqualTo("image/gif");
-        assertThat(ImageUtils.detectMimeType("file:///test.webp", unknownData)).isEqualTo("image/webp");
-        assertThat(ImageUtils.detectMimeType("file:///test.bmp", unknownData)).isEqualTo("image/bmp");
-        assertThat(ImageUtils.detectMimeType("file:///test.svg", unknownData)).isEqualTo("image/svg+xml");
-        assertThat(ImageUtils.detectMimeType("file:///test.tiff", unknownData)).isEqualTo("image/tiff");
-        assertThat(ImageUtils.detectMimeType("file:///test.tif", unknownData)).isEqualTo("image/tiff");
-        assertThat(ImageUtils.detectMimeType("file:///test.ico", unknownData)).isEqualTo("image/x-icon");
-        assertThat(ImageUtils.detectMimeType("file:///test.unknown", unknownData)).isEqualTo("application/octet-stream");
+        then(ImageUtils.detectMimeType("file:///test.png", unknownData)).isEqualTo("image/png");
+        then(ImageUtils.detectMimeType("file:///test.jpg", unknownData)).isEqualTo("image/jpeg");
+        then(ImageUtils.detectMimeType("file:///test.jpeg", unknownData)).isEqualTo("image/jpeg");
+        then(ImageUtils.detectMimeType("file:///test.gif", unknownData)).isEqualTo("image/gif");
+        then(ImageUtils.detectMimeType("file:///test.webp", unknownData)).isEqualTo("image/webp");
+        then(ImageUtils.detectMimeType("file:///test.bmp", unknownData)).isEqualTo("image/bmp");
+        then(ImageUtils.detectMimeType("file:///test.svg", unknownData)).isEqualTo("image/svg+xml");
+        then(ImageUtils.detectMimeType("file:///test.tiff", unknownData)).isEqualTo("image/tiff");
+        then(ImageUtils.detectMimeType("file:///test.tif", unknownData)).isEqualTo("image/tiff");
+        then(ImageUtils.detectMimeType("file:///test.ico", unknownData)).isEqualTo("image/x-icon");
+        then(ImageUtils.detectMimeType("file:///test.unknown", unknownData)).isEqualTo("application/octet-stream");
     }
 
     @Test
@@ -120,11 +120,11 @@ class ImageUtilsTest {
         byte[] unknownData = {1, 2, 3, 4};
 
         // When & Then
-        assertThat(ImageUtils.detectMimeType("file:///test.PNG", unknownData)).isEqualTo("image/png");
-        assertThat(ImageUtils.detectMimeType("file:///test.JPG", unknownData)).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.detectMimeType("file:///test.JPEG", unknownData)).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.detectMimeType("file:///test.GIF", unknownData)).isEqualTo("image/gif");
-        assertThat(ImageUtils.detectMimeType("file:///test.WEBP", unknownData)).isEqualTo("image/webp");
+        then(ImageUtils.detectMimeType("file:///test.PNG", unknownData)).isEqualTo("image/png");
+        then(ImageUtils.detectMimeType("file:///test.JPG", unknownData)).isEqualTo("image/jpeg");
+        then(ImageUtils.detectMimeType("file:///test.JPEG", unknownData)).isEqualTo("image/jpeg");
+        then(ImageUtils.detectMimeType("file:///test.GIF", unknownData)).isEqualTo("image/gif");
+        then(ImageUtils.detectMimeType("file:///test.WEBP", unknownData)).isEqualTo("image/webp");
     }
 
     // ===== sniffMimeType 메서드 테스트 =====
@@ -132,11 +132,11 @@ class ImageUtilsTest {
     @Test
     void sniffMimeType_파일_시그니처_감지() {
         // When & Then
-        assertThat(ImageUtils.sniffMimeType(createPngBytes(), "test.png")).isEqualTo("image/png");
-        assertThat(ImageUtils.sniffMimeType(createJpegBytes(), "test.jpg")).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.sniffMimeType(createGifBytes(), "test.gif")).isEqualTo("image/gif");
-        assertThat(ImageUtils.sniffMimeType(createWebpBytes(), "test.webp")).isEqualTo("image/webp");
-        assertThat(ImageUtils.sniffMimeType(createBmpBytes(), "test.bmp")).isEqualTo("image/bmp");
+        then(ImageUtils.sniffMimeType(createPngBytes(), "test.png")).isEqualTo("image/png");
+        then(ImageUtils.sniffMimeType(createJpegBytes(), "test.jpg")).isEqualTo("image/jpeg");
+        then(ImageUtils.sniffMimeType(createGifBytes(), "test.gif")).isEqualTo("image/gif");
+        then(ImageUtils.sniffMimeType(createWebpBytes(), "test.webp")).isEqualTo("image/webp");
+        then(ImageUtils.sniffMimeType(createBmpBytes(), "test.bmp")).isEqualTo("image/bmp");
     }
 
     @Test
@@ -145,16 +145,16 @@ class ImageUtilsTest {
         byte[] unknownData = {1, 2, 3, 4};
 
         // When & Then
-        assertThat(ImageUtils.sniffMimeType(unknownData, "test.png")).isEqualTo("image/png");
-        assertThat(ImageUtils.sniffMimeType(unknownData, "test.svg")).isEqualTo("image/svg+xml");
-        assertThat(ImageUtils.sniffMimeType(unknownData, null)).isEqualTo("application/octet-stream");
+        then(ImageUtils.sniffMimeType(unknownData, "test.png")).isEqualTo("image/png");
+        then(ImageUtils.sniffMimeType(unknownData, "test.svg")).isEqualTo("image/svg+xml");
+        then(ImageUtils.sniffMimeType(unknownData, null)).isEqualTo("application/octet-stream");
     }
 
     @Test
     void 빈_데이터_처리() {
         // When & Then
-        assertThat(ImageUtils.sniffMimeType(new byte[0], "test.png")).isEqualTo("image/png");
-        assertThat(ImageUtils.sniffMimeType(null, "test.png")).isEqualTo("image/png");
+        then(ImageUtils.sniffMimeType(new byte[0], "test.png")).isEqualTo("image/png");
+        then(ImageUtils.sniffMimeType(null, "test.png")).isEqualTo("image/png");
     }
 
     @Test
@@ -163,8 +163,8 @@ class ImageUtilsTest {
         byte[] shortData = {1, 2};
 
         // When & Then
-        assertThat(ImageUtils.sniffMimeType(shortData, "test.png")).isEqualTo("image/png");
-        assertThat(ImageUtils.sniffMimeType(shortData, "test.unknown")).isEqualTo("application/octet-stream");
+        then(ImageUtils.sniffMimeType(shortData, "test.png")).isEqualTo("image/png");
+        then(ImageUtils.sniffMimeType(shortData, "test.unknown")).isEqualTo("application/octet-stream");
     }
 
     @Test
@@ -176,7 +176,7 @@ class ImageUtilsTest {
         String result = ImageUtils.detectMimeType("file:///test.jpg", pngData);
 
         // Then - 시그니처가 우선되어 PNG로 감지되어야 함
-        assertThat(result).isEqualTo("image/png");
+        then(result).isEqualTo("image/png");
     }
 
     @Test
@@ -185,47 +185,47 @@ class ImageUtilsTest {
         byte[] unknownData = {1, 2, 3, 4};
 
         // When & Then - 모든 지원 확장자 테스트
-        assertThat(ImageUtils.detectMimeType("file:///file.png", unknownData)).isEqualTo("image/png");
-        assertThat(ImageUtils.detectMimeType("file:///file.jpg", unknownData)).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.detectMimeType("file:///file.jpeg", unknownData)).isEqualTo("image/jpeg");
-        assertThat(ImageUtils.detectMimeType("file:///file.gif", unknownData)).isEqualTo("image/gif");
-        assertThat(ImageUtils.detectMimeType("file:///file.webp", unknownData)).isEqualTo("image/webp");
-        assertThat(ImageUtils.detectMimeType("file:///file.bmp", unknownData)).isEqualTo("image/bmp");
-        assertThat(ImageUtils.detectMimeType("file:///file.svg", unknownData)).isEqualTo("image/svg+xml");
-        assertThat(ImageUtils.detectMimeType("file:///file.tiff", unknownData)).isEqualTo("image/tiff");
-        assertThat(ImageUtils.detectMimeType("file:///file.tif", unknownData)).isEqualTo("image/tiff");
-        assertThat(ImageUtils.detectMimeType("file:///file.ico", unknownData)).isEqualTo("image/x-icon");
+        then(ImageUtils.detectMimeType("file:///file.png", unknownData)).isEqualTo("image/png");
+        then(ImageUtils.detectMimeType("file:///file.jpg", unknownData)).isEqualTo("image/jpeg");
+        then(ImageUtils.detectMimeType("file:///file.jpeg", unknownData)).isEqualTo("image/jpeg");
+        then(ImageUtils.detectMimeType("file:///file.gif", unknownData)).isEqualTo("image/gif");
+        then(ImageUtils.detectMimeType("file:///file.webp", unknownData)).isEqualTo("image/webp");
+        then(ImageUtils.detectMimeType("file:///file.bmp", unknownData)).isEqualTo("image/bmp");
+        then(ImageUtils.detectMimeType("file:///file.svg", unknownData)).isEqualTo("image/svg+xml");
+        then(ImageUtils.detectMimeType("file:///file.tiff", unknownData)).isEqualTo("image/tiff");
+        then(ImageUtils.detectMimeType("file:///file.tif", unknownData)).isEqualTo("image/tiff");
+        then(ImageUtils.detectMimeType("file:///file.ico", unknownData)).isEqualTo("image/x-icon");
     }
 
     @Test
     void 파일_시그니처_정확성_검증() {
         // When & Then - 각 파일 시그니처가 정확한지 테스트
         byte[] pngBytes = createPngBytes();
-        assertThat(pngBytes[0]).isEqualTo((byte) 0x89);
-        assertThat(pngBytes[1]).isEqualTo((byte) 0x50);
-        assertThat(pngBytes[2]).isEqualTo((byte) 0x4E);
-        assertThat(pngBytes[3]).isEqualTo((byte) 0x47);
+        then(pngBytes[0]).isEqualTo((byte) 0x89);
+        then(pngBytes[1]).isEqualTo((byte) 0x50);
+        then(pngBytes[2]).isEqualTo((byte) 0x4E);
+        then(pngBytes[3]).isEqualTo((byte) 0x47);
 
         byte[] jpegBytes = createJpegBytes();
-        assertThat(jpegBytes[0]).isEqualTo((byte) 0xFF);
-        assertThat(jpegBytes[1]).isEqualTo((byte) 0xD8);
-        assertThat(jpegBytes[2]).isEqualTo((byte) 0xFF);
+        then(jpegBytes[0]).isEqualTo((byte) 0xFF);
+        then(jpegBytes[1]).isEqualTo((byte) 0xD8);
+        then(jpegBytes[2]).isEqualTo((byte) 0xFF);
 
         byte[] gifBytes = createGifBytes();
-        assertThat(gifBytes[0]).isEqualTo((byte) 0x47); // G
-        assertThat(gifBytes[1]).isEqualTo((byte) 0x49); // I
-        assertThat(gifBytes[2]).isEqualTo((byte) 0x46); // F
-        assertThat(gifBytes[3]).isEqualTo((byte) 0x38); // 8
+        then(gifBytes[0]).isEqualTo((byte) 0x47); // G
+        then(gifBytes[1]).isEqualTo((byte) 0x49); // I
+        then(gifBytes[2]).isEqualTo((byte) 0x46); // F
+        then(gifBytes[3]).isEqualTo((byte) 0x38); // 8
 
         byte[] webpBytes = createWebpBytes();
-        assertThat(webpBytes[8]).isEqualTo((byte) 0x57);  // W
-        assertThat(webpBytes[9]).isEqualTo((byte) 0x45);  // E
-        assertThat(webpBytes[10]).isEqualTo((byte) 0x42); // B
-        assertThat(webpBytes[11]).isEqualTo((byte) 0x50); // P
+        then(webpBytes[8]).isEqualTo((byte) 0x57);  // W
+        then(webpBytes[9]).isEqualTo((byte) 0x45);  // E
+        then(webpBytes[10]).isEqualTo((byte) 0x42); // B
+        then(webpBytes[11]).isEqualTo((byte) 0x50); // P
 
         byte[] bmpBytes = createBmpBytes();
-        assertThat(bmpBytes[0]).isEqualTo((byte) 0x42); // B
-        assertThat(bmpBytes[1]).isEqualTo((byte) 0x4D); // M
+        then(bmpBytes[0]).isEqualTo((byte) 0x42); // B
+        then(bmpBytes[1]).isEqualTo((byte) 0x4D); // M
     }
 
     // ===== Helper Methods =====

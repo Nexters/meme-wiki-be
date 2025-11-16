@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import spring.memewikibe.annotation.UnitTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
 @UnitTest
 class MemeLogTest {
@@ -14,7 +14,7 @@ class MemeLogTest {
     @DisplayName("MemeCustomLog.of()는 null meme을 받으면 NullPointerException을 던진다")
     void memeCustomLog_of_throwsNullPointerException_whenMemeIsNull() {
         // when & then
-        assertThatThrownBy(() -> MemeCustomLog.of(null))
+        thenThrownBy(() -> MemeCustomLog.of(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("meme must not be null");
     }
@@ -36,15 +36,15 @@ class MemeLogTest {
         MemeCustomLog log = MemeCustomLog.of(meme);
 
         // then
-        assertThat(log).isNotNull();
-        assertThat(log.getMeme()).isEqualTo(meme);
+        then(log).isNotNull();
+        then(log.getMeme()).isEqualTo(meme);
     }
 
     @Test
     @DisplayName("MemeViewLog.of()는 null meme을 받으면 NullPointerException을 던진다")
     void memeViewLog_of_throwsNullPointerException_whenMemeIsNull() {
         // when & then
-        assertThatThrownBy(() -> MemeViewLog.of(null))
+        thenThrownBy(() -> MemeViewLog.of(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("meme must not be null");
     }
@@ -66,15 +66,15 @@ class MemeLogTest {
         MemeViewLog log = MemeViewLog.of(meme);
 
         // then
-        assertThat(log).isNotNull();
-        assertThat(log.getMeme()).isEqualTo(meme);
+        then(log).isNotNull();
+        then(log.getMeme()).isEqualTo(meme);
     }
 
     @Test
     @DisplayName("MemeShareLog.of()는 null meme을 받으면 NullPointerException을 던진다")
     void memeShareLog_of_throwsNullPointerException_whenMemeIsNull() {
         // when & then
-        assertThatThrownBy(() -> MemeShareLog.of(null))
+        thenThrownBy(() -> MemeShareLog.of(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("meme must not be null");
     }
@@ -96,7 +96,7 @@ class MemeLogTest {
         MemeShareLog log = MemeShareLog.of(meme);
 
         // then
-        assertThat(log).isNotNull();
-        assertThat(log.getMeme()).isEqualTo(meme);
+        then(log).isNotNull();
+        then(log.getMeme()).isEqualTo(meme);
     }
 }

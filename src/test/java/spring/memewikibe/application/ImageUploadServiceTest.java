@@ -17,8 +17,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -49,8 +49,8 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).startsWith("https://img.meme-wiki.net/" + TEST_BUCKET + "/");
-        assertThat(url).endsWith(".jpg");
+        then(url).startsWith("https://img.meme-wiki.net/" + TEST_BUCKET + "/");
+        then(url).endsWith(".jpg");
         verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 
@@ -66,7 +66,7 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).endsWith(".png");
+        then(url).endsWith(".png");
     }
 
     @Test
@@ -81,7 +81,7 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).endsWith(".webp");
+        then(url).endsWith(".webp");
     }
 
     @Test
@@ -96,7 +96,7 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).endsWith(".gif");
+        then(url).endsWith(".gif");
     }
 
     @Test
@@ -111,7 +111,7 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).endsWith(".jpeg");
+        then(url).endsWith(".jpeg");
     }
 
     @Test
@@ -122,7 +122,7 @@ class ImageUploadServiceTest {
         when(file.isEmpty()).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("파일이 비어있습니다.");
 
@@ -138,7 +138,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn(null);
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("지원하지 않는 이미지 형식입니다");
 
@@ -154,7 +154,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn("");
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("지원하지 않는 이미지 형식입니다");
 
@@ -170,7 +170,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn("test");
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("파일 확장자가 없습니다.");
 
@@ -186,7 +186,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn("test.pdf");
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("지원하지 않는 이미지 형식입니다")
             .hasMessageContaining("jpg")
@@ -204,7 +204,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn("test.bmp");
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("지원하지 않는 이미지 형식입니다");
 
@@ -223,7 +223,7 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).endsWith(".jpg");
+        then(url).endsWith(".jpg");
     }
 
     @Test
@@ -236,7 +236,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn("test.jpg");
 
         // when & then
-        assertThatThrownBy(() -> serviceWithNullBucket.uploadImage(file))
+        thenThrownBy(() -> serviceWithNullBucket.uploadImage(file))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Cloudflare R2 is not configured (bucket name missing)");
 
@@ -253,7 +253,7 @@ class ImageUploadServiceTest {
         when(file.getOriginalFilename()).thenReturn("test.jpg");
 
         // when & then
-        assertThatThrownBy(() -> serviceWithBlankBucket.uploadImage(file))
+        thenThrownBy(() -> serviceWithBlankBucket.uploadImage(file))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Cloudflare R2 is not configured (bucket name missing)");
 
@@ -271,7 +271,7 @@ class ImageUploadServiceTest {
         when(file.getInputStream()).thenThrow(new IOException("Network error"));
 
         // when & then
-        assertThatThrownBy(() -> imageUploadService.uploadImage(file))
+        thenThrownBy(() -> imageUploadService.uploadImage(file))
             .isInstanceOf(RuntimeException.class)
             .hasMessage("R2 업로드 실패")
             .hasCauseInstanceOf(IOException.class);
@@ -289,7 +289,7 @@ class ImageUploadServiceTest {
         String url = imageUploadService.uploadImage(file);
 
         // then
-        assertThat(url).endsWith(".png");
+        then(url).endsWith(".png");
     }
 
     @Test

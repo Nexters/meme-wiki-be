@@ -17,7 +17,7 @@ import spring.memewikibe.infrastructure.ai.NaverRagService;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -85,11 +85,11 @@ class RecommendationServiceTest {
         List<MemeRecommendationResponse> out = recommendationService.searchWithReasons(query, null, 3);
 
         // then
-        assertThat(out).extracting(MemeRecommendationResponse::id).containsExactly(1L, 3L, 2L);
-        assertThat(out.get(0).reason()).isEqualTo("귀가에 찰떡인 밈!");
+        then(out).extracting(MemeRecommendationResponse::id).containsExactly(1L, 3L, 2L);
+        then(out.get(0).reason()).isEqualTo("귀가에 찰떡인 밈!");
         // verify that NaverRagService got candidates with required fields
         List<NaverRagService.Candidate> sent = candidatesCaptor.getValue();
-        assertThat(sent).isNotEmpty();
+        then(sent).isNotEmpty();
         verify(vectorIndexService, times(1)).query(anyString(), anyInt());
         verify(naverRagService, times(1)).recommendWithContextDetailed(anyString(), anyString(), anyList());
     }
