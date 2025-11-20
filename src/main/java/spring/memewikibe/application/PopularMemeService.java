@@ -15,7 +15,7 @@ import java.util.List;
 public class PopularMemeService {
 
     private final InMemoryPopularMemeCache inMemoryPopularMemeCache;
-    private final MemeAggregationLookUpServiceImpl memeAggregationLookUpServiceImpl;
+    private final MemeAggregationLookUpService memeAggregationLookUpService;
     private final MemeLookUpService memeLookUpService;
 
     public List<MemeSimpleResponse> getTopPopularMemes() {
@@ -24,7 +24,7 @@ public class PopularMemeService {
         if (cachedMemeIds.size() < inMemoryPopularMemeCache.getTargetSize()) {
             log.debug("Cache is not full ({}/<{}), falling back to DB",
                 cachedMemeIds.size(), inMemoryPopularMemeCache.getTargetSize());
-            List<MemeSimpleResponse> popularMemes = memeAggregationLookUpServiceImpl.getMostPopularMemes();
+            List<MemeSimpleResponse> popularMemes = memeAggregationLookUpService.getMostPopularMemes();
             List<Long> memeIds = popularMemes.stream()
                 .map(MemeSimpleResponse::id)
                 .toList();
@@ -41,7 +41,7 @@ public class PopularMemeService {
     @PostConstruct
     public void warmUpCache() {
         try {
-            List<MemeSimpleResponse> popularMemes = memeAggregationLookUpServiceImpl.getMostPopularMemes();
+            List<MemeSimpleResponse> popularMemes = memeAggregationLookUpService.getMostPopularMemes();
             List<Long> memeIds = popularMemes.stream()
                 .map(MemeSimpleResponse::id)
                 .toList();

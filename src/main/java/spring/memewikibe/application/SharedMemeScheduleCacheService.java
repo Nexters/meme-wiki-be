@@ -24,7 +24,7 @@ public class SharedMemeScheduleCacheService {
 
     private volatile MostSharedMemes cachedData;
 
-    public SharedMemeScheduleCacheService(MemeAggregationLookUpServiceImpl memeAggregationLookUpService, TimeProvider timeProvider) {
+    public SharedMemeScheduleCacheService(MemeAggregationLookUpService memeAggregationLookUpService, TimeProvider timeProvider) {
         this.memeAggregationLookUpService = memeAggregationLookUpService;
         this.timeProvider = timeProvider;
     }
