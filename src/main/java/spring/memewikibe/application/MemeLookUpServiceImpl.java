@@ -101,7 +101,6 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
         Cursor cursor = Cursor.of(memes, limit);
         List<MemeDetailResponse> response = memes.stream()
             .map(MemeDetailResponse::from)
-            .limit(limit)
             .toList();
         return PageResponse.cursor(cursor, response);
     }
