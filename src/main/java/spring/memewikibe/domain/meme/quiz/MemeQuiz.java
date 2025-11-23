@@ -36,6 +36,7 @@ public class MemeQuiz extends BaseEntity {
 
     @Builder
     private MemeQuiz(String question, String option1, String option2, String option3, String option4, int answer, String imageUrl) {
+        validateAnswer(answer);
         this.question = question;
         this.option1 = option1;
         this.option2 = option2;
@@ -43,6 +44,12 @@ public class MemeQuiz extends BaseEntity {
         this.option4 = option4;
         this.answer = answer;
         this.imageUrl = imageUrl;
+    }
+
+    private void validateAnswer(int answer) {
+        if (answer < 1 || answer > 4) {
+            throw new IllegalArgumentException("Answer must be between 1 and 4, but was: " + answer);
+        }
     }
 }
 
