@@ -46,7 +46,7 @@ class QuizServiceTest {
         List<QuizProblemResponse> result = quizService.getRandomQuizzes();
 
         then(result).hasSize(10);
-        result.forEach(q -> then(q.questions()).hasSize(4));
+        result.forEach(q -> then(q.options()).hasSize(4));
     }
 }
 
