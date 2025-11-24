@@ -28,5 +28,20 @@ class NotificationTokenRepositoryTest {
         then(saved.getCreatedAt()).isNotNull();
         then(saved.getUpdatedAt()).isNotNull();
     }
+
+    @Test
+    void 모든_토큰_문자열을_조회할_수_있다() {
+        // given
+        sut.save(NotificationToken.create("token1"));
+        sut.save(NotificationToken.create("token2"));
+        sut.save(NotificationToken.create("token3"));
+        sut.flush();
+
+        // when
+        var tokens = sut.findAllTokens();
+
+        // then
+        then(tokens).containsExactlyInAnyOrder("token1", "token2", "token3");
+    }
 }
 
