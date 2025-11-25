@@ -1,6 +1,7 @@
 package spring.memewikibe.api.controller.admin;
 
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("/admin")
+@RequiredArgsConstructor
 public class AdminController {
 
     private final MemeRepository memeRepository;
@@ -46,30 +48,6 @@ public class AdminController {
     private final AdminMemeStatsService adminMemeStatsService;
     private final MemeNotificationService memeNotificationService;
     private final AdminProperties adminProperties;
-
-    public AdminController(MemeRepository memeRepository,
-                          ImageUploadService imageUploadService,
-                          MemeLookUpService memeLookUpService,
-                          MemeCreateService memeCreateService,
-                          CategoryRepository categoryRepository,
-                          MemeCategoryRepository memeCategoryRepository,
-                          MemeVectorIndexService vectorIndexService,
-                          ImageEditService imageEditService,
-                          AdminMemeStatsService adminMemeStatsService,
-                          MemeNotificationService memeNotificationService,
-                          AdminProperties adminProperties) {
-        this.memeRepository = memeRepository;
-        this.imageUploadService = imageUploadService;
-        this.memeLookUpService = memeLookUpService;
-        this.memeCreateService = memeCreateService;
-        this.categoryRepository = categoryRepository;
-        this.memeCategoryRepository = memeCategoryRepository;
-        this.vectorIndexService = vectorIndexService;
-        this.imageEditService = imageEditService;
-        this.adminMemeStatsService = adminMemeStatsService;
-        this.memeNotificationService = memeNotificationService;
-        this.adminProperties = adminProperties;
-    }
 
     /**
      * 관리자 로그인 페이지
@@ -381,23 +359,9 @@ public class AdminController {
             Meme meme = memeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
 
-            // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
-            String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
+            String finalImgUrl = determineImageUrl(imageFile, imgUrl, meme.getImgUrl());
+            String validTrendPeriod = validateTrendPeriod(trendPeriod, meme.getTrendPeriod());
 
-            if (imageFile != null && !imageFile.isEmpty()) {
-                log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
-                finalImgUrl = imageUploadService.uploadImage(imageFile);
-                log.info("✅ 새 이미지 파일 업로드 완료: {}", finalImgUrl);
-            } else if (imgUrl != null && !imgUrl.trim().isEmpty() && !imgUrl.equals(meme.getImgUrl())) {
-                finalImgUrl = imgUrl.trim();
-                log.info("🔗 새 이미지 URL 사용: {}", finalImgUrl);
-            }
-
-            // 유행시기 기본값 설정
-            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty())
-                ? trendPeriod.trim() : meme.getTrendPeriod();
-
-            // 밈 정보 업데이트
             meme.updateMeme(
                 title.trim(),
                 origin.trim(),
@@ -408,21 +372,7 @@ public class AdminController {
             );
 
             memeRepository.save(meme);
-
-            // 기존 카테고리 연결 삭제
-            memeCategoryRepository.deleteByMemeId(id);
-
-            // 새 카테고리 연결
-            if (categoryIds != null && !categoryIds.isEmpty()) {
-                categoryRepository.findAllById(categoryIds)
-                    .forEach(category -> {
-                        MemeCategory memeCategory = MemeCategory.builder()
-                            .meme(meme)
-                            .category(category)
-                            .build();
-                        memeCategoryRepository.save(memeCategory);
-                    });
-            }
+            updateMemeCategories(id, meme, categoryIds);
 
             log.info("✨ Meme updated by admin: id={}, title={}, categories={}",
                 id, title.trim(), categoryIds);
@@ -462,23 +412,9 @@ public class AdminController {
             Meme meme = memeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("밈을 찾을 수 없습니다."));
 
-            // 이미지 URL 결정 (새 파일 업로드가 있으면 우선, 없으면 기존 또는 새 URL 사용)
-            String finalImgUrl = meme.getImgUrl(); // 기존 이미지 URL을 기본값으로
+            String finalImgUrl = determineImageUrl(imageFile, imgUrl, meme.getImgUrl());
+            String validTrendPeriod = validateTrendPeriod(trendPeriod, meme.getTrendPeriod());
 
-            if (imageFile != null && !imageFile.isEmpty()) {
-                log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
-                finalImgUrl = imageUploadService.uploadImage(imageFile);
-                log.info("✅ 새 이미지 파일 업로드 완료: {}", finalImgUrl);
-            } else if (imgUrl != null && !imgUrl.trim().isEmpty() && !imgUrl.equals(meme.getImgUrl())) {
-                finalImgUrl = imgUrl.trim();
-                log.info("🔗 새 이미지 URL 사용: {}", finalImgUrl);
-            }
-
-            // 유행시기 기본값 설정
-            String validTrendPeriod = (trendPeriod != null && !trendPeriod.trim().isEmpty())
-                ? trendPeriod.trim() : meme.getTrendPeriod();
-
-            // 밈 정보 업데이트
             meme.updateMeme(
                 title.trim(),
                 origin.trim(),
@@ -488,20 +424,9 @@ public class AdminController {
                 hashtags.trim()
             );
 
-            // 승인 처리
             meme.approve();
-
-            // 카테고리 업데이트
-            memeCategoryRepository.deleteByMemeId(meme.getId());
-            if (categoryIds != null && !categoryIds.isEmpty()) {
-                categoryRepository.findAllById(categoryIds)
-                    .forEach(category -> {
-                        MemeCategory memeCategory = MemeCategory.create(meme, category);
-                        memeCategoryRepository.save(memeCategory);
-                    });
-            }
-
             memeRepository.save(meme);
+            updateMemeCategories(meme.getId(), meme, categoryIds);
 
             log.info("✅ Meme edited and approved successfully: id={}, title={}, categories={}",
                 id, title.trim(), categoryIds);
@@ -765,6 +690,46 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "벡터 인덱스 재구성 중 오류: " + e.getMessage());
         }
         return "redirect:/admin/memes";
+    }
+
+    /**
+     * 이미지 URL 결정 (새 파일 업로드 우선, 없으면 기존 또는 새 URL 사용)
+     */
+    private String determineImageUrl(MultipartFile imageFile, String imgUrl, String existingImgUrl) {
+        if (imageFile != null && !imageFile.isEmpty()) {
+            log.info("📁 새 이미지 파일 업로드 시작: {}", imageFile.getOriginalFilename());
+            String uploadedUrl = imageUploadService.uploadImage(imageFile);
+            log.info("✅ 새 이미지 파일 업로드 완료: {}", uploadedUrl);
+            return uploadedUrl;
+        } else if (imgUrl != null && !imgUrl.trim().isEmpty() && !imgUrl.equals(existingImgUrl)) {
+            log.info("🔗 새 이미지 URL 사용: {}", imgUrl.trim());
+            return imgUrl.trim();
+        }
+        return existingImgUrl;
+    }
+
+    /**
+     * 유행시기 유효성 검증 (null 또는 빈 문자열이면 기본값 사용)
+     */
+    private String validateTrendPeriod(String trendPeriod, String defaultValue) {
+        return (trendPeriod != null && !trendPeriod.trim().isEmpty())
+            ? trendPeriod.trim()
+            : defaultValue;
+    }
+
+    /**
+     * 밈 카테고리 업데이트 (기존 카테고리 삭제 후 새 카테고리 연결)
+     */
+    private void updateMemeCategories(Long memeId, Meme meme, List<Long> categoryIds) {
+        memeCategoryRepository.deleteByMemeId(memeId);
+
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            categoryRepository.findAllById(categoryIds)
+                .forEach(category -> {
+                    MemeCategory memeCategory = MemeCategory.create(meme, category);
+                    memeCategoryRepository.save(memeCategory);
+                });
+        }
     }
 
     private boolean isAuthenticated(HttpSession session) {
