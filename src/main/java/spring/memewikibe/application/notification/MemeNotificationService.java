@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import spring.memewikibe.domain.meme.Meme;
-import spring.memewikibe.domain.notification.NotificationToken;
 import spring.memewikibe.infrastructure.MemeRepository;
 import spring.memewikibe.infrastructure.NotificationTokenRepository;
 import spring.memewikibe.support.error.ErrorType;
@@ -26,10 +25,7 @@ public class MemeNotificationService {
         Meme meme = memeRepository.findById(memeId)
             .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.MEME_NOT_FOUND));
 
-        List<String> tokens = tokenRepository.findAll()
-            .stream()
-            .map(NotificationToken::getToken)
-            .toList();
+        List<String> tokens = tokenRepository.findAllTokens();
 
         if (tokens.isEmpty()) {
             log.info("No active tokens found for meme notification: memeId={}", memeId);
