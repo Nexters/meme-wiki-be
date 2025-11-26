@@ -2,6 +2,8 @@ package spring.memewikibe.application;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spring.memewikibe.api.controller.meme.response.CategoryResponse;
@@ -53,9 +55,19 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
         int validatedLimit = validateLimit(limit);
 
         Category category = getCategoryBy(id);
-        List<Meme> foundMemes = fetchMemesByCategory(category, next, validatedLimit);
+        Slice<MemeCategory> slice = memeCategoryRepository.findNormalMemesWithCursorAsSlice(
+            category,
+            next,
+            PageRequest.of(0, validatedLimit)
+        );
 
-        return createPageResponseBy(foundMemes, validatedLimit);
+        Cursor cursor = Cursor.fromSlice(slice, mc -> mc.getMeme().getId());
+        List<MemeDetailResponse> response = slice.getContent().stream()
+            .map(MemeCategory::getMeme)
+            .map(MemeDetailResponse::from)
+            .toList();
+
+        return PageResponse.cursor(cursor, response);
     }
 
     @Transactional(readOnly = true)
@@ -113,13 +125,6 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
             .orElseThrow(() -> new MemeWikiApplicationException(ErrorType.CATEGORY_NOT_FOUND));
     }
 
-    private List<Meme> fetchMemesByCategory(Category category, Long next, int limit) {
-        // NORMAL 상태의 밈만 조회 (보안: ABNORMAL 밈은 일반 사용자에게 노출되지 않음)
-        return memeCategoryRepository.findNormalMemesWithCursor(category, next, Limit.of(limit + 1))
-            .stream()
-            .map(MemeCategory::getMeme)
-            .toList();
-    }
 
     private int validateLimit(int limit) {
         return Math.min(Math.max(limit, 1), 30);
