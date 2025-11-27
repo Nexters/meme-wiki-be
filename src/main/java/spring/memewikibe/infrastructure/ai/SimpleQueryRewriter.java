@@ -6,23 +6,42 @@ import java.util.Locale;
 
 /**
  * Default query rewriter that performs light normalization only.
- * Later, replace with a NAVER LLM-backed implementation.
+ * Acts as a fallback when AI-powered query rewriting is unavailable.
+ * This implementation provides basic text normalization without semantic understanding.
  */
 @Component
 public class SimpleQueryRewriter implements QueryRewriter {
+
+    /**
+     * Performs basic normalization on the query string.
+     * Trims whitespace, converts to lowercase, and collapses multiple spaces.
+     *
+     * @param userContext User context (currently unused in simple implementation)
+     * @param query The original query string
+     * @return Normalized query string, or empty string if query is null or blank
+     */
     @Override
     public String rewrite(String userContext, String query) {
-        if (query == null) return "";
-        // Light rewrite: trim + lower + collapse spaces; keep original language tokens.
-        String s = query.trim().toLowerCase(Locale.ROOT);
-        s = s.replaceAll("\\s+", " ").trim();
-        return s;
+        if (query == null || query.isBlank()) {
+            return "";
+        }
+        String normalized = query.trim().toLowerCase(Locale.ROOT);
+        normalized = normalized.replaceAll("\\s+", " ").trim();
+        return normalized;
     }
 
-    // [추가] 컴파일 에러 해결을 위해 expandForKeywords 메소드를 구현합니다.
-    // 이 클래스는 AI 기능이 없으므로, 원본 쿼리를 그대로 반환하는 것이 가장 안전한 기본 동작입니다.
+    /**
+     * Returns the original query without keyword expansion.
+     * This simple implementation does not perform AI-based keyword extraction.
+     *
+     * @param query The original query string
+     * @return The original query, or empty string if query is null or blank
+     */
     @Override
     public String expandForKeywords(String query) {
+        if (query == null || query.isBlank()) {
+            return "";
+        }
         return query;
     }
 }
