@@ -4,6 +4,9 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
 import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
@@ -39,6 +42,25 @@ public class MemeRepositoryCustomImpl implements MemeRepositoryCustom {
             .orderBy(meme.id.desc())
             .limit(limit.max())
             .fetch();
+    }
+
+    @Override
+    public Slice<Meme> findByTitleOrHashtagsContainingAsSlice(String title, Long lastId, Pageable pageable) {
+        List<Meme> results = queryFactory
+            .selectFrom(meme)
+            .where(
+                titleOrHashtagsContains(title),
+                lastId == null ? null : meme.id.lt(lastId),
+                meme.flag.eq(Meme.Flag.NORMAL)
+            )
+            .orderBy(meme.id.desc())
+            .limit(pageable.getPageSize() + 1)
+            .fetch();
+
+        boolean hasNext = results.size() > pageable.getPageSize();
+        List<Meme> content = hasNext ? results.subList(0, pageable.getPageSize()) : results;
+
+        return new SliceImpl<>(content, pageable, hasNext);
     }
 
     @Override

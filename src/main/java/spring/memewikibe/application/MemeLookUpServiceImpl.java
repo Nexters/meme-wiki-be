@@ -75,12 +75,18 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
     public PageResponse<Cursor, MemeDetailResponse> getMemesByQuery(String query, Long next, int limit) {
         int validatedLimit = validateLimit(limit);
 
-        if (next == null) {
-            List<Meme> foundMemes = memeRepository.findByTitleOrHashtagsContainingOrderByIdDesc(query, Limit.of(validatedLimit + 1));
-            return createPageResponseBy(foundMemes, validatedLimit);
-        }
-        List<Meme> foundMemes = memeRepository.findByTitleOrHashtagsContainingAndIdLessThanOrderByIdDesc(query, next, Limit.of(validatedLimit + 1));
-        return createPageResponseBy(foundMemes, validatedLimit);
+        Slice<Meme> slice = memeRepository.findByTitleOrHashtagsContainingAsSlice(
+            query,
+            next,
+            PageRequest.of(0, validatedLimit)
+        );
+
+        Cursor cursor = Cursor.fromSlice(slice);
+        List<MemeDetailResponse> response = slice.getContent().stream()
+            .map(MemeDetailResponse::from)
+            .toList();
+
+        return PageResponse.cursor(cursor, response);
     }
 
     @Transactional(readOnly = true)
@@ -107,14 +113,6 @@ public class MemeLookUpServiceImpl implements MemeLookUpService {
             .map(memeMap::get)
             .filter(Objects::nonNull)
             .toList();
-    }
-
-    private PageResponse<Cursor, MemeDetailResponse> createPageResponseBy(List<Meme> memes, int limit) {
-        Cursor cursor = Cursor.of(memes, limit);
-        List<MemeDetailResponse> response = memes.stream()
-            .map(MemeDetailResponse::from)
-            .toList();
-        return PageResponse.cursor(cursor, response);
     }
 
     private Category getCategoryBy(Long id) {
