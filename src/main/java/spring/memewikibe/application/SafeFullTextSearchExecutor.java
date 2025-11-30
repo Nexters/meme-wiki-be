@@ -26,7 +26,9 @@ public class SafeFullTextSearchExecutor {
     public List<Meme> tryFullText(String query, int limit) {
         try {
             return memeRepository.findCandidatesByFullTextSearch(query, limit);
-        } catch (Throwable ignored) {
+        } catch (Exception ignored) {
+            // Catch database-related exceptions (e.g., SQL syntax errors on H2)
+            // but let Error types (OutOfMemoryError, etc.) propagate
             return emptyList();
         }
     }
