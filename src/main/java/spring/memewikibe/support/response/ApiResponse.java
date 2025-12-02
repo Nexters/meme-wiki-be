@@ -1,20 +1,17 @@
 package spring.memewikibe.support.response;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import spring.memewikibe.support.error.ErrorMessage;
 import spring.memewikibe.support.error.ErrorType;
 
 @Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ApiResponse<S> {
     private final ResultType resultType;
     private final S success;
     private final ErrorMessage error;
-
-    public ApiResponse(ResultType resultType, S success, ErrorMessage error) {
-        this.resultType = resultType;
-        this.success = success;
-        this.error = error;
-    }
 
     public static ApiResponse<?> success() {
         return new ApiResponse<>(ResultType.SUCCESS, null, null);

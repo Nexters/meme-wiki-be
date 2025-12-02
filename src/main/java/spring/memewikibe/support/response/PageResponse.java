@@ -1,25 +1,18 @@
 package spring.memewikibe.support.response;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.List;
 
-public class PageResponse<P extends Paging, T> {
+@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public final class PageResponse<P extends Paging, T> {
     private final P paging;
     private final List<T> results;
 
-    private PageResponse(P paging, List<T> results) {
-        this.paging = paging;
-        this.results = results;
-    }
-
     public static <T> PageResponse<Cursor, T> cursor(Cursor paging, List<T> results) {
         return new PageResponse<>(paging, results.subList(0, Math.min(results.size(), paging.getPageSize())));
-    }
-
-    public P getPaging() {
-        return paging;
-    }
-
-    public List<T> getResults() {
-        return results;
     }
 }
