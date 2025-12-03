@@ -1,7 +1,10 @@
 package spring.memewikibe.support.response;
 
+import lombok.Getter;
+
 import java.util.List;
 
+@Getter
 public class PageResponse<P extends Paging, T> {
     private final P paging;
     private final List<T> results;
@@ -13,13 +16,5 @@ public class PageResponse<P extends Paging, T> {
 
     public static <T> PageResponse<Cursor, T> cursor(Cursor paging, List<T> results) {
         return new PageResponse<>(paging, results.subList(0, Math.min(results.size(), paging.getPageSize())));
-    }
-
-    public P getPaging() {
-        return paging;
-    }
-
-    public List<T> getResults() {
-        return results;
     }
 }
