@@ -4,12 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import spring.memewikibe.support.error.ErrorType;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 import spring.memewikibe.support.response.ApiResponse;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class ControllerAdvice {
@@ -24,6 +30,31 @@ public class ControllerAdvice {
             default -> log.info("CustomException : {}", e.getMessage(), e);
         }
         return new ResponseEntity<>(ApiResponse.error(e.getErrorType(), e.getData()), e.getErrorType().getStatus());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException e) {
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        log.warn("Validation failed: {}", errors);
+        return new ResponseEntity<>(
+            ApiResponse.error(ErrorType.EXTERNAL_SERVICE_BAD_REQUEST, errors),
+            HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        log.warn("Malformed JSON request: {}", e.getMessage());
+        return new ResponseEntity<>(
+            ApiResponse.error(ErrorType.EXTERNAL_SERVICE_BAD_REQUEST, "올바르지 않은 요청 형식입니다."),
+            HttpStatus.BAD_REQUEST
+        );
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
