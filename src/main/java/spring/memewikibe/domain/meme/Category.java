@@ -22,4 +22,14 @@ public class Category extends BaseEntity {
         this.name = name;
         this.imgUrl = imgUrl;
     }
+
+    /**
+     * Category 생성을 위한 정적 팩토리 메서드
+     */
+    public static Category create(String name, String imgUrl) {
+        return Category.builder()
+                .name(name)
+                .imgUrl(imgUrl)
+                .build();
+    }
 }

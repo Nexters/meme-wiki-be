@@ -47,10 +47,7 @@ public class MemeCreateService {
             .filter(ids -> !ids.isEmpty())
             .map(categoryRepository::findAllById)
             .map(categories -> categories.stream()
-                .map(category -> MemeCategory.builder()
-                    .meme(savedMeme)
-                    .category(category)
-                    .build())
+                .map(category -> MemeCategory.create(savedMeme, category))
                 .toList())
             .ifPresent(memeCategoryRepository::saveAll);
 

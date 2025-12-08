@@ -224,10 +224,7 @@ public class AdminController {
                 if (categoryIds != null && !categoryIds.isEmpty()) {
                     categoryRepository.findAllById(categoryIds)
                         .forEach(category -> {
-                            MemeCategory memeCategory = MemeCategory.builder()
-                                .meme(savedMeme)
-                                .category(category)
-                                .build();
+                            MemeCategory memeCategory = MemeCategory.create(savedMeme, category);
                             memeCategoryRepository.save(memeCategory);
                         });
                 }
@@ -416,10 +413,7 @@ public class AdminController {
             if (categoryIds != null && !categoryIds.isEmpty()) {
                 categoryRepository.findAllById(categoryIds)
                     .forEach(category -> {
-                        MemeCategory memeCategory = MemeCategory.builder()
-                            .meme(meme)
-                            .category(category)
-                            .build();
+                        MemeCategory memeCategory = MemeCategory.create(meme, category);
                         memeCategoryRepository.save(memeCategory);
                     });
             }
