@@ -72,7 +72,10 @@ public class MemeAggregationLookUpServiceImpl implements MemeAggregationLookUpSe
     private List<MemeSimpleResponse> fillWithLatestMemes(List<MemeSimpleResponse> originalList, int originalListSize, int targetCount) {
         int remainingCount = targetCount - originalListSize;
         List<Long> existingIds = originalList.stream().map(MemeSimpleResponse::id).toList();
-        List<MemeSimpleResponse> latestMemes = memeRepository.findLatestMemesExcludingIds(existingIds, remainingCount);
+        List<MemeSimpleResponse> latestMemes = memeRepository.findLatestMemesExcludingIds(existingIds, remainingCount)
+            .stream()
+            .map(info -> new MemeSimpleResponse(info.id(), info.title(), info.imgUrl()))
+            .toList();
 
         List<MemeSimpleResponse> result = new ArrayList<>(originalList);
         result.addAll(latestMemes);
