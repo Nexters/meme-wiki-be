@@ -19,8 +19,8 @@ import static org.assertj.core.api.BDDAssertions.then;
 class TtlZsetConcurrencyTest {
 
     @RepeatedTest(10)
-    @DisplayName("여러 스레드가 동시에 zincrby를 호출하면 race condition이 발생할 수 있다")
-    void concurrent_zincrby() throws InterruptedException {
+    @DisplayName("TtlZset은 ReentrantReadWriteLock을 통해 여러 스레드가 동시에 같은 key에 zincrby를 호출해도 안전하다")
+    void concurrent_zincrby_same_key_is_safe() throws InterruptedException {
         // given
         TtlZset<String> zset = new TtlZset<>(Duration.ofHours(1));
         int threadCount = 10;
@@ -45,11 +45,8 @@ class TtlZsetConcurrencyTest {
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
-        // then - 예상: threadCount * incrementsPerThread = 1000
-        // 실제: race condition으로 인해 값이 누락될 수 있음
+        // then - TtlZset의 write lock이 보호하므로 정확히 1000이어야 함
         Double score = zset.zscore("key1");
-
-        // 이 assertion은 실패할 가능성이 높음 (동시성 이슈가 있다면)
         then(score).isEqualTo(1000.0);
     }
 
@@ -176,8 +173,8 @@ class TtlZsetConcurrencyTest {
     }
 
     @RepeatedTest(10)
-    @DisplayName("TTL이 있는 상태에서 동시에 zincrby를 호출하면 TTL과 score가 불일치할 수 있다")
-    void concurrent_zincrby_with_ttl() throws InterruptedException {
+    @DisplayName("TTL이 있는 상태에서 동시에 zincrby를 호출해도 write lock이 TTL과 score의 일관성을 보장한다")
+    void concurrent_zincrby_with_ttl_is_safe() throws InterruptedException {
         // given
         TtlZset<String> zset = new TtlZset<>(Duration.ofSeconds(10));
         int threadCount = 10;
@@ -185,13 +182,12 @@ class TtlZsetConcurrencyTest {
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
 
-        // when
+        // when - 여러 스레드가 동시에 zincrby 호출
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
                     for (int j = 0; j < incrementsPerThread; j++) {
                         zset.zincrby("key1", 1.0);
-                        // zincrby와 TTL 갱신 사이에 다른 스레드가 개입할 수 있음
                     }
                 } finally {
                     latch.countDown();
@@ -203,7 +199,7 @@ class TtlZsetConcurrencyTest {
         executor.shutdown();
         executor.awaitTermination(10, TimeUnit.SECONDS);
 
-        // then - score와 TTL이 모두 제대로 설정되어 있어야 함
+        // then - write lock이 zincrby와 TTL 갱신을 원자적으로 보호하므로 일관성이 유지됨
         Double score = zset.zscore("key1");
         then(score).isNotNull();
         then(score).isEqualTo(1000.0);
