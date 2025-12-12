@@ -106,8 +106,6 @@ class ZsetConcurrencyTest {
 
         // 이 assertion은 자주 실패함 (내부 일관성이 깨짐을 증명)
         // dictSize와 skipSize가 다를 수 있음
-        System.out.println("Dict size: " + dictSize + ", Skip size: " + skipSize);
-
         // 최소한 하나 이상의 데이터가 있어야 함
         then(dictSize + skipSize).isGreaterThan(0);
     }
