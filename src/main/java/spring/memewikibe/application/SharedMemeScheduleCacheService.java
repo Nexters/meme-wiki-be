@@ -1,6 +1,7 @@
 package spring.memewikibe.application;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class SharedMemeScheduleCacheService {
 
@@ -24,14 +26,13 @@ public class SharedMemeScheduleCacheService {
 
     private volatile MostSharedMemes cachedData;
 
-    public SharedMemeScheduleCacheService(MemeAggregationLookUpService memeAggregationLookUpService, TimeProvider timeProvider) {
-        this.memeAggregationLookUpService = memeAggregationLookUpService;
-        this.timeProvider = timeProvider;
-    }
-
     public MostSharedMemes getMostSharedMemes() {
         if (cachedData == null) {
-            refreshCache(timeProvider);
+            synchronized (this) {
+                if (cachedData == null) {
+                    refreshCache();
+                }
+            }
         }
         return cachedData;
     }
@@ -39,16 +40,16 @@ public class SharedMemeScheduleCacheService {
     @PostConstruct
     public void initializeCache() {
         log.info("Initializing shared meme cache");
-        refreshCache(timeProvider);
+        refreshCache();
     }
 
     @Scheduled(cron = SHARED_MEME_RENEWAL_CRON)
     public void scheduledRefresh() {
         log.info("Scheduled refresh of shared meme cache");
-        refreshCache(timeProvider);
+        refreshCache();
     }
 
-    private void refreshCache(TimeProvider timeProvider) {
+    private synchronized void refreshCache() {
         try {
             List<MemeSimpleResponse> memes = memeAggregationLookUpService.getMostFrequentSharedMemes();
             LocalDateTime nextUpdateTime = cronExpression.next(timeProvider.now());
@@ -58,6 +59,11 @@ public class SharedMemeScheduleCacheService {
             log.info("Shared meme cache refreshed. Next update at: {}", nextUpdateTime);
         } catch (Exception e) {
             log.error("Failed to refresh shared meme cache", e);
+            if (cachedData == null) {
+                LocalDateTime nextUpdateTime = cronExpression.next(timeProvider.now());
+                cachedData = new MostSharedMemes(List.of(), nextUpdateTime);
+                log.warn("Initialized cache with empty meme list due to refresh failure");
+            }
         }
     }
 }
