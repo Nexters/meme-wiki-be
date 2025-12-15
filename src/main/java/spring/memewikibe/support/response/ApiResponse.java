@@ -10,7 +10,7 @@ public final class ApiResponse<S> {
     private final S success;
     private final ErrorMessage error;
 
-    public ApiResponse(ResultType resultType, S success, ErrorMessage error) {
+    private ApiResponse(ResultType resultType, S success, ErrorMessage error) {
         this.resultType = resultType;
         this.success = success;
         this.error = error;
