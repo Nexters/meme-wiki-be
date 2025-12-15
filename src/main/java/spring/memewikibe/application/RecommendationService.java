@@ -105,8 +105,8 @@ public class RecommendationService {
                 // 확장된 키워드 토큰들로 OR 조건 검색을 수행
                 log.info("Performing keyword search with OR conditions for tokens: {}", keywordTokens);
                 kwCandidates = memeRepository.findKeywordCandidatesAcrossFields(keywordTokens, of(useKwTopK));
-            } catch (Throwable t2) {
-                log.error("Custom keyword search failed, falling back to simple containing search.", t2);
+            } catch (Exception e) {
+                log.error("Custom keyword search failed, falling back to simple containing search.", e);
                 kwCandidates = memeRepository.findByTitleOrHashtagsContainingOrderByIdDesc(normKeywordQuery, of(useKwTopK));
             }
         }
