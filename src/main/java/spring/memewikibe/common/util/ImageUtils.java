@@ -47,30 +47,11 @@ public class ImageUtils {
     }
 
     public static String detectMimeType(String imageUrl, byte[] data) {
-        // Try by HTTP response header
-        try {
-            URI uri = new URI(imageUrl);
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(uri)
-                .timeout(Duration.ofSeconds(5))
-                .method("HEAD", HttpRequest.BodyPublishers.noBody())
-                .build();
-            
-            HttpResponse<Void> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
-            String contentType = response.headers().firstValue("Content-Type").orElse(null);
-            if (StringUtils.hasText(contentType)) {
-                // Content-Type might include charset, so extract only the MIME type
-                return contentType.split(";")[0].trim();
-            }
-        } catch (Exception ignored) {
-            // If HEAD request fails, continue with other methods
-        }
-        
-        // Try by stream content sniffing using legacy method (still works for content detection)
+        // Prioritize byte signature analysis (fastest and most reliable)
         String guessed = guessContentTypeFromBytes(data);
         if (StringUtils.hasText(guessed)) return guessed;
-        
-        // Fallback by extension
+
+        // Fallback to extension-based detection
         return getMimeTypeByExtension(imageUrl);
     }
 
