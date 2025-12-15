@@ -8,8 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
-import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
+import spring.memewikibe.domain.meme.MemeSimpleInfo;
 
 import java.util.List;
 
@@ -64,9 +64,9 @@ public class MemeRepositoryCustomImpl implements MemeRepositoryCustom {
     }
 
     @Override
-    public List<MemeSimpleResponse> findLatestMemesExcludingIds(List<Long> excludeIds, int limit) {
+    public List<MemeSimpleInfo> findLatestMemesExcludingIds(List<Long> excludeIds, int limit) {
         return queryFactory
-            .select(Projections.constructor(MemeSimpleResponse.class,
+            .select(Projections.constructor(MemeSimpleInfo.class,
                 meme.id,
                 meme.title,
                 meme.imgUrl

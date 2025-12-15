@@ -3,8 +3,8 @@ package spring.memewikibe.infrastructure;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import spring.memewikibe.api.controller.meme.response.MemeSimpleResponse;
 import spring.memewikibe.domain.meme.Meme;
+import spring.memewikibe.domain.meme.MemeSimpleInfo;
 
 import java.util.List;
 
@@ -17,5 +17,5 @@ public interface MemeRepositoryCustom {
 
     List<Meme> findKeywordCandidatesAcrossFields(List<String> keywords, Limit limit);
 
-    List<MemeSimpleResponse> findLatestMemesExcludingIds(List<Long> excludeIds, int limit);
+    List<MemeSimpleInfo> findLatestMemesExcludingIds(List<Long> excludeIds, int limit);
 }
