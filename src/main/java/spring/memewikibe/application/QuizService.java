@@ -15,12 +15,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class QuizService {
-    private static final int quizLimit = 10;
+    private static final int QUIZ_LIMIT = 10;
 
     private final MemeQuizRepository quizRepository;
 
     public List<QuizProblemResponse> getRandomQuizzes() {
-        return quizRepository.findRandomQuizzes(quizLimit).stream()
+        return quizRepository.findRandomQuizzes(QUIZ_LIMIT).stream()
             .map(this::toProblem)
             .toList();
     }
