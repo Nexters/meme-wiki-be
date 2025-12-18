@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Default no-op Cross-Encoder reranker that preserves prior order by score.
@@ -16,6 +15,6 @@ public class NoopCrossEncoderReranker implements CrossEncoderReranker {
         return candidates.stream()
             .sorted(Comparator.comparingDouble(Candidate::priorScore).reversed())
             .map(Candidate::id)
-            .collect(Collectors.toList());
+            .toList();
     }
 }
