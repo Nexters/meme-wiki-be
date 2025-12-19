@@ -39,13 +39,20 @@ public class ImageGenerator {
 
     public GenerateContentResponse generateImageWithExistingImage(String naturalLanguage, String imageUrl) {
         try {
-            byte[] imageBytes = ImageUtils.downloadBytes(imageUrl);
-            String mimeType = ImageUtils.detectMimeType(imageUrl, imageBytes);
-            Base64Image base64Image = new Base64Image(mimeType, getEncoder().encodeToString(imageBytes));
-
+            Base64Image base64Image = convertUrlToBase64Image(imageUrl);
             return generateImageCombine(naturalLanguage, List.of(base64Image));
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate image with existing image", e);
+        }
+    }
+
+    public Base64Image convertUrlToBase64Image(String imageUrl) {
+        try {
+            byte[] imageBytes = ImageUtils.downloadBytes(imageUrl);
+            String mimeType = ImageUtils.detectMimeType(imageUrl, imageBytes);
+            return new Base64Image(mimeType, getEncoder().encodeToString(imageBytes));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert URL to Base64 image: " + imageUrl, e);
         }
     }
 

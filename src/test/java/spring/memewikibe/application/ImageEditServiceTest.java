@@ -3,7 +3,6 @@ package spring.memewikibe.application;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -11,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import spring.memewikibe.annotation.IntegrationTest;
 import spring.memewikibe.api.controller.image.response.Base64Image;
 import spring.memewikibe.api.controller.image.response.GeneratedImagesResponse;
-import spring.memewikibe.common.util.ImageUtils;
 import spring.memewikibe.domain.meme.Meme;
 import spring.memewikibe.external.google.application.ImageGenerator;
 import spring.memewikibe.external.google.client.response.GenerateContentResponse;
@@ -88,6 +86,10 @@ class ImageEditServiceTest {
             new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00, 0x00}
         );
 
+        Base64Image mockExistingImage = new Base64Image("image/jpeg", "existingImageBase64");
+        when(imageGenerator.convertUrlToBase64Image(anyString()))
+            .thenReturn(mockExistingImage);
+
         GenerateContentResponse mockResponse = createMockResponse(
             List.of(new Base64Image("image/png", "combinedBase64data")),
             List.of("Combined image")
@@ -95,20 +97,15 @@ class ImageEditServiceTest {
         when(imageGenerator.generateImageCombine(anyString(), anyList()))
             .thenReturn(mockResponse);
 
-        // when & then
-        try (MockedStatic<ImageUtils> mockedImageUtils = mockStatic(ImageUtils.class)) {
-            mockedImageUtils.when(() -> ImageUtils.downloadBytes(anyString()))
-                .thenReturn(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
-            mockedImageUtils.when(() -> ImageUtils.detectMimeType(anyString(), any()))
-                .thenReturn("image/jpeg");
+        // when
+        GeneratedImagesResponse response = imageEditService.editMemeImg("Combine images", meme.getId(), userImage);
 
-            GeneratedImagesResponse response = imageEditService.editMemeImg("Combine images", meme.getId(), userImage);
-
-            assertThat(response).isNotNull();
-            assertThat(response.images()).hasSize(1);
-            assertThat(response.text()).hasSize(1);
-            verify(imageGenerator).generateImageCombine(anyString(), anyList());
-        }
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.images()).hasSize(1);
+        assertThat(response.text()).hasSize(1);
+        verify(imageGenerator).convertUrlToBase64Image(meme.getImgUrl());
+        verify(imageGenerator).generateImageCombine(anyString(), anyList());
     }
 
     @Test

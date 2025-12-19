@@ -62,7 +62,7 @@ public class ImageEditService {
 
     private GeneratedImagesResponse editMemeImgWithUserRequestImg(String prompt, String existingMemeImgUrl, MultipartFile file) {
         try {
-            Base64Image existingImage = convertUrlToBase64Image(existingMemeImgUrl);
+            Base64Image existingImage = imageGenerator.convertUrlToBase64Image(existingMemeImgUrl);
             Base64Image userRequestImg = convertMultipartFileToBase64Image(file);
             List<Base64Image> requestImages = List.of(existingImage, userRequestImg);
 
@@ -74,18 +74,6 @@ public class ImageEditService {
             return new GeneratedImagesResponse(images, texts);
         } catch (IOException e) {
             log.error("Failed to read uploaded file", e);
-            throw new MemeWikiApplicationException(ErrorType.DEFAULT_ERROR);
-        }
-    }
-
-    private Base64Image convertUrlToBase64Image(String imageUrl) {
-        try {
-            byte[] imageBytes = ImageUtils.downloadBytes(imageUrl);
-            String mimeType = ImageUtils.detectMimeType(imageUrl, imageBytes);
-            String base64Data = Base64.getEncoder().encodeToString(imageBytes);
-            return new Base64Image(mimeType, base64Data);
-        } catch (IOException e) {
-            log.error("Failed to convert URL to Base64 image: {}", imageUrl, e);
             throw new MemeWikiApplicationException(ErrorType.DEFAULT_ERROR);
         }
     }
