@@ -134,6 +134,52 @@ class SharedMemeScheduleCacheServiceTest {
         verify(mockOriginService, times(1)).getMostFrequentSharedMemes();
     }
 
+    @Test
+    void getMostSharedMemes_초기화중_예외가_발생하면_캐시가_null이고_다시_시도한다() {
+        // given
+        when(mockOriginService.getMostFrequentSharedMemes())
+            .thenThrow(new RuntimeException("Database error"))
+            .thenReturn(testMemes);
+
+        // when
+        MostSharedMemes firstResult = sharedMemeScheduleCacheService.getMostSharedMemes();
+
+        // then - 첫 번째 호출은 예외로 인해 null 캐시를 유지하므로, 두 번째 호출시 재시도
+        MostSharedMemes secondResult = sharedMemeScheduleCacheService.getMostSharedMemes();
+        then(secondResult.memes()).isEqualTo(testMemes);
+        verify(mockOriginService, times(2)).getMostFrequentSharedMemes();
+    }
+
+    @Test
+    void scheduledRefresh_예외가_발생하면_기존_캐시를_유지한다() {
+        // given
+        when(mockOriginService.getMostFrequentSharedMemes())
+            .thenReturn(testMemes)
+            .thenThrow(new RuntimeException("Temporary network error"));
+
+        // when
+        sharedMemeScheduleCacheService.initializeCache();
+        MostSharedMemes beforeRefresh = sharedMemeScheduleCacheService.getMostSharedMemes();
+        sharedMemeScheduleCacheService.scheduledRefresh(); // 예외 발생
+        MostSharedMemes afterFailedRefresh = sharedMemeScheduleCacheService.getMostSharedMemes();
+
+        // then - 기존 캐시가 유지됨
+        then(afterFailedRefresh.memes()).isEqualTo(testMemes);
+        then(afterFailedRefresh).isEqualTo(beforeRefresh);
+        verify(mockOriginService, times(2)).getMostFrequentSharedMemes();
+    }
+
+    @Test
+    void initializeCache_예외가_발생해도_애플리케이션이_정상_시작된다() {
+        // given
+        when(mockOriginService.getMostFrequentSharedMemes())
+            .thenThrow(new RuntimeException("Initialization error"));
+
+        // when & then - 예외가 던져지지 않고 정상적으로 초기화됨
+        sharedMemeScheduleCacheService.initializeCache();
+        verify(mockOriginService, times(1)).getMostFrequentSharedMemes();
+    }
+
     public static class StubTimeProvider implements TimeProvider {
         private final LocalDateTime fixedTime;
 
