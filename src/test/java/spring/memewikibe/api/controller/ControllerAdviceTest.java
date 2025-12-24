@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import spring.memewikibe.annotation.UnitTest;
 import spring.memewikibe.support.error.ErrorType;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 import spring.memewikibe.support.response.ApiResponse;
@@ -20,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@UnitTest
 class ControllerAdviceTest {
 
     private MockMvc mockMvc;
