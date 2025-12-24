@@ -88,7 +88,15 @@ public class TtlZset<K> {
         lock.writeLock().lock();
         try {
             evictExpired();
-            return ttl.size();
+            // Verify consistency between ttl and zset
+            int ttlSize = ttl.size();
+            int zsetSize = zset.size();
+            if (ttlSize != zsetSize) {
+                throw new IllegalStateException(
+                    String.format("Inconsistent state: ttl.size()=%d, zset.size()=%d", ttlSize, zsetSize)
+                );
+            }
+            return ttlSize;
         } finally {
             lock.writeLock().unlock();
         }

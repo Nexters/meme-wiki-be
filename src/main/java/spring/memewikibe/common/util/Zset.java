@@ -92,6 +92,10 @@ public class Zset<K> {
         return result;
     }
 
+    public int size() {
+        return skip.size();
+    }
+
     private record ScoreKey<K>(double score, K key) implements Comparable<ScoreKey<K>> {
 
         @Override
