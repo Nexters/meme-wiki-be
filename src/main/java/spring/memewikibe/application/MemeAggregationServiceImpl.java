@@ -17,6 +17,9 @@ import spring.memewikibe.infrastructure.MemeShareLogRepository;
 import spring.memewikibe.infrastructure.MemeViewLogRepository;
 import spring.memewikibe.support.error.MemeWikiApplicationException;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import static spring.memewikibe.support.error.ErrorType.MEME_NOT_FOUND;
 
 @RequiredArgsConstructor
@@ -32,25 +35,19 @@ public class MemeAggregationServiceImpl implements MemeAggregationService {
     @Override
     @Transactional
     public void increaseMemeViewCount(Long memeId) {
-        Meme meme = getMemeBy(memeId);
-        memeViewLogRepository.save(MemeViewLog.of(meme));
-        inMemoryPopularMemeCache.onMemeViewed(memeId);
+        recordMemeActivity(memeId, MemeViewLog::of, memeViewLogRepository::save, inMemoryPopularMemeCache::onMemeViewed);
     }
 
     @Override
     @Transactional
     public void increaseMakeCustomMemeCount(Long memeId) {
-        Meme meme = getMemeBy(memeId);
-        memeCustomLogRepository.save(MemeCustomLog.of(meme));
-        inMemoryPopularMemeCache.onMemeCustomized(memeId);
+        recordMemeActivity(memeId, MemeCustomLog::of, memeCustomLogRepository::save, inMemoryPopularMemeCache::onMemeCustomized);
     }
 
     @Override
     @Transactional
     public void increaseShareMemeCount(Long memeId) {
-        Meme meme = getMemeBy(memeId);
-        memeShareLogRepository.save(MemeShareLog.of(meme));
-        inMemoryPopularMemeCache.onMemeShared(memeId);
+        recordMemeActivity(memeId, MemeShareLog::of, memeShareLogRepository::save, inMemoryPopularMemeCache::onMemeShared);
     }
 
     @Async
@@ -58,6 +55,18 @@ public class MemeAggregationServiceImpl implements MemeAggregationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleMemeViewed(MemeViewedEvent event) {
         increaseMemeViewCount(event.memeId());
+    }
+
+    private <T> void recordMemeActivity(
+        Long memeId,
+        Function<Meme, T> logFactory,
+        Consumer<T> logSaver,
+        Consumer<Long> cacheUpdater
+    ) {
+        Meme meme = getMemeBy(memeId);
+        T log = logFactory.apply(meme);
+        logSaver.accept(log);
+        cacheUpdater.accept(memeId);
     }
 
     private Meme getMemeBy(Long memeId) {
