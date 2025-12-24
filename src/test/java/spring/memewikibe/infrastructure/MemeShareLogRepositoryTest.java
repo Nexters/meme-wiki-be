@@ -80,8 +80,6 @@ class MemeShareLogRepositoryTest {
     }
 
     private MemeShareLog createMemeShareLog(Meme meme) {
-        return MemeShareLog.builder()
-            .meme(meme)
-            .build();
+        return MemeShareLog.of(meme);
     }
 }
