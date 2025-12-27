@@ -82,8 +82,6 @@ class MemeCustomLogRepositoryTest {
     }
 
     private MemeCustomLog createMemeCustomLog(Meme meme) {
-        return MemeCustomLog.builder()
-            .meme(meme)
-            .build();
+        return MemeCustomLog.of(meme);
     }
 }

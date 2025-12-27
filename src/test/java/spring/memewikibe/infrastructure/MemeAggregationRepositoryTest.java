@@ -117,20 +117,14 @@ class MemeAggregationRepositoryTest {
     }
 
     private MemeCustomLog createMemeCustomLog(Meme meme) {
-        return MemeCustomLog.builder()
-            .meme(meme)
-            .build();
+        return MemeCustomLog.of(meme);
     }
 
     private MemeShareLog createMemeShareLog(Meme meme) {
-        return MemeShareLog.builder()
-            .meme(meme)
-            .build();
+        return MemeShareLog.of(meme);
     }
 
     private MemeViewLog createMemeViewLog(Meme meme) {
-        return MemeViewLog.builder()
-            .meme(meme)
-            .build();
+        return MemeViewLog.of(meme);
     }
 }
