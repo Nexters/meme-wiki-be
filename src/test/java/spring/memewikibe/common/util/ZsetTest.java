@@ -334,4 +334,114 @@ class ZsetTest {
         // 상위 2개
         assertThat(zset.zrevrange(0, 1)).containsExactly("key3", "key2");
     }
+
+    @Test
+    @DisplayName("size는 빈 zset에서 0을 반환한다")
+    void size_empty() {
+        // given
+        Zset<String> zset = new Zset<>();
+
+        // when
+        int size = zset.size();
+
+        // then
+        assertThat(size).isZero();
+    }
+
+    @Test
+    @DisplayName("size는 요소를 추가하면 증가한다")
+    void size_increases_on_add() {
+        // given
+        Zset<String> zset = new Zset<>();
+
+        // when & then
+        assertThat(zset.size()).isZero();
+
+        zset.zadd("key1", 10.0);
+        assertThat(zset.size()).isEqualTo(1);
+
+        zset.zadd("key2", 20.0);
+        assertThat(zset.size()).isEqualTo(2);
+
+        zset.zadd("key3", 30.0);
+        assertThat(zset.size()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("size는 요소를 제거하면 감소한다")
+    void size_decreases_on_remove() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 10.0);
+        zset.zadd("key2", 20.0);
+        zset.zadd("key3", 30.0);
+
+        // when & then
+        assertThat(zset.size()).isEqualTo(3);
+
+        zset.zrem("key2");
+        assertThat(zset.size()).isEqualTo(2);
+
+        zset.zrem("key1");
+        assertThat(zset.size()).isEqualTo(1);
+
+        zset.zrem("key3");
+        assertThat(zset.size()).isZero();
+    }
+
+    @Test
+    @DisplayName("size는 같은 key를 여러 번 추가해도 변하지 않는다")
+    void size_unchanged_on_overwrite() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 10.0);
+
+        // when
+        zset.zadd("key1", 20.0);
+        zset.zadd("key1", 30.0);
+
+        // then
+        assertThat(zset.size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("size는 존재하지 않는 key를 제거해도 변하지 않는다")
+    void size_unchanged_on_remove_non_existent() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 10.0);
+
+        // when
+        zset.zrem("non_existent");
+
+        // then
+        assertThat(zset.size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("size는 zincrby 후에도 변하지 않는다")
+    void size_unchanged_on_zincrby() {
+        // given
+        Zset<String> zset = new Zset<>();
+        zset.zadd("key1", 10.0);
+
+        // when
+        zset.zincrby("key1", 5.0);
+
+        // then
+        assertThat(zset.size()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("size는 zincrby로 새 key를 추가하면 증가한다")
+    void size_increases_on_zincrby_new_key() {
+        // given
+        Zset<String> zset = new Zset<>();
+
+        // when
+        zset.zincrby("key1", 5.0);
+
+        // then
+        assertThat(zset.size()).isEqualTo(1);
+    }
 }
