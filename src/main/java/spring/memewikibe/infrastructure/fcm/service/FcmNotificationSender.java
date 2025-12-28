@@ -25,11 +25,15 @@ public class FcmNotificationSender implements NotificationSender {
             return new SendResult(0, 0, List.of());
         }
 
-        Notification notification = Notification.builder()
+        Notification.Builder notificationBuilder = Notification.builder()
             .setTitle(command.title())
-            .setBody(command.body())
-            .setImage(command.imageUrl())
-            .build();
+            .setBody(command.body());
+
+        if (command.imageUrl() != null) {
+            notificationBuilder.setImage(command.imageUrl());
+        }
+
+        Notification notification = notificationBuilder.build();
 
 
         MulticastMessage.Builder messageBuilder = MulticastMessage.builder()
@@ -62,7 +66,7 @@ public class FcmNotificationSender implements NotificationSender {
             SendResponse sendResponse = responses.get(i);
             if (!sendResponse.isSuccessful()) {
                 FirebaseMessagingException exception = sendResponse.getException();
-                log.info("Token send failed: token={}, error={}, message={}, ", tokens.get(i), exception.getMessagingErrorCode(),exception.getMessage());
+                log.info("Token send failed: token={}, error={}, message={}", tokens.get(i), exception.getMessagingErrorCode(), exception.getMessage());
                 if (exception.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT ||
                     exception.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED ||
                     exception.getMessagingErrorCode() == MessagingErrorCode.SENDER_ID_MISMATCH) {
