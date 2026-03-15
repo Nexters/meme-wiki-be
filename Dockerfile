@@ -2,7 +2,7 @@
 FROM gradle:8-jdk21-alpine AS build
 WORKDIR /workspace
 COPY . .
-RUN gradle bootJar --no-daemon
+RUN gradle clean bootJar --no-daemon
 
 # 2단계: 런타임 이미지 설정
 # 작업 디렉토리 설정
