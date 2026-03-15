@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - dev
   workflow_dispatch:
     inputs:
       force_infra_deploy:
@@ -19,7 +18,7 @@ on:
         type: string
 
 env:
-  REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
+  REGISTRY_URL: ${{ secrets.GCP_REGISTRY_URL }}
   IMAGE_NAME: meme-wiki-be
 
 jobs:
@@ -49,26 +48,23 @@ jobs:
       run: |
         echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "TIMESTAMP=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
-        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          echo "ENV_TAG=prod" >> $GITHUB_OUTPUT
-          echo "DOCKERFILE=Dockerfile" >> $GITHUB_OUTPUT
-        elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-          echo "ENV_TAG=dev" >> $GITHUB_OUTPUT
-          echo "DOCKERFILE=dev.Dockerfile" >> $GITHUB_OUTPUT
-        else
-          echo "ENV_TAG=dev" >> $GITHUB_OUTPUT
-          echo "DOCKERFILE=dev.Dockerfile" >> $GITHUB_OUTPUT
-        fi
+        echo "ENV_TAG=prod" >> $GITHUB_OUTPUT
+        echo "DOCKERFILE=Dockerfile" >> $GITHUB_OUTPUT
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Login to NCP Container Registry
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
+
+    - name: Login to GCP Artifact Registry
       uses: docker/login-action@v3
       with:
-        registry: ${{ env.REGISTRY_URL }}
-        username: ${{ secrets.NCP_ACCESS_KEY }}
-        password: ${{ secrets.NCP_SECRET_KEY }}
+        registry: us-central1-docker.pkg.dev
+        username: _json_key
+        password: ${{ secrets.GCP_SA_KEY_JSON }}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -97,7 +93,7 @@ jobs:
       if: steps.changes.outputs.infra == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_infra_deploy == 'true')
       uses: appleboy/scp-action@master
       with:
-        host: ${{ secrets.NCP_SERVER_HOST }}
+        host: ${{ secrets.GCP_SERVER_HOST }}
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "docker-compose.yml,init-scripts/"
@@ -108,7 +104,7 @@ jobs:
       if: steps.changes.outputs.infra == 'true' || (github.event_name == 'workflow_dispatch' && inputs.force_infra_deploy == 'true')
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.NCP_SERVER_HOST }}
+        host: ${{ secrets.GCP_SERVER_HOST }}
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
@@ -117,11 +113,10 @@ jobs:
           # Export runtime env vars from GitHub Secrets (no .env file needed)
           export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
           export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
-          export MYSQL_DEV_DATABASE='${{ secrets.MYSQL_DEV_DATABASE }}'
           export MYSQL_USER='${{ secrets.MYSQL_USER }}'
           export MYSQL_PASSWORD='${{ secrets.MYSQL_PASSWORD }}'
 
-          export NCP_REGISTRY_URL='${{ secrets.NCP_REGISTRY_URL }}'
+          export GCP_REGISTRY_URL='${{ secrets.GCP_REGISTRY_URL }}'
 
           export CLOUDFLARE_R2_ACCESS_KEY_ID='${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}'
           export CLOUDFLARE_R2_SECRET_ACCESS_KEY='${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}'
@@ -143,8 +138,8 @@ jobs:
           echo '${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}' > /root/config/fcm-service-account.json
           chmod 600 /root/config/fcm-service-account.json
 
-          docker compose pull app app-dev
-          docker compose up -d app app-dev
+          docker compose pull app
+          docker compose up -d app
           docker compose ps
           echo "✅ App service restarted"
 
